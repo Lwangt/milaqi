@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "baseHp": 210,
+  "prepSeconds": 35,
+  "battleMaxSeconds": 30,
+  "round": {
+    "startGold": 10,
+    "startLevel": 3,
+    "baseIncome": 5,
+    "interestPer": 10,
+    "interestCap": 5,
+    "streakBonus": {
+      "0": 0,
+      "1": 0,
+      "2": 1,
+      "3": 1,
+      "4": 2,
+      "5": 3
+    },
+    "levelXp": [
+      0,
+      2,
+      2,
+      6,
+      10,
+      20,
+      36,
+      56,
+      80,
+      100,
+      120,
+      150
+    ],
+    "maxLevel": 12,
+    "xpBuyCost": 4,
+    "xpPerBuy": 4,
+    "popFormula": "level+1",
+    "shopSize": 5,
+    "rerollCost": 2,
+    "relicEveryRounds": 2,
+    "relicChoices": 3,
+    "shopOdds": {
+      "1": [
+        100,
+        0,
+        0,
+        0,
+        0
+      ],
+      "2": [
+        100,
+        0,
+        0,
+        0,
+        0
+      ],
+      "3": [
+        75,
+        25,
+        0,
+        0,
+        0
+      ],
+      "4": [
+        55,
+        30,
+        15,
+        0,
+        0
+      ],
+      "5": [
+        45,
+        33,
+        20,
+        2,
+        0
+      ],
+      "6": [
+        30,
+        40,
+        25,
+        5,
+        0
+      ],
+      "7": [
+        19,
+        35,
+        35,
+        10,
+        1
+      ],
+      "8": [
+        15,
+        25,
+        35,
+        20,
+        5
+      ],
+      "9": [
+        10,
+        20,
+        30,
+        30,
+        10
+      ],
+      "10": [
+        5,
+        15,
+        25,
+        35,
+        20
+      ],
+      "11": [
+        3,
+        10,
+        20,
+        35,
+        32
+      ],
+      "12": [
+        2,
+        8,
+        18,
+        32,
+        40
+      ]
+    },
+    "unitsPerShopSlot": 1,
+    "sellRefundRatio": 0.6,
+    "battleBonusGoldWin": 1
+  },
+  "combat": {
+    "tickRate": 30,
+    "laneCount": 1,
+    "fieldWidth": 1400,
+    "fieldHeight": 420,
+    "spawnOffset": 90,
+    "defConstant": 50,
+    "acquireRangeExtra": 40,
+    "settleTimeoutSeconds": 30
+  },
+  "startingUnits": {
+    "militia": 2
+  }
+}

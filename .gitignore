@@ -1,0 +1,25 @@
+# Godot 4+
+.godot/
+/android/
+*.translation
+
+# .NET
+.mono/
+bin/
+obj/
+*.user
+*.userprefs
+
+# Builds / exports
+/build/
+/export/
+*.pck
+
+# IDE
+.vs/
+.idea/
+.vscode/
+*.swp
+
+# Tools (本地工具目录，不入库)
+/.tools/

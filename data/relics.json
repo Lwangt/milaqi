@@ -1,0 +1,718 @@
+{
+  "version": 1,
+  "rarityGemCost": {
+    "common": 4,
+    "rare": 7,
+    "epic": 12
+  },
+  "categoryNames": {
+    "economy": "成长型",
+    "power": "战力型",
+    "unit": "兵种型",
+    "synergy": "羁绊型",
+    "skill": "技能强化型"
+  },
+  "relics": [
+    {
+      "id": "philosopher_stone",
+      "name": "贤者之石",
+      "category": "economy",
+      "rarity": "rare",
+      "desc": "每回合开始额外获得 1 颗宝石。",
+      "effects": [
+        {
+          "type": "income",
+          "gems": 1
+        }
+      ],
+      "flavor": "点石成金，涓流成海。"
+    },
+    {
+      "id": "merchant_caravan",
+      "name": "商队",
+      "category": "economy",
+      "rarity": "common",
+      "desc": "每回合开始额外获得 2 金币。",
+      "effects": [
+        {
+          "type": "income",
+          "gold": 2
+        }
+      ],
+      "flavor": "金币的轰鸣声比战鼓更动听。"
+    },
+    {
+      "id": "interest_bank",
+      "name": "金库",
+      "category": "economy",
+      "rarity": "rare",
+      "desc": "利息比例 +10%，利息上限 +3。",
+      "effects": [
+        {
+          "type": "interest",
+          "addPct": 0.1,
+          "capAdd": 3
+        }
+      ],
+      "flavor": "钱生钱的道理，连国王都懂。"
+    },
+    {
+      "id": "tome_of_wisdom",
+      "name": "智慧之书",
+      "category": "economy",
+      "rarity": "common",
+      "desc": "每回合开始额外获得 2 点经验。",
+      "effects": [
+        {
+          "type": "income",
+          "xp": 2
+        }
+      ],
+      "flavor": "知识就是人口。"
+    },
+    {
+      "id": "gem_vein",
+      "name": "宝石矿脉",
+      "category": "economy",
+      "rarity": "epic",
+      "desc": "每 2 回合额外获得 4 颗宝石。",
+      "effects": [
+        {
+          "type": "income",
+          "gems": 4,
+          "everyRounds": 2
+        }
+      ],
+      "flavor": "山脉之下，尽是流光。"
+    },
+    {
+      "id": "compound_interest",
+      "name": "复利",
+      "category": "economy",
+      "rarity": "rare",
+      "desc": "每回合开始额外获得当前金币的 5%（最多 5 金币）。",
+      "effects": [
+        {
+          "type": "compoundInterest",
+          "pct": 0.05,
+          "cap": 5
+        }
+      ],
+      "flavor": "利滚利，直到压垮敌人。"
+    },
+    {
+      "id": "treasure_map",
+      "name": "藏宝图",
+      "category": "economy",
+      "rarity": "common",
+      "desc": "立即获得 6 颗宝石。",
+      "effects": [
+        {
+          "type": "instantGems",
+          "value": 6
+        }
+      ],
+      "flavor": "X 标记着财富的位置。"
+    },
+    {
+      "id": "golden_era",
+      "name": "黄金时代",
+      "category": "economy",
+      "rarity": "epic",
+      "desc": "每回合基础收入 +3，第 10 回合起再 +3。",
+      "effects": [
+        {
+          "type": "income",
+          "gold": 3
+        },
+        {
+          "type": "income",
+          "gold": 3,
+          "fromRound": 10
+        }
+      ],
+      "flavor": "国库充盈，方能长久。"
+    },
+    {
+      "id": "war_banner",
+      "name": "战争旗帜",
+      "category": "power",
+      "rarity": "common",
+      "desc": "全体单位物理攻击 +15%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "all",
+          "stat": "atk",
+          "mode": "pct",
+          "value": 0.15
+        }
+      ],
+      "flavor": "旗在，阵在。"
+    },
+    {
+      "id": "iron_wall",
+      "name": "铁壁",
+      "category": "power",
+      "rarity": "common",
+      "desc": "全体单位物理防御 +25%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "all",
+          "stat": "pdef",
+          "mode": "pct",
+          "value": 0.25
+        }
+      ],
+      "flavor": "刀枪不入，唯我铁壁。"
+    },
+    {
+      "id": "arcane_core",
+      "name": "秘法核心",
+      "category": "power",
+      "rarity": "rare",
+      "desc": "全体单位魔法攻击 +30%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "all",
+          "stat": "matk",
+          "mode": "pct",
+          "value": 0.3
+        }
+      ],
+      "flavor": "奥术在血脉中沸腾。"
+    },
+    {
+      "id": "swift_boots",
+      "name": "疾行靴",
+      "category": "power",
+      "rarity": "common",
+      "desc": "全体单位移动速度 +20%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "all",
+          "stat": "speed",
+          "mode": "pct",
+          "value": 0.2
+        }
+      ],
+      "flavor": "先到者，先杀。"
+    },
+    {
+      "id": "giant_blood",
+      "name": "巨人之血",
+      "category": "power",
+      "rarity": "rare",
+      "desc": "全体单位最大生命 +20%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "all",
+          "stat": "hp",
+          "mode": "pct",
+          "value": 0.2
+        }
+      ],
+      "flavor": "巨人的血，流在你我身上。"
+    },
+    {
+      "id": "hunters_mark",
+      "name": "猎手印记",
+      "category": "power",
+      "rarity": "rare",
+      "desc": "全体单位攻击速度 +15%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "all",
+          "stat": "atkSpeed",
+          "mode": "pct",
+          "value": 0.15
+        }
+      ],
+      "flavor": "快一分，多一刀。"
+    },
+    {
+      "id": "titan_heart",
+      "name": "泰坦之心",
+      "category": "power",
+      "rarity": "epic",
+      "desc": "人口 ≥3 的单位生命 +35%、攻击 +15%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "big",
+          "stat": "hp",
+          "mode": "pct",
+          "value": 0.35
+        },
+        {
+          "type": "stat",
+          "target": "big",
+          "stat": "atk",
+          "mode": "pct",
+          "value": 0.15
+        }
+      ],
+      "flavor": "庞大即正义。"
+    },
+    {
+      "id": "warlord_crown",
+      "name": "战神王冠",
+      "category": "power",
+      "rarity": "epic",
+      "desc": "全体单位杀戮值 +25%（战后压制伤害更高）。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "all",
+          "stat": "killValue",
+          "mode": "pct",
+          "value": 0.25
+        }
+      ],
+      "flavor": "王冠之下，皆是战功。"
+    },
+    {
+      "id": "berserker_rage",
+      "name": "狂战之怒",
+      "category": "power",
+      "rarity": "rare",
+      "desc": "全体单位攻击 +25%，但物理防御 -15%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "all",
+          "stat": "atk",
+          "mode": "pct",
+          "value": 0.25
+        },
+        {
+          "type": "stat",
+          "target": "all",
+          "stat": "pdef",
+          "mode": "pct",
+          "value": -0.15
+        }
+      ],
+      "flavor": "以血肉换锋刃。"
+    },
+    {
+      "id": "undead_pact",
+      "name": "亡灵契约",
+      "category": "unit",
+      "rarity": "rare",
+      "desc": "亡灵单位价格 -1；亡灵单位死亡时 35% 概率原地召唤一个骷髅兵。",
+      "effects": [
+        {
+          "type": "costMod",
+          "target": "undead",
+          "value": -1
+        },
+        {
+          "type": "onDeathSummon",
+          "target": "undead",
+          "unit": "skeleton",
+          "count": 1,
+          "chance": 0.35
+        }
+      ],
+      "flavor": "死亡不是终点，只是换了个形态。"
+    },
+    {
+      "id": "knight_order",
+      "name": "骑士团徽章",
+      "category": "unit",
+      "rarity": "rare",
+      "desc": "骑兵单位生命 +30%、物理防御 +20%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "cavalry",
+          "stat": "hp",
+          "mode": "pct",
+          "value": 0.3
+        },
+        {
+          "type": "stat",
+          "target": "cavalry",
+          "stat": "pdef",
+          "mode": "pct",
+          "value": 0.2
+        }
+      ],
+      "flavor": "为了荣耀，冲锋。"
+    },
+    {
+      "id": "archery_manual",
+      "name": "弓术秘籍",
+      "category": "unit",
+      "rarity": "rare",
+      "desc": "远程单位射程 +25%、攻击速度 +10%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "ranged",
+          "stat": "range",
+          "mode": "pct",
+          "value": 0.25
+        },
+        {
+          "type": "stat",
+          "target": "ranged",
+          "stat": "atkSpeed",
+          "mode": "pct",
+          "value": 0.1
+        }
+      ],
+      "flavor": "箭雨所至，寸草不生。"
+    },
+    {
+      "id": "mage_tower",
+      "name": "法师塔",
+      "category": "unit",
+      "rarity": "rare",
+      "desc": "魔法单位魔法攻击 +35%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "magic",
+          "stat": "matk",
+          "mode": "pct",
+          "value": 0.35
+        }
+      ],
+      "flavor": "塔尖所指，即为灰烬。"
+    },
+    {
+      "id": "swarm_tactics",
+      "name": "人海战术",
+      "category": "unit",
+      "rarity": "rare",
+      "desc": "人口 =1 的单位价格 -1、攻击 +20%、生命 +10%。",
+      "effects": [
+        {
+          "type": "costMod",
+          "target": "pop1",
+          "value": -1
+        },
+        {
+          "type": "stat",
+          "target": "pop1",
+          "stat": "atk",
+          "mode": "pct",
+          "value": 0.2
+        },
+        {
+          "type": "stat",
+          "target": "pop1",
+          "stat": "hp",
+          "mode": "pct",
+          "value": 0.1
+        }
+      ],
+      "flavor": "数量本身就是一种质量。"
+    },
+    {
+      "id": "hero_glory",
+      "name": "英雄荣耀",
+      "category": "unit",
+      "rarity": "epic",
+      "desc": "英雄单位全属性 +25%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "hero",
+          "stat": "all",
+          "mode": "pct",
+          "value": 0.25
+        }
+      ],
+      "flavor": "一人可当千军。"
+    },
+    {
+      "id": "machine_overdrive",
+      "name": "机械超载",
+      "category": "unit",
+      "rarity": "rare",
+      "desc": "机械单位攻击速度 +30%、移动速度 +10%。",
+      "effects": [
+        {
+          "type": "stat",
+          "target": "machine",
+          "stat": "atkSpeed",
+          "mode": "pct",
+          "value": 0.3
+        },
+        {
+          "type": "stat",
+          "target": "machine",
+          "stat": "speed",
+          "mode": "pct",
+          "value": 0.1
+        }
+      ],
+      "flavor": "齿轮转动，战争提速。"
+    },
+    {
+      "id": "giant_slayer",
+      "name": "巨兽猎手",
+      "category": "unit",
+      "rarity": "rare",
+      "desc": "刺客单位对人口 ≥3 的单位造成 +40% 伤害。",
+      "effects": [
+        {
+          "type": "bonusVsBig",
+          "target": "assassin",
+          "value": 0.4
+        }
+      ],
+      "flavor": "越庞大，越好下手。"
+    },
+    {
+      "id": "undead_legion",
+      "name": "不死军团",
+      "category": "synergy",
+      "rarity": "epic",
+      "desc": "每有 3 个亡灵单位，全体攻击 +6%（最多 5 层）。",
+      "effects": [
+        {
+          "type": "synergy",
+          "tag": "undead",
+          "perCount": 3,
+          "stat": "atk",
+          "mode": "pct",
+          "value": 0.06,
+          "max": 5
+        }
+      ],
+      "flavor": "亡者越众，怒火越盛。"
+    },
+    {
+      "id": "steel_phalanx",
+      "name": "钢铁方阵",
+      "category": "synergy",
+      "rarity": "rare",
+      "desc": "每有 2 个盾卫单位，全体物理防御 +5（最多 6 层）。",
+      "effects": [
+        {
+          "type": "synergy",
+          "tag": "shield",
+          "perCount": 2,
+          "stat": "pdef",
+          "mode": "flat",
+          "value": 5,
+          "max": 6
+        }
+      ],
+      "flavor": "肩并肩，即是城墙。"
+    },
+    {
+      "id": "volley",
+      "name": "万箭齐发",
+      "category": "synergy",
+      "rarity": "rare",
+      "desc": "每有 2 个远程单位，全体远程攻速 +5%（最多 5 层）。",
+      "effects": [
+        {
+          "type": "synergy",
+          "tag": "ranged",
+          "perCount": 2,
+          "stat": "atkSpeed",
+          "mode": "pct",
+          "value": 0.05,
+          "max": 5,
+          "target": "ranged"
+        }
+      ],
+      "flavor": "放箭——！"
+    },
+    {
+      "id": "mounted_charge",
+      "name": "铁骑冲锋",
+      "category": "synergy",
+      "rarity": "rare",
+      "desc": "每有 2 个骑兵单位，全体骑兵移速 +8%、攻击 +6%（最多 5 层）。",
+      "effects": [
+        {
+          "type": "synergy",
+          "tag": "cavalry",
+          "perCount": 2,
+          "stat": "speed",
+          "mode": "pct",
+          "value": 0.08,
+          "max": 5,
+          "target": "cavalry"
+        },
+        {
+          "type": "synergy",
+          "tag": "cavalry",
+          "perCount": 2,
+          "stat": "atk",
+          "mode": "pct",
+          "value": 0.06,
+          "max": 5,
+          "target": "cavalry"
+        }
+      ],
+      "flavor": "铁蹄之下，皆为齑粉。"
+    },
+    {
+      "id": "magic_resonance",
+      "name": "奥术共鸣",
+      "category": "synergy",
+      "rarity": "rare",
+      "desc": "每有 2 个魔法单位，全体魔法攻击 +8%（最多 5 层）。",
+      "effects": [
+        {
+          "type": "synergy",
+          "tag": "magic",
+          "perCount": 2,
+          "stat": "matk",
+          "mode": "pct",
+          "value": 0.08,
+          "max": 5
+        }
+      ],
+      "flavor": "共鸣越强，法术越烈。"
+    },
+    {
+      "id": "raider_bond",
+      "name": "兽群羁绊",
+      "category": "synergy",
+      "rarity": "rare",
+      "desc": "每有 2 个兽族单位，全体兽族攻速 +8%、移速 +6%（最多 4 层）。",
+      "effects": [
+        {
+          "type": "synergy",
+          "tag": "beast",
+          "perCount": 2,
+          "stat": "atkSpeed",
+          "mode": "pct",
+          "value": 0.08,
+          "max": 4,
+          "target": "beast"
+        },
+        {
+          "type": "synergy",
+          "tag": "beast",
+          "perCount": 2,
+          "stat": "speed",
+          "mode": "pct",
+          "value": 0.06,
+          "max": 4,
+          "target": "beast"
+        }
+      ],
+      "flavor": "兽群奔涌，势不可挡。"
+    },
+    {
+      "id": "legion_banner",
+      "name": "军团旗",
+      "category": "synergy",
+      "rarity": "epic",
+      "desc": "每上阵 1 个单位，全体生命 +3%（最多 15 层）。",
+      "effects": [
+        {
+          "type": "synergy",
+          "tag": "any",
+          "perCount": 1,
+          "stat": "hp",
+          "mode": "pct",
+          "value": 0.03,
+          "max": 15
+        }
+      ],
+      "flavor": "旗不倒，阵不散。"
+    },
+    {
+      "id": "arcane_crystal",
+      "name": "奥术水晶",
+      "category": "skill",
+      "rarity": "rare",
+      "desc": "技能伤害 +30%。",
+      "effects": [
+        {
+          "type": "skillMod",
+          "stat": "damage",
+          "mode": "pct",
+          "value": 0.3
+        }
+      ],
+      "flavor": "水晶越亮，毁灭越近。"
+    },
+    {
+      "id": "cooldown_rune",
+      "name": "冷却符文",
+      "category": "skill",
+      "rarity": "rare",
+      "desc": "技能冷却 -25%。",
+      "effects": [
+        {
+          "type": "skillMod",
+          "stat": "cooldown",
+          "mode": "pct",
+          "value": -0.25
+        }
+      ],
+      "flavor": "时间，也是一种武器。"
+    },
+    {
+      "id": "twin_array",
+      "name": "双生法阵",
+      "category": "skill",
+      "rarity": "epic",
+      "desc": "每个技能每回合可额外释放 1 次。",
+      "effects": [
+        {
+          "type": "skillMod",
+          "stat": "charges",
+          "mode": "flat",
+          "value": 1
+        }
+      ],
+      "flavor": "一次不够，那就两次。"
+    },
+    {
+      "id": "wide_array",
+      "name": "广域法阵",
+      "category": "skill",
+      "rarity": "rare",
+      "desc": "技能作用范围 +30%。",
+      "effects": [
+        {
+          "type": "skillMod",
+          "stat": "radius",
+          "mode": "pct",
+          "value": 0.3
+        }
+      ],
+      "flavor": "覆盖之处，皆为焦土。"
+    },
+    {
+      "id": "swift_chant",
+      "name": "迅捷吟唱",
+      "category": "skill",
+      "rarity": "common",
+      "desc": "技能冷却 -10%、技能伤害 +10%。",
+      "effects": [
+        {
+          "type": "skillMod",
+          "stat": "cooldown",
+          "mode": "pct",
+          "value": -0.1
+        },
+        {
+          "type": "skillMod",
+          "stat": "damage",
+          "mode": "pct",
+          "value": 0.1
+        }
+      ],
+      "flavor": "吟唱如风。"
+    }
+  ]
+}

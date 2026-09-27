@@ -1,0 +1,806 @@
+{
+  "version": 1,
+  "note": "米拉奇战纪 兵种表。伤害公式：物理 = atk*(1-pdef/(pdef+50))，魔法 = matk*(1-mdef/(mdef+50))。",
+  "tagNames": {
+    "human": "人类",
+    "undead": "亡灵",
+    "beast": "兽族",
+    "machine": "机械",
+    "giant": "巨兽",
+    "hero": "英雄",
+    "ranged": "远程",
+    "magic": "魔法",
+    "shield": "盾卫",
+    "cavalry": "骑兵",
+    "assassin": "刺客"
+  },
+  "units": [
+    {
+      "id": "militia",
+      "name": "民兵",
+      "tier": 1,
+      "price": 2,
+      "pop": 1,
+      "unlockRound": 1,
+      "tags": [
+        "human"
+      ],
+      "hp": 114,
+      "atk": 31,
+      "matk": 0,
+      "pdef": 6,
+      "mdef": 3,
+      "speed": 62,
+      "atkSpeed": 1,
+      "range": 22,
+      "killValue": 2,
+      "desc": "最基础的人类步兵，性价比均衡，人海流的地基。"
+    },
+    {
+      "id": "spearman",
+      "name": "长矛兵",
+      "tier": 1,
+      "price": 2,
+      "pop": 1,
+      "unlockRound": 1,
+      "tags": [
+        "human"
+      ],
+      "hp": 110,
+      "atk": 38,
+      "matk": 0,
+      "pdef": 5,
+      "mdef": 3,
+      "speed": 60,
+      "atkSpeed": 0.95,
+      "range": 30,
+      "killValue": 2,
+      "desc": "长矛对骑兵造成 60% 额外伤害，克制冲锋流派。",
+      "extra": {
+        "antiCavalry": 0.6
+      }
+    },
+    {
+      "id": "archer",
+      "name": "弓箭手",
+      "tier": 1,
+      "price": 2,
+      "pop": 1,
+      "unlockRound": 1,
+      "tags": [
+        "human",
+        "ranged"
+      ],
+      "hp": 75,
+      "atk": 28,
+      "matk": 0,
+      "pdef": 3,
+      "mdef": 2,
+      "speed": 60,
+      "atkSpeed": 0.85,
+      "range": 150,
+      "killValue": 2,
+      "desc": "远程输出，血薄，需要前排保护。"
+    },
+    {
+      "id": "skeleton",
+      "name": "骷髅兵",
+      "tier": 1,
+      "price": 2,
+      "pop": 1,
+      "unlockRound": 1,
+      "tags": [
+        "undead"
+      ],
+      "hp": 88,
+      "atk": 33,
+      "matk": 0,
+      "pdef": 4,
+      "mdef": 4,
+      "speed": 66,
+      "atkSpeed": 1.05,
+      "range": 22,
+      "killValue": 2,
+      "desc": "亡灵单位，受亡灵系遗物与羁绊加成。"
+    },
+    {
+      "id": "goblin",
+      "name": "哥布林",
+      "tier": 1,
+      "price": 2,
+      "pop": 1,
+      "unlockRound": 1,
+      "tags": [
+        "beast"
+      ],
+      "hp": 84,
+      "atk": 26,
+      "matk": 0,
+      "pdef": 3,
+      "mdef": 2,
+      "speed": 88,
+      "atkSpeed": 1.15,
+      "range": 20,
+      "killValue": 2,
+      "desc": "速度极快的低费单位，适合骚扰与抢先接敌。"
+    },
+    {
+      "id": "swordsman",
+      "name": "剑士",
+      "tier": 2,
+      "price": 4,
+      "pop": 2,
+      "unlockRound": 3,
+      "tags": [
+        "human"
+      ],
+      "hp": 189,
+      "atk": 51,
+      "matk": 0,
+      "pdef": 13,
+      "mdef": 6,
+      "speed": 60,
+      "atkSpeed": 1,
+      "range": 24,
+      "killValue": 4,
+      "desc": "攻守兼备的正面主力。"
+    },
+    {
+      "id": "shieldman",
+      "name": "盾兵",
+      "tier": 2,
+      "price": 4,
+      "pop": 2,
+      "unlockRound": 3,
+      "tags": [
+        "human",
+        "shield"
+      ],
+      "hp": 255,
+      "atk": 33,
+      "matk": 0,
+      "pdef": 27,
+      "mdef": 13,
+      "speed": 48,
+      "atkSpeed": 0.8,
+      "range": 22,
+      "killValue": 4,
+      "desc": "高物防前排，克制物理输出阵容。"
+    },
+    {
+      "id": "pikeman",
+      "name": "重矛兵",
+      "tier": 2,
+      "price": 4,
+      "pop": 2,
+      "unlockRound": 3,
+      "tags": [
+        "human"
+      ],
+      "hp": 176,
+      "atk": 59,
+      "matk": 0,
+      "pdef": 10,
+      "mdef": 6,
+      "speed": 56,
+      "atkSpeed": 0.9,
+      "range": 34,
+      "killValue": 4,
+      "desc": "更长的攻击距离，对骑兵伤害加成 60%。",
+      "extra": {
+        "antiCavalry": 0.6
+      }
+    },
+    {
+      "id": "apprentice_mage",
+      "name": "法师学徒",
+      "tier": 2,
+      "price": 4,
+      "pop": 2,
+      "unlockRound": 3,
+      "tags": [
+        "human",
+        "magic",
+        "ranged"
+      ],
+      "hp": 110,
+      "atk": 0,
+      "matk": 69,
+      "pdef": 3,
+      "mdef": 10,
+      "speed": 58,
+      "atkSpeed": 0.7,
+      "range": 135,
+      "killValue": 4,
+      "desc": "魔法伤害无视物理防御，克制重甲。"
+    },
+    {
+      "id": "wolf_rider",
+      "name": "狼骑兵",
+      "tier": 2,
+      "price": 4,
+      "pop": 2,
+      "unlockRound": 3,
+      "tags": [
+        "beast",
+        "cavalry"
+      ],
+      "hp": 158,
+      "atk": 48,
+      "matk": 0,
+      "pdef": 8,
+      "mdef": 5,
+      "speed": 96,
+      "atkSpeed": 1.1,
+      "range": 24,
+      "killValue": 4,
+      "desc": "高速骑兵，善于突进与绕后。"
+    },
+    {
+      "id": "crossbowman",
+      "name": "弩手",
+      "tier": 2,
+      "price": 4,
+      "pop": 2,
+      "unlockRound": 3,
+      "tags": [
+        "human",
+        "ranged"
+      ],
+      "hp": 101,
+      "atk": 51,
+      "matk": 0,
+      "pdef": 4,
+      "mdef": 3,
+      "speed": 58,
+      "atkSpeed": 0.9,
+      "range": 145,
+      "killValue": 4,
+      "desc": "比弓箭手更高伤害的远程单位。"
+    },
+    {
+      "id": "knight",
+      "name": "骑士",
+      "tier": 3,
+      "price": 7,
+      "pop": 3,
+      "unlockRound": 6,
+      "tags": [
+        "human",
+        "cavalry"
+      ],
+      "hp": 343,
+      "atk": 89,
+      "matk": 0,
+      "pdef": 23,
+      "mdef": 12,
+      "speed": 72,
+      "atkSpeed": 1,
+      "range": 24,
+      "killValue": 7,
+      "desc": "重装骑兵，冲锋陷阵的核心战力。"
+    },
+    {
+      "id": "guardian",
+      "name": "重装盾卫",
+      "tier": 3,
+      "price": 7,
+      "pop": 3,
+      "unlockRound": 6,
+      "tags": [
+        "human",
+        "shield"
+      ],
+      "hp": 475,
+      "atk": 54,
+      "matk": 0,
+      "pdef": 45,
+      "mdef": 24,
+      "speed": 44,
+      "atkSpeed": 0.7,
+      "range": 22,
+      "killValue": 7,
+      "desc": "极高双防的城墙型前排。"
+    },
+    {
+      "id": "ranger",
+      "name": "游侠",
+      "tier": 3,
+      "price": 7,
+      "pop": 3,
+      "unlockRound": 6,
+      "tags": [
+        "human",
+        "ranged"
+      ],
+      "hp": 202,
+      "atk": 69,
+      "matk": 0,
+      "pdef": 6,
+      "mdef": 5,
+      "speed": 64,
+      "atkSpeed": 1.35,
+      "range": 170,
+      "killValue": 7,
+      "desc": "高攻速远程，持续输出能力强。"
+    },
+    {
+      "id": "vampire",
+      "name": "吸血鬼",
+      "tier": 3,
+      "price": 7,
+      "pop": 3,
+      "unlockRound": 6,
+      "tags": [
+        "undead"
+      ],
+      "hp": 238,
+      "atk": 79,
+      "matk": 0,
+      "pdef": 12,
+      "mdef": 14,
+      "speed": 82,
+      "atkSpeed": 1,
+      "range": 24,
+      "killValue": 7,
+      "desc": "攻击回复 25% 伤害为生命，续航极强。",
+      "extra": {
+        "lifesteal": 0.25
+      }
+    },
+    {
+      "id": "ballista",
+      "name": "弩车",
+      "tier": 3,
+      "price": 7,
+      "pop": 3,
+      "unlockRound": 6,
+      "tags": [
+        "machine",
+        "ranged"
+      ],
+      "hp": 220,
+      "atk": 128,
+      "matk": 0,
+      "pdef": 8,
+      "mdef": 4,
+      "speed": 38,
+      "atkSpeed": 0.5,
+      "range": 215,
+      "killValue": 7,
+      "desc": "超高单发伤害的超远程机械，射速慢。"
+    },
+    {
+      "id": "zealot",
+      "name": "狂热者",
+      "tier": 3,
+      "price": 7,
+      "pop": 3,
+      "unlockRound": 6,
+      "tags": [
+        "human"
+      ],
+      "hp": 220,
+      "atk": 59,
+      "matk": 0,
+      "pdef": 9,
+      "mdef": 6,
+      "speed": 86,
+      "atkSpeed": 1.8,
+      "range": 22,
+      "killValue": 7,
+      "desc": "攻速极快的近战，靠出手数堆伤害。"
+    },
+    {
+      "id": "ice_mage",
+      "name": "冰法师",
+      "tier": 3,
+      "price": 7,
+      "pop": 3,
+      "unlockRound": 6,
+      "tags": [
+        "human",
+        "magic",
+        "ranged"
+      ],
+      "hp": 145,
+      "atk": 0,
+      "matk": 89,
+      "pdef": 4,
+      "mdef": 12,
+      "speed": 58,
+      "atkSpeed": 0.75,
+      "range": 150,
+      "killValue": 7,
+      "desc": "命中使目标减速 35%，持续 1.5 秒。",
+      "extra": {
+        "slow": 0.35,
+        "slowTime": 1.5
+      }
+    },
+    {
+      "id": "templar",
+      "name": "圣殿骑士",
+      "tier": 4,
+      "price": 11,
+      "pop": 4,
+      "unlockRound": 10,
+      "tags": [
+        "human",
+        "shield",
+        "cavalry"
+      ],
+      "hp": 502,
+      "atk": 125,
+      "matk": 0,
+      "pdef": 35,
+      "mdef": 29,
+      "speed": 66,
+      "atkSpeed": 1,
+      "range": 24,
+      "killValue": 12,
+      "desc": "双防极高的精英骑兵，前排核心。"
+    },
+    {
+      "id": "sniper",
+      "name": "狙击手",
+      "tier": 4,
+      "price": 11,
+      "pop": 4,
+      "unlockRound": 10,
+      "tags": [
+        "human",
+        "ranged"
+      ],
+      "hp": 163,
+      "atk": 163,
+      "matk": 0,
+      "pdef": 5,
+      "mdef": 5,
+      "speed": 56,
+      "atkSpeed": 0.6,
+      "range": 265,
+      "killValue": 12,
+      "desc": "射程最远，优先狙杀关键目标。"
+    },
+    {
+      "id": "cannoneer",
+      "name": "炮兵",
+      "tier": 4,
+      "price": 11,
+      "pop": 4,
+      "unlockRound": 10,
+      "tags": [
+        "machine",
+        "ranged"
+      ],
+      "hp": 211,
+      "atk": 107,
+      "matk": 0,
+      "pdef": 10,
+      "mdef": 6,
+      "speed": 42,
+      "atkSpeed": 0.6,
+      "range": 195,
+      "killValue": 12,
+      "desc": "炮弹造成 45 范围溅射伤害。",
+      "extra": {
+        "splash": 45
+      }
+    },
+    {
+      "id": "chaos_golem",
+      "name": "混沌石怪",
+      "tier": 4,
+      "price": 11,
+      "pop": 4,
+      "unlockRound": 10,
+      "tags": [
+        "giant"
+      ],
+      "hp": 810,
+      "atk": 105,
+      "matk": 0,
+      "pdef": 52,
+      "mdef": 42,
+      "speed": 36,
+      "atkSpeed": 0.7,
+      "range": 24,
+      "killValue": 12,
+      "desc": "超高生命的巨兽，移动缓慢但极难击杀。"
+    },
+    {
+      "id": "necromancer",
+      "name": "死灵法师",
+      "tier": 4,
+      "price": 11,
+      "pop": 4,
+      "unlockRound": 10,
+      "tags": [
+        "undead",
+        "magic",
+        "ranged"
+      ],
+      "hp": 185,
+      "atk": 0,
+      "matk": 107,
+      "pdef": 6,
+      "mdef": 16,
+      "speed": 56,
+      "atkSpeed": 0.8,
+      "range": 155,
+      "killValue": 12,
+      "desc": "击杀敌人时召唤一个骷髅兵。",
+      "extra": {
+        "summonOnKill": "skeleton"
+      }
+    },
+    {
+      "id": "shadow_assassin",
+      "name": "暗影刺客",
+      "tier": 4,
+      "price": 11,
+      "pop": 4,
+      "unlockRound": 10,
+      "tags": [
+        "human",
+        "assassin"
+      ],
+      "hp": 233,
+      "atk": 148,
+      "matk": 0,
+      "pdef": 10,
+      "mdef": 8,
+      "speed": 132,
+      "atkSpeed": 1.15,
+      "range": 22,
+      "killValue": 12,
+      "desc": "优先攻击敌方后排远程与法师。",
+      "extra": {
+        "targetBackline": true
+      }
+    },
+    {
+      "id": "guan_yu",
+      "name": "关羽",
+      "tier": 5,
+      "price": 16,
+      "pop": 5,
+      "unlockRound": 15,
+      "tags": [
+        "human",
+        "hero"
+      ],
+      "hp": 1012,
+      "atk": 245,
+      "matk": 0,
+      "pdef": 46,
+      "mdef": 36,
+      "speed": 70,
+      "atkSpeed": 0.9,
+      "range": 34,
+      "killValue": 20,
+      "desc": "武圣：攻击溅射 60 范围内的敌人（60% 伤害）。",
+      "extra": {
+        "cleave": 60,
+        "cleaveRatio": 0.6
+      }
+    },
+    {
+      "id": "zhao_yun",
+      "name": "赵云",
+      "tier": 5,
+      "price": 16,
+      "pop": 5,
+      "unlockRound": 15,
+      "tags": [
+        "human",
+        "hero",
+        "cavalry"
+      ],
+      "hp": 810,
+      "atk": 201,
+      "matk": 0,
+      "pdef": 30,
+      "mdef": 22,
+      "speed": 102,
+      "atkSpeed": 1.45,
+      "range": 26,
+      "killValue": 20,
+      "desc": "常胜将军：周期性突进并大幅提升移速。",
+      "extra": {
+        "dash": true
+      }
+    },
+    {
+      "id": "titan",
+      "name": "泰坦巨人",
+      "tier": 5,
+      "price": 16,
+      "pop": 5,
+      "unlockRound": 15,
+      "tags": [
+        "giant"
+      ],
+      "hp": 1628,
+      "atk": 286,
+      "matk": 0,
+      "pdef": 62,
+      "mdef": 46,
+      "speed": 44,
+      "atkSpeed": 0.65,
+      "range": 30,
+      "killValue": 20,
+      "desc": "远古泰坦：攻击溅射 70 范围内的敌人（70% 伤害）。",
+      "extra": {
+        "cleave": 70,
+        "cleaveRatio": 0.7
+      }
+    },
+    {
+      "id": "wind_swordsman",
+      "name": "疾风剑豪",
+      "tier": 5,
+      "price": 16,
+      "pop": 5,
+      "unlockRound": 15,
+      "tags": [
+        "human",
+        "assassin"
+      ],
+      "hp": 634,
+      "atk": 135,
+      "matk": 0,
+      "pdef": 20,
+      "mdef": 18,
+      "speed": 112,
+      "atkSpeed": 2.4,
+      "range": 24,
+      "killValue": 18,
+      "desc": "极致攻速的剑客，靠出手频率碾压。"
+    },
+    {
+      "id": "archmage",
+      "name": "大魔法师",
+      "tier": 5,
+      "price": 16,
+      "pop": 5,
+      "unlockRound": 15,
+      "tags": [
+        "human",
+        "magic",
+        "ranged",
+        "hero"
+      ],
+      "hp": 378,
+      "atk": 0,
+      "matk": 316,
+      "pdef": 8,
+      "mdef": 24,
+      "speed": 52,
+      "atkSpeed": 0.8,
+      "range": 185,
+      "killValue": 20,
+      "desc": "魔法溅射 70 范围，法术伤害无视物防。",
+      "extra": {
+        "splash": 70
+      }
+    },
+    {
+      "id": "dragon_knight",
+      "name": "龙骑士",
+      "tier": 5,
+      "price": 16,
+      "pop": 5,
+      "unlockRound": 15,
+      "tags": [
+        "human",
+        "cavalry"
+      ],
+      "hp": 1100,
+      "atk": 219,
+      "matk": 0,
+      "pdef": 52,
+      "mdef": 30,
+      "speed": 82,
+      "atkSpeed": 0.95,
+      "range": 26,
+      "killValue": 20,
+      "desc": "龙血骑士，攻防兼备的顶级骑兵。"
+    },
+    {
+      "id": "war_beast",
+      "name": "战争巨兽",
+      "tier": 5,
+      "price": 16,
+      "pop": 5,
+      "unlockRound": 15,
+      "tags": [
+        "beast",
+        "giant"
+      ],
+      "hp": 1452,
+      "atk": 235,
+      "matk": 0,
+      "pdef": 34,
+      "mdef": 20,
+      "speed": 74,
+      "atkSpeed": 1.1,
+      "range": 24,
+      "killValue": 20,
+      "desc": "狂暴巨兽，高攻高血的正面绞肉机。"
+    },
+    {
+      "id": "lich",
+      "name": "巫妖",
+      "tier": 5,
+      "price": 16,
+      "pop": 5,
+      "unlockRound": 15,
+      "tags": [
+        "undead",
+        "magic",
+        "ranged"
+      ],
+      "hp": 458,
+      "atk": 0,
+      "matk": 250,
+      "pdef": 10,
+      "mdef": 28,
+      "speed": 54,
+      "atkSpeed": 0.75,
+      "range": 175,
+      "killValue": 20,
+      "desc": "亡灵统帅：击杀敌人时召唤骷髅兵。",
+      "extra": {
+        "summonOnKill": "skeleton"
+      }
+    },
+    {
+      "id": "gargoyle",
+      "name": "石像鬼",
+      "tier": 5,
+      "price": 16,
+      "pop": 5,
+      "unlockRound": 15,
+      "tags": [
+        "machine",
+        "assassin"
+      ],
+      "hp": 546,
+      "atk": 158,
+      "matk": 0,
+      "pdef": 26,
+      "mdef": 18,
+      "speed": 124,
+      "atkSpeed": 1.2,
+      "range": 24,
+      "killValue": 18,
+      "desc": "俯冲攻击敌方后排的构装体。",
+      "extra": {
+        "targetBackline": true
+      }
+    },
+    {
+      "id": "reinforcement",
+      "name": "援军战士",
+      "tier": 1,
+      "price": 0,
+      "pop": 0,
+      "unlockRound": 999,
+      "tags": [
+        "human"
+      ],
+      "hp": 185,
+      "atk": 48,
+      "matk": 0,
+      "pdef": 10,
+      "mdef": 6,
+      "speed": 70,
+      "atkSpeed": 1,
+      "range": 24,
+      "killValue": 0,
+      "desc": "技能召唤出的临时战士：不占人口、不计入战后杀戮值。"
+    }
+  ]
+}

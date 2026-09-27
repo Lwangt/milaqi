@@ -1,0 +1,17 @@
+<Project Sdk="Godot.NET.Sdk/4.6.1">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>disable</Nullable>
+    <RootNamespace>Milaqi</RootNamespace>
+    <LangVersion>12</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Milaqi</AssemblyName>
+  </PropertyGroup>
+
+  <!-- 纯逻辑层（不依赖 Godot），同时被 tests/Milaqi.Tests.csproj 复用做 headless 测试 -->
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
+    <Compile Remove="tools/**/*.cs" />
+  </ItemGroup>
+</Project>

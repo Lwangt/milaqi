@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "maxLevel": 3,
+  "skills": [
+    {
+      "id": "meteor",
+      "name": "陨石天火",
+      "kind": "damage",
+      "desc": "在目标区域降下陨石，造成范围魔法伤害。",
+      "cooldown": 2,
+      "levels": {
+        "radius": 95,
+        "value": 85,
+        "upgrade": [
+          0,
+          45,
+          70
+        ]
+      }
+    },
+    {
+      "id": "heal",
+      "name": "圣光治疗",
+      "kind": "support",
+      "desc": "治疗区域内所有友军单位。",
+      "cooldown": 2,
+      "levels": {
+        "radius": 120,
+        "value": 110,
+        "upgrade": [
+          0,
+          60,
+          90
+        ]
+      }
+    },
+    {
+      "id": "frost",
+      "name": "冰霜新星",
+      "kind": "control",
+      "desc": "冻结目标区域，使敌人减速 50% 并受到少量伤害。",
+      "cooldown": 2,
+      "levels": {
+        "radius": 135,
+        "value": 25,
+        "slow": 0.5,
+        "slowTime": 4,
+        "upgrade": [
+          0,
+          15,
+          25
+        ]
+      }
+    },
+    {
+      "id": "horn",
+      "name": "战争号角",
+      "kind": "support",
+      "desc": "鼓舞区域内友军，攻击 +35%、攻速 +30%，持续 8 秒。",
+      "cooldown": 3,
+      "levels": {
+        "radius": 130,
+        "atk": 0.35,
+        "atkSpeed": 0.3,
+        "duration": 8,
+        "upgrade": [
+          0,
+          0.1,
+          0.15
+        ]
+      }
+    },
+    {
+      "id": "summon",
+      "name": "召唤援军",
+      "kind": "summon",
+      "desc": "在指定位置召唤援军战士为你作战。",
+      "cooldown": 3,
+      "levels": {
+        "radius": 60,
+        "count": 3,
+        "upgrade": [
+          0,
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "id": "arcane_blast",
+      "name": "奥术轰击",
+      "kind": "damage",
+      "desc": "向敌方方向发射穿透奥术波，对路径上所有敌人造成魔法伤害。",
+      "cooldown": 2,
+      "levels": {
+        "radius": 70,
+        "value": 120,
+        "upgrade": [
+          0,
+          60,
+          90
+        ]
+      }
+    },
+    {
+      "id": "thorn",
+      "name": "荆棘护盾",
+      "kind": "support",
+      "desc": "为区域内友军附加护盾并反弹部分近战伤害。",
+      "cooldown": 2,
+      "levels": {
+        "radius": 110,
+        "shield": 130,
+        "thorn": 0.35,
+        "duration": 8,
+        "upgrade": [
+          0,
+          70,
+          110
+        ]
+      }
+    },
+    {
+      "id": "death_gaze",
+      "name": "死亡凝视",
+      "kind": "damage",
+      "desc": "对区域内生命低于 40% 的敌人造成高额真实伤害。",
+      "cooldown": 3,
+      "levels": {
+        "radius": 100,
+        "value": 160,
+        "threshold": 0.4,
+        "upgrade": [
+          0,
+          80,
+          120
+        ]
+      }
+    }
+  ]
+}
