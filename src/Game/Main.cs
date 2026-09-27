@@ -108,8 +108,14 @@ namespace Milaqi.Game
             }
             var m = new Match(db, 4242);
             m.Start();
-            var a0 = new AiController(m, m.players[0]);
-            var a1 = new AiController(m, m.players[1]);
+            if (m.players[0].roster.Count < 2)
+            {
+                GD.Print("SELFTEST FAIL: 初始部队为空");
+                GetTree().Quit(2);
+                return;
+            }
+            var a0 = new AiController(m, m.players[0], db.Archetype("undead_swarm"), db.DifficultyOr(2));
+            var a1 = new AiController(m, m.players[1], db.Archetype("iron_wall"), db.DifficultyOr(2));
             int guard = 0;
             float t = 0f;
             while (m.phase != MatchPhase.GameOver && guard++ < 200000)
@@ -330,7 +336,13 @@ namespace Milaqi.Game
                         {
                             string uid = r.ReadString();
                             float x = r.ReadSingle(), y = r.ReadSingle();
-                            match.Deploy(p, uid, x, y);
+                            match.Place(p, uid, x, y);
+                            break;
+                        }
+                    case NetManager.CmdSell:
+                        {
+                            float x = r.ReadSingle(), y = r.ReadSingle();
+                            match.SellAt(p, x, y, 34f);
                             break;
                         }
                     case NetManager.CmdAutoDeploy: match.AutoDeployAll(p); break;
@@ -420,6 +432,12 @@ namespace Milaqi.Game
             if (!mySide) return;
             string uid = p.pendingDeploy[0];
             Send(NetManager.CmdDeploy, w => { w.Write(uid); w.Write(fieldPos.X); w.Write(fieldPos.Y); });
+        }
+
+        public void OnFieldRightClick(Vector2 fieldPos)
+        {
+            if (match.phase != MatchPhase.Prep) return;
+            Send(NetManager.CmdSell, w => { w.Write(fieldPos.X); w.Write(fieldPos.Y); });
         }
 
         public override void _UnhandledInput(InputEvent @event)

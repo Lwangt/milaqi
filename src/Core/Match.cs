@@ -5,6 +5,14 @@ namespace Milaqi.Core
 {
     public enum MatchPhase { Prep, Battle, Settle, GameOver }
 
+    /// <summary>玩家拥有的一支部队：买了就永久属于你，每回合满血重新上阵。</summary>
+    public sealed class OwnedUnit
+    {
+        public string id;
+        public float x, y;
+        public bool placed;
+    }
+
     public sealed class ShopOffer
     {
         public string unitId;
@@ -30,10 +38,29 @@ namespace Milaqi.Core
         public readonly List<ShopOffer> shop = new List<ShopOffer>();
         public readonly List<string> skills = new List<string>();
         public readonly Dictionary<string, int> skillLevels = new Dictionary<string, int>();
-        public readonly List<string> pendingDeploy = new List<string>();
+        public readonly List<OwnedUnit> roster = new List<OwnedUnit>();
+
+        /// <summary>尚未落位的部队（兼容旧接口，只读使用）</summary>
+        readonly List<string> _pendingCache = new List<string>();
+        public List<string> pendingDeploy
+        {
+            get
+            {
+                _pendingCache.Clear();
+                for (int i = 0; i < roster.Count; i++) if (!roster[i].placed) _pendingCache.Add(roster[i].id);
+                return _pendingCache;
+            }
+        }
+        public int OwnedPop(GameDatabase db)
+        {
+            int n = 0;
+            for (int i = 0; i < roster.Count; i++) { var d = db.Unit(roster[i].id); if (d != null) n += d.pop; }
+            return n;
+        }
         public readonly List<string> pendingRelics = new List<string>();
         public readonly Dictionary<string, int> pendingSkillUpgrades = new Dictionary<string, int>();
         public readonly List<string> gemShop = new List<string>();
+        public string archetypeId;   // 该玩家使用的流派（决定流派印记）
         public readonly Dictionary<string, int> skillCharges = new Dictionary<string, int>();
         public readonly List<string> activeRelicOffers = new List<string>();
         public int lastIncomeGold, lastIncomeGems;
@@ -110,40 +137,36 @@ namespace Milaqi.Core
 
         public int PopCap(PlayerState p) { return p.level + 1; }
 
-        public int PopUsed(PlayerState p)
-        {
-            int used = 0;
-            for (int i = 0; i < sim.Units.Count; i++)
-            {
-                var u = sim.Units[i];
-                if (u.alive && u.team == p.Team) used += u.def.pop;
-            }
-            for (int i = 0; i < p.pendingDeploy.Count; i++)
-            {
-                var d = db.Unit(p.pendingDeploy[i]);
-                if (d != null) used += d.pop;
-            }
-            return used;
-        }
+        public int PopUsed(PlayerState p) { return p.OwnedPop(db); }
 
         public int UnitPrice(PlayerState p, UnitDef d)
         {
             float delta;
-            StatResolver.Resolve(db, p.RelicDefs(db), BuildBoard(p), d, out delta);
+            StatResolver.Resolve(db, EffectiveRelics(p), BuildBoard(p), d, out delta);
             return Math.Max(1, (int)Math.Round(d.price + delta));
+        }
+
+        /// <summary>玩家的有效遗物 = 已获得遗物 + 流派印记（固有加成）。</summary>
+        public List<RelicDef> EffectiveRelics(PlayerState p)
+        {
+            var list = p.RelicDefs(db);
+            var a = db.Archetype(p.archetypeId);
+            if (a != null && a.style != null && a.style.factionBonus != null && a.style.factionBonus.Length > 0)
+                list.Add(new RelicDef { id = "__faction", name = "流派印记", category = "faction", rarity = "rare", effects = a.style.factionBonus });
+            return list;
         }
 
         public StatResolver.BoardContext BuildBoard(PlayerState p)
         {
             var defs = new List<UnitDef>();
-            for (int i = 0; i < sim.Units.Count; i++)
+            for (int i = 0; i < p.roster.Count; i++)
             {
-                var u = sim.Units[i];
-                if (u.alive && u.team == p.Team) defs.Add(u.def);
+                var d = db.Unit(p.roster[i].id);
+                if (d != null) defs.Add(d);
             }
-            for (int i = 0; i < p.pendingDeploy.Count; i++)
+            for (int i = 0; i < p.roster.Count; i++)
             {
-                var d = db.Unit(p.pendingDeploy[i]);
+                var d = db.Unit(p.roster[i].id);
                 if (d != null) defs.Add(d);
             }
             return StatResolver.BuildBoard(defs);
@@ -151,7 +174,7 @@ namespace Milaqi.Core
 
         public void RecalcStats(PlayerState p)
         {
-            var relics = p.RelicDefs(db);
+            var relics = EffectiveRelics(p);
             var board = BuildBoard(p);
             for (int i = 0; i < sim.Units.Count; i++)
             {
@@ -191,9 +214,8 @@ namespace Milaqi.Core
                 var def = db.Unit(kv.Key);
                 if (def == null) continue;
                 for (int i = 0; i < 2; i++)
-                    for (int n = 0; n < kv.Value; n++) players[i].pendingDeploy.Add(kv.Key);
+                    for (int n = 0; n < kv.Value; n++) players[i].roster.Add(new OwnedUnit { id = kv.Key });
             }
-            for (int i = 0; i < 2; i++) AutoDeployAll(players[i]);
             NextRound(true);
         }
 
@@ -207,7 +229,7 @@ namespace Milaqi.Core
                 float goldGain = rcfg.baseIncome;
                 float gemGain = 0f;
                 float xpGain = 0f;
-                var relics = p.RelicDefs(db);
+                var relics = EffectiveRelics(p);
                 int capAdd = 0; float addPct = 0f;
                 for (int i = 0; i < relics.Count; i++)
                 {
@@ -249,12 +271,6 @@ namespace Milaqi.Core
                 p.lastIncomeGold = (int)goldGain;
                 p.lastIncomeGems = (int)gemGain;
                 if (xpGain > 0f) AddXp(p, xpGain);
-                // 受伤单位每回合恢复 35% 生命
-                for (int i = 0; i < sim.Units.Count; i++)
-                {
-                    var u = sim.Units[i];
-                    if (u.alive && u.team == p.Team) u.hp = Math.Min(u.maxHp, u.hp + u.maxHp * 0.35f);
-                }
                 // 技能解锁
                 if (round >= 4 && p.skills.Count <= 2) { p.skills.Add("frost"); p.skillLevels["frost"] = 1; }
                 if (round >= 8 && p.skills.Count <= 3) { p.skills.Add("arcane_blast"); p.skillLevels["arcane_blast"] = 1; }
@@ -397,7 +413,7 @@ namespace Milaqi.Core
             if (PopUsed(p) + def.pop > PopCap(p)) return false;
             p.gold -= price;
             offer.sold = true;
-            p.pendingDeploy.Add(def.id);
+            p.roster.Add(new OwnedUnit { id = def.id });
             return true;
         }
 
@@ -465,41 +481,89 @@ namespace Milaqi.Core
         }
 
         // ---------------------------------------------------------------- 部署与战斗
-        public SimUnit Deploy(PlayerState p, string unitId, float x, float y)
+        /// <summary>登记一个单位的站位（准备阶段的布阵）。</summary>
+        public bool Place(PlayerState p, string unitId, float x, float y)
         {
-            var def = db.Unit(unitId);
-            if (def == null) return null;
-            int idx = p.pendingDeploy.IndexOf(unitId);
-            if (idx < 0) return null;
-            p.pendingDeploy.RemoveAt(idx);
-            float delta;
-            var st = StatResolver.Resolve(db, p.RelicDefs(db), BuildBoard(p), def, out delta);
-            return sim.Spawn(def, p.Team, x, y, st);
+            for (int i = 0; i < p.roster.Count; i++)
+            {
+                var o = p.roster[i];
+                if (o.placed || o.id != unitId) continue;
+                o.placed = true; o.x = x; o.y = y;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>出售一个部队（返还 60% 金币），用于腾出人口。</summary>
+        public bool SellAt(PlayerState p, float x, float y, float radius)
+        {
+            int best = -1;
+            float bestD2 = radius * radius;
+            for (int i = 0; i < p.roster.Count; i++)
+            {
+                var o = p.roster[i];
+                if (!o.placed) continue;
+                float dx = o.x - x, dy = o.y - y;
+                float d2 = dx * dx + dy * dy;
+                if (d2 < bestD2) { bestD2 = d2; best = i; }
+            }
+            if (best < 0) return false;
+            var def = db.Unit(p.roster[best].id);
+            if (def != null) p.gold += Math.Max(1, (int)Math.Floor(UnitPrice(p, def) * db.Balance.round.sellRefundRatio));
+            p.roster.RemoveAt(best);
+            return true;
+        }
+
+        /// <summary>按索引出售部队（AI 换血用）。</summary>
+        public bool SellUnit(PlayerState p, int rosterIndex)
+        {
+            if (rosterIndex < 0 || rosterIndex >= p.roster.Count) return false;
+            var def = db.Unit(p.roster[rosterIndex].id);
+            if (def != null) p.gold += Math.Max(1, (int)Math.Floor(UnitPrice(p, def) * db.Balance.round.sellRefundRatio));
+            p.roster.RemoveAt(rosterIndex);
+            return true;
         }
 
         public void AutoDeployAll(PlayerState p)
         {
-            while (p.pendingDeploy.Count > 0)
+            int guard = 0;
+            while (guard++ < 128)
             {
-                var id = p.pendingDeploy[0];
-                var def = db.Unit(id);
-                if (def == null) { p.pendingDeploy.RemoveAt(0); continue; }
+                OwnedUnit target = null;
+                for (int i = 0; i < p.roster.Count; i++) if (!p.roster[i].placed) { target = p.roster[i]; break; }
+                if (target == null) break;
+                var def = db.Unit(target.id);
+                if (def == null) { target.placed = true; continue; }
                 float lane = (float)(Rand(1000) / 1000.0) * 2f - 1f;
                 float y = sim.fieldHeight * 0.5f + lane * sim.fieldHeight * 0.32f;
                 float x = p.Team == Team.Left
                     ? db.Balance.combat.spawnOffset + Rand(90)
                     : sim.fieldWidth - db.Balance.combat.spawnOffset - Rand(90);
-                Deploy(p, id, x, y);
+                target.placed = true; target.x = x; target.y = y;
+            }
+        }
+
+        /// <summary>每回合开始时把整支部队满血重新部署（云顶之弈模型）。</summary>
+        public void RebuildTeam(PlayerState p)
+        {
+            sim.RemoveTeam(p.Team);
+            AutoDeployAll(p);
+            var relics = EffectiveRelics(p);
+            var board = BuildBoard(p);
+            for (int i = 0; i < p.roster.Count; i++)
+            {
+                var o = p.roster[i];
+                var def = db.Unit(o.id);
+                if (def == null) continue;
+                float delta;
+                var st = StatResolver.Resolve(db, relics, board, def, out delta);
+                sim.Spawn(def, p.Team, o.x, o.y, st);
             }
         }
 
         public void BeginBattle()
         {
-            for (int i = 0; i < 2; i++)
-            {
-                AutoDeployAll(players[i]);
-                RecalcStats(players[i]);
-            }
+            for (int i = 0; i < 2; i++) RebuildTeam(players[i]);
             sim.ClearEvents();
             sim.time = 0f;
             battleTimer = 0f;
@@ -568,7 +632,7 @@ namespace Milaqi.Core
             var sd = db.Skill(skillId);
             int baseCharges = sd != null ? Math.Max(1, 3 - sd.cooldown + 1) : 1;
             baseCharges = 1;
-            var relics = p.RelicDefs(db);
+            var relics = EffectiveRelics(p);
             for (int i = 0; i < relics.Count; i++)
             {
                 if (relics[i].effects == null) continue;
@@ -584,7 +648,7 @@ namespace Milaqi.Core
         public float SkillModValue(PlayerState p, string stat, float fallback)
         {
             float pct = 0f, flat = 0f;
-            var relics = p.RelicDefs(db);
+            var relics = EffectiveRelics(p);
             for (int i = 0; i < relics.Count; i++)
             {
                 if (relics[i].effects == null) continue;

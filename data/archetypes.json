@@ -1,0 +1,512 @@
+{
+  "version": 1,
+  "note": "流派模板：定义 AI/玩家的构筑倾向（买什么兵、优先拿什么遗物、经济风格），用于批量平衡验证。",
+  "difficulties": [
+    {
+      "id": "easy",
+      "name": "简单",
+      "desc": "反应慢、乱花钱、遗物随机选、不放技能",
+      "thinkInterval": 0.9,
+      "relicPickQuality": 0.15,
+      "counterPick": 0,
+      "rerollBias": 0.25,
+      "xpBias": 0.5,
+      "deployQuality": 0.25,
+      "useSkills": false,
+      "saveBuffer": 2,
+      "reserveGold": 0,
+      "allowUpgrade": false,
+      "maxRerolls": 0,
+      "buyRandomness": 0.75
+    },
+    {
+      "id": "normal",
+      "name": "普通",
+      "desc": "标准运营，会买经验与刷新，遗物按流派偏好选",
+      "thinkInterval": 0.4,
+      "relicPickQuality": 0.55,
+      "counterPick": 0.25,
+      "rerollBias": 0.8,
+      "xpBias": 0.85,
+      "deployQuality": 0.6,
+      "useSkills": true,
+      "saveBuffer": 4,
+      "reserveGold": 4,
+      "allowUpgrade": true,
+      "maxRerolls": 1,
+      "buyRandomness": 0.3
+    },
+    {
+      "id": "hard",
+      "name": "困难",
+      "desc": "高效运营，针对性选兵，技能释放更准",
+      "thinkInterval": 0.25,
+      "relicPickQuality": 0.85,
+      "counterPick": 0.7,
+      "rerollBias": 1,
+      "xpBias": 1,
+      "deployQuality": 0.85,
+      "useSkills": true,
+      "saveBuffer": 5,
+      "reserveGold": 5,
+      "allowUpgrade": true,
+      "maxRerolls": 2,
+      "buyRandomness": 0.08
+    },
+    {
+      "id": "nightmare",
+      "name": "噩梦",
+      "desc": "极限运营 + 完全针对，几乎不浪费经济",
+      "thinkInterval": 0.15,
+      "relicPickQuality": 1,
+      "counterPick": 0.8,
+      "rerollBias": 1.25,
+      "xpBias": 1.15,
+      "deployQuality": 1,
+      "useSkills": true,
+      "saveBuffer": 6,
+      "reserveGold": 2,
+      "allowUpgrade": true,
+      "maxRerolls": 4,
+      "buyRandomness": 0
+    }
+  ],
+  "archetypes": [
+    {
+      "id": "undead_swarm",
+      "name": "亡灵虫群",
+      "icon": "swarm",
+      "desc": "用低费亡灵铺场，靠死亡召唤与数量羁绊堆出攻击加成，以量取胜。",
+      "tagWeight": {
+        "undead": 3.5,
+        "beast": 0.8,
+        "human": 0.4,
+        "shield": 0.5
+      },
+      "unitWeight": {
+        "skeleton": 2.6,
+        "goblin": 1.6,
+        "vampire": 2.2,
+        "necromancer": 2.2,
+        "lich": 1.6,
+        "shieldman": 0.7
+      },
+      "relicPriority": [
+        "undead_legion",
+        "legion_banner",
+        "swarm_tactics",
+        "undead_pact",
+        "warlord_crown",
+        "gem_vein",
+        "mage_tower",
+        "philosopher_stone",
+        "berserker_rage",
+        "titan_heart"
+      ],
+      "style": {
+        "xpBias": 0.9,
+        "rerollBias": 1.3,
+        "saveBuffer": 3,
+        "pricePenalty": 0.5,
+        "popWeight": 1,
+        "skills": [
+          "meteor",
+          "summon"
+        ],
+        "tierBias": -10,
+        "factionBonus": [
+          {
+            "type": "stat",
+            "target": "undead",
+            "stat": "hp",
+            "mode": "pct",
+            "value": 0.28
+          },
+          {
+            "type": "stat",
+            "target": "undead",
+            "stat": "atk",
+            "mode": "pct",
+            "value": 0.16
+          },
+          {
+            "type": "stat",
+            "target": "pop1",
+            "stat": "atk",
+            "mode": "flat",
+            "value": 10
+          },
+          {
+            "type": "stat",
+            "target": "pop1",
+            "stat": "hp",
+            "mode": "flat",
+            "value": 18
+          }
+        ]
+      }
+    },
+    {
+      "id": "iron_wall",
+      "name": "钢铁壁垒",
+      "icon": "shield",
+      "desc": "高双防前排顶住阵线，靠杀戮值差磨死对手，克制一切物理输出。",
+      "tagWeight": {
+        "shield": 3,
+        "giant": 2,
+        "human": 0.8
+      },
+      "unitWeight": {
+        "shieldman": 2,
+        "guardian": 2,
+        "templar": 2,
+        "chaos_golem": 1.8,
+        "swordsman": 1,
+        "titan": 1.4
+      },
+      "relicPriority": [
+        "iron_wall",
+        "steel_phalanx",
+        "giant_blood",
+        "titan_heart",
+        "warlord_crown",
+        "knight_order",
+        "philosopher_stone",
+        "legion_banner",
+        "golden_era",
+        "giant_slayer"
+      ],
+      "style": {
+        "xpBias": 1,
+        "rerollBias": 0.9,
+        "saveBuffer": 5,
+        "pricePenalty": 0.1,
+        "popWeight": 1.1,
+        "skills": [
+          "thorn",
+          "heal"
+        ],
+        "tierBias": 0,
+        "factionBonus": [
+          {
+            "type": "stat",
+            "target": "shield",
+            "stat": "hp",
+            "mode": "pct",
+            "value": 0.32
+          },
+          {
+            "type": "stat",
+            "target": "shield",
+            "stat": "pdef",
+            "mode": "pct",
+            "value": 0.3
+          },
+          {
+            "type": "stat",
+            "target": "shield",
+            "stat": "mdef",
+            "mode": "pct",
+            "value": 0.3
+          },
+          {
+            "type": "stat",
+            "target": "giant",
+            "stat": "hp",
+            "mode": "pct",
+            "value": 0.16
+          }
+        ]
+      }
+    },
+    {
+      "id": "volley",
+      "name": "万箭齐发",
+      "icon": "bow",
+      "desc": "极限远程输出 + 少量重甲前排。用射程和攻速把敌人消灭在接触之前。",
+      "tagWeight": {
+        "ranged": 3,
+        "human": 0.8,
+        "shield": 0.9
+      },
+      "unitWeight": {
+        "archer": 1.6,
+        "crossbowman": 1.8,
+        "ranger": 2,
+        "sniper": 1.8,
+        "ballista": 1.6,
+        "cannoneer": 1.4,
+        "shieldman": 1.5,
+        "guardian": 1.3,
+        "templar": 1.2
+      },
+      "relicPriority": [
+        "archery_manual",
+        "volley",
+        "hunters_mark",
+        "swift_boots",
+        "warlord_crown",
+        "war_banner",
+        "philosopher_stone",
+        "steel_phalanx",
+        "iron_wall",
+        "hero_glory"
+      ],
+      "style": {
+        "xpBias": 1,
+        "rerollBias": 1.2,
+        "saveBuffer": 4,
+        "pricePenalty": 0.15,
+        "popWeight": 1,
+        "skills": [
+          "frost",
+          "meteor"
+        ],
+        "tierBias": -2,
+        "factionBonus": [
+          {
+            "type": "stat",
+            "target": "ranged",
+            "stat": "range",
+            "mode": "pct",
+            "value": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "id": "arcane",
+      "name": "奥术洪流",
+      "icon": "magic",
+      "desc": "魔法伤害无视物理防御，专治重甲与大群低血单位。",
+      "tagWeight": {
+        "magic": 3,
+        "human": 0.8
+      },
+      "unitWeight": {
+        "apprentice_mage": 1.8,
+        "ice_mage": 1.8,
+        "archmage": 2,
+        "lich": 1.6,
+        "necromancer": 1.4
+      },
+      "relicPriority": [
+        "mage_tower",
+        "arcane_core",
+        "magic_resonance",
+        "arcane_crystal",
+        "wide_array",
+        "cooldown_rune",
+        "philosopher_stone",
+        "giant_blood",
+        "iron_wall",
+        "twin_array"
+      ],
+      "style": {
+        "xpBias": 1.05,
+        "rerollBias": 1.15,
+        "saveBuffer": 5,
+        "pricePenalty": 0.1,
+        "popWeight": 1.05,
+        "skills": [
+          "meteor",
+          "arcane_blast"
+        ],
+        "tierBias": 0,
+        "factionBonus": [
+          {
+            "type": "stat",
+            "target": "magic",
+            "stat": "matk",
+            "mode": "pct",
+            "value": 0.14
+          }
+        ]
+      }
+    },
+    {
+      "id": "shadow",
+      "name": "暗影突袭",
+      "icon": "dagger",
+      "desc": "高机动单位绕开前排直切后排，前期用狼骑兵过渡。",
+      "tagWeight": {
+        "assassin": 3,
+        "cavalry": 2.6,
+        "beast": 1.4,
+        "shield": 0.9
+      },
+      "unitWeight": {
+        "wolf_rider": 2.4,
+        "shadow_assassin": 2.2,
+        "gargoyle": 1.8,
+        "wind_swordsman": 1.8,
+        "knight": 1.6,
+        "zhao_yun": 1.4,
+        "shieldman": 1.3,
+        "guardian": 0.8
+      },
+      "relicPriority": [
+        "giant_slayer",
+        "swift_boots",
+        "mounted_charge",
+        "berserker_rage",
+        "hunters_mark",
+        "raider_bond",
+        "war_banner",
+        "cooldown_rune",
+        "warlord_crown",
+        "philosopher_stone"
+      ],
+      "style": {
+        "xpBias": 0.95,
+        "rerollBias": 1.2,
+        "saveBuffer": 4,
+        "pricePenalty": 0.2,
+        "popWeight": 1,
+        "skills": [
+          "horn",
+          "meteor"
+        ],
+        "tierBias": -2,
+        "factionBonus": [
+          {
+            "type": "stat",
+            "target": "assassin",
+            "stat": "hp",
+            "mode": "pct",
+            "value": 0.38
+          },
+          {
+            "type": "stat",
+            "target": "assassin",
+            "stat": "atk",
+            "mode": "pct",
+            "value": 0.18
+          },
+          {
+            "type": "stat",
+            "target": "cavalry",
+            "stat": "hp",
+            "mode": "pct",
+            "value": 0.26
+          },
+          {
+            "type": "stat",
+            "target": "cavalry",
+            "stat": "atk",
+            "mode": "pct",
+            "value": 0.14
+          },
+          {
+            "type": "stat",
+            "target": "shield",
+            "stat": "hp",
+            "mode": "pct",
+            "value": 0.15
+          }
+        ]
+      }
+    },
+    {
+      "id": "heroes",
+      "name": "英雄荣耀",
+      "icon": "crown",
+      "desc": "少而精：用高人口精英单位换取高质量，靠单体强度碾压。",
+      "tagWeight": {
+        "hero": 3.5,
+        "giant": 2,
+        "human": 0.6
+      },
+      "unitWeight": {
+        "guan_yu": 2.2,
+        "zhao_yun": 2,
+        "titan": 2,
+        "dragon_knight": 1.8,
+        "archmage": 1.6,
+        "war_beast": 1.6
+      },
+      "relicPriority": [
+        "hero_glory",
+        "titan_heart",
+        "giant_blood",
+        "warlord_crown",
+        "war_banner",
+        "arcane_core",
+        "philosopher_stone",
+        "golden_era",
+        "berserker_rage",
+        "iron_wall"
+      ],
+      "style": {
+        "xpBias": 1.2,
+        "rerollBias": 1,
+        "saveBuffer": 7,
+        "pricePenalty": -0.25,
+        "popWeight": 1.2,
+        "skills": [
+          "heal",
+          "horn"
+        ],
+        "tierBias": 8,
+        "factionBonus": [
+          {
+            "type": "stat",
+            "target": "hero",
+            "stat": "hp",
+            "mode": "pct",
+            "value": 0.12
+          },
+          {
+            "type": "stat",
+            "target": "hero",
+            "stat": "atk",
+            "mode": "pct",
+            "value": 0.08
+          }
+        ]
+      }
+    },
+    {
+      "id": "greed",
+      "name": "黄金贪婪",
+      "icon": "coin",
+      "desc": "前期不打架只吃利息，中期用经济与人口差碾压；赌的是活到后期。",
+      "tagWeight": {
+        "human": 1,
+        "machine": 1
+      },
+      "unitWeight": {
+        "shieldman": 1.2,
+        "ballista": 1.2,
+        "cannoneer": 1.2,
+        "guardian": 1.2,
+        "templar": 1.2
+      },
+      "relicPriority": [
+        "merchant_caravan",
+        "war_banner",
+        "interest_bank",
+        "iron_wall",
+        "compound_interest",
+        "giant_blood",
+        "philosopher_stone",
+        "golden_era",
+        "tome_of_wisdom",
+        "warlord_crown"
+      ],
+      "style": {
+        "xpBias": 0.7,
+        "rerollBias": 0.6,
+        "saveBuffer": 4,
+        "pricePenalty": 0,
+        "popWeight": 1.15,
+        "skills": [
+          "heal",
+          "thorn"
+        ],
+        "tierBias": 2,
+        "factionBonus": []
+      }
+    }
+  ]
+}

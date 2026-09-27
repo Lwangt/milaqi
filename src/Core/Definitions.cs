@@ -161,6 +161,7 @@ namespace Milaqi.Core
         public float fieldHeight = 420f;
         public float spawnOffset = 90f;
         public float defConstant = 50f;
+        public float minDamageRatio = 0.20f;
         public float acquireRangeExtra = 40f;
         public float settleTimeoutSeconds = 30f;
     }
@@ -181,6 +182,8 @@ namespace Milaqi.Core
         public RelicDef[] Relics = Array.Empty<RelicDef>();
         public SkillDef[] Skills = Array.Empty<SkillDef>();
         public BalanceConfig Balance = new BalanceConfig();
+        public ArchetypeDef[] Archetypes = Array.Empty<ArchetypeDef>();
+        public DifficultyDef[] Difficulties = Array.Empty<DifficultyDef>();
         public Dictionary<string, string> TagNames = new Dictionary<string, string>();
         public Dictionary<string, string> CategoryNames = new Dictionary<string, string>();
         public Dictionary<string, int> RarityGemCost = new Dictionary<string, int>();
@@ -190,6 +193,24 @@ namespace Milaqi.Core
         readonly Dictionary<string, SkillDef> _skillById = new Dictionary<string, SkillDef>();
 
         readonly Dictionary<string, short> _indexById = new Dictionary<string, short>();
+        readonly Dictionary<string, ArchetypeDef> _archById = new Dictionary<string, ArchetypeDef>();
+        readonly Dictionary<string, DifficultyDef> _diffById = new Dictionary<string, DifficultyDef>();
+
+        public ArchetypeDef Archetype(string id)
+        {
+            ArchetypeDef a;
+            return id != null && _archById.TryGetValue(id, out a) ? a : null;
+        }
+        public DifficultyDef Difficulty(string id)
+        {
+            DifficultyDef d;
+            return id != null && _diffById.TryGetValue(id, out d) ? d : null;
+        }
+        public DifficultyDef DifficultyOr(int index)
+        {
+            if (Difficulties.Length == 0) return new DifficultyDef();
+            return Difficulties[Math.Max(0, Math.Min(Difficulties.Length - 1, index))];
+        }
 
         public short UnitIndex(string id)
         {
@@ -253,6 +274,24 @@ namespace Milaqi.Core
             db.Skills = skillsRoot?.skills ?? Array.Empty<SkillDef>();
 
             db.Balance = JsonSerializer.Deserialize<BalanceConfig>(read("data/balance.json"), Opts) ?? new BalanceConfig();
+
+            var archRoot = JsonSerializer.Deserialize<ArchetypeRoot>(read("data/archetypes.json"), Opts);
+            db.Archetypes = archRoot?.archetypes ?? Array.Empty<ArchetypeDef>();
+            db.Difficulties = archRoot?.difficulties ?? Array.Empty<DifficultyDef>();
+            for (int i = 0; i < db.Archetypes.Length; i++)
+            {
+                var a = db.Archetypes[i];
+                if (a == null || a.id == null) continue;
+                db._archById[a.id] = a;
+                if (a.tagWeight == null) a.tagWeight = new Dictionary<string, float>();
+                if (a.unitWeight == null) a.unitWeight = new Dictionary<string, float>();
+                if (a.style == null) a.style = new ArchetypeStyle();
+            }
+            for (int i = 0; i < db.Difficulties.Length; i++)
+            {
+                var d = db.Difficulties[i];
+                if (d?.id != null) db._diffById[d.id] = d;
+            }
 
             for (int i = 0; i < db.Units.Length; i++)
             {

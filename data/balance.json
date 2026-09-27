@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "baseHp": 210,
+  "baseHp": 190,
   "prepSeconds": 35,
   "battleMaxSeconds": 30,
   "round": {
@@ -23,13 +23,13 @@
       2,
       6,
       10,
-      20,
-      36,
-      56,
-      80,
+      16,
+      26,
+      40,
+      58,
+      78,
       100,
-      120,
-      150
+      130
     ],
     "maxLevel": 12,
     "xpBuyCost": 4,
@@ -135,9 +135,10 @@
     "fieldWidth": 1400,
     "fieldHeight": 420,
     "spawnOffset": 90,
-    "defConstant": 50,
+    "defConstant": 75,
     "acquireRangeExtra": 40,
-    "settleTimeoutSeconds": 30
+    "settleTimeoutSeconds": 30,
+    "minDamageRatio": 0.2
   },
   "startingUnits": {
     "militia": 2

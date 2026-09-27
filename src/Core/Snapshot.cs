@@ -74,8 +74,14 @@ namespace Milaqi.Core
             w.Write((short)p.skills.Count);
             for (int i = 0; i < p.skills.Count; i++) { w.Write(p.skills[i]); w.Write((short)p.SkillLevel(p.skills[i])); }
 
-            w.Write((short)p.pendingDeploy.Count);
-            for (int i = 0; i < p.pendingDeploy.Count; i++) w.Write(p.pendingDeploy[i]);
+            w.Write((short)p.roster.Count);
+            for (int i = 0; i < p.roster.Count; i++)
+            {
+                w.Write(p.roster[i].id);
+                w.Write(p.roster[i].x);
+                w.Write(p.roster[i].y);
+                w.Write(p.roster[i].placed);
+            }
 
             w.Write((short)p.activeRelicOffers.Count);
             for (int i = 0; i < p.activeRelicOffers.Count; i++) w.Write(p.activeRelicOffers[i]);
@@ -150,9 +156,15 @@ namespace Milaqi.Core
             n = r.ReadInt16();
             for (int i = 0; i < n; i++) { var id = r.ReadString(); int lv = r.ReadInt16(); p.skills.Add(id); p.skillLevels[id] = lv; }
 
-            p.pendingDeploy.Clear();
+            p.roster.Clear();
             n = r.ReadInt16();
-            for (int i = 0; i < n; i++) p.pendingDeploy.Add(r.ReadString());
+            for (int i = 0; i < n; i++)
+            {
+                var id = r.ReadString();
+                float ox = r.ReadSingle(), oy = r.ReadSingle();
+                bool placed = r.ReadBoolean();
+                p.roster.Add(new OwnedUnit { id = id, x = ox, y = oy, placed = placed });
+            }
 
             p.activeRelicOffers.Clear();
             n = r.ReadInt16();

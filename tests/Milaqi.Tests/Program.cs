@@ -48,6 +48,22 @@ namespace Milaqi.Tests
                 int n = args.Length > 1 ? int.Parse(args[1]) : 200;
                 BatchSim(db, n, true);
             }
+            if (mode == "matrix")
+            {
+                int n = args.Length > 1 ? int.Parse(args[1]) : 30;
+                ArchetypeMatrix(db, n);
+            }
+            if (mode == "diag")
+            {
+                string a = args.Length > 1 ? args[1] : "greed";
+                string b = args.Length > 2 ? args[2] : "undead_swarm";
+                DiagMatch(db, a, b);
+            }
+            if (mode == "ladder")
+            {
+                int n = args.Length > 1 ? int.Parse(args[1]) : 60;
+                DifficultyLadder(db, n);
+            }
             Console.WriteLine(fails == 0 ? "[OK] 全部自检通过" : "[FAIL] 有 " + fails + " 项自检失败");
             return fails == 0 ? 0 : 1;
         }
@@ -81,9 +97,8 @@ namespace Milaqi.Tests
             m.Start();
             Check(m.round == 1 && m.phase == MatchPhase.Prep, "开局进入第 1 回合准备阶段", ref fails);
             Check(m.players[0].gold > 0 && m.players[0].level == 3, "初始经济与等级正确", ref fails);
-            int spawned = 0;
-            for (int i = 0; i < m.sim.Units.Count; i++) spawned++;
-            Check(spawned >= 2, "初始兵种已部署（" + spawned + " 个单位）", ref fails);
+            Check(m.players[0].roster.Count >= 2, "初始部队已编入名册（" + m.players[0].roster.Count + " 个单位）", ref fails);
+            Check(m.PopUsed(m.players[0]) <= m.PopCap(m.players[0]), "初始人口未超上限", ref fails);
 
             m.BeginBattle();
             float t = 0f;
@@ -122,6 +137,160 @@ namespace Milaqi.Tests
             bool upgraded = m2.UpgradeSkill(p1, "meteor");
             Check(upgraded && p1.pendingSkillUpgrades.Count == 1, "宝石可强化技能（下回合生效）", ref fails);
             return fails;
+        }
+
+        /// <summary>跑一整局。双方 AI 每 tick 随机顺序更新，避免顺序带来的系统性优势。</summary>
+        static Match PlayMatch(GameDatabase db, ArchetypeDef a, ArchetypeDef b, DifficultyDef da, DifficultyDef db_, Random rnd)
+        {
+            var m = new Match(db, rnd.Next(1, int.MaxValue));
+            m.Start();
+            var ai0 = new AiController(m, m.players[0], a, da);
+            var ai1 = new AiController(m, m.players[1], b, db_);
+            int guard = 0;
+            while (m.phase != MatchPhase.GameOver && guard++ < 300000)
+            {
+                float dt = 1f / 30f;
+                if (rnd.Next(2) == 0) { ai0.Update(dt); ai1.Update(dt); }
+                else { ai1.Update(dt); ai0.Update(dt); }
+                m.Tick(dt);
+            }
+            return m;
+        }
+
+        static string ArmyLine(GameDatabase db, Match m, int pi)
+        {
+            var p = m.players[pi];
+            var counts = new Dictionary<string, int>();
+            for (int i = 0; i < p.roster.Count; i++)
+            {
+                var d = db.Unit(p.roster[i].id);
+                if (d == null) continue;
+                int c; counts.TryGetValue(d.name, out c); counts[d.name] = c + 1;
+            }
+            var parts = new List<string>();
+            foreach (var kv in counts) parts.Add(kv.Key + "x" + kv.Value);
+            var relics = new List<string>();
+            for (int i = 0; i < p.relicIds.Count; i++) { var rd = db.Relic(p.relicIds[i]); if (rd != null) relics.Add(rd.name); }
+            return "Lv" + p.level + " 金" + (int)p.gold + " 人口" + m.PopUsed(p) + "/" + m.PopCap(p) + " 城邦" + (int)p.baseHp
+                + " [" + string.Join(",", parts) + "] 遗物[" + string.Join(",", relics) + "]";
+        }
+
+        /// <summary>单局逐回合诊断：看清是经济、等级、兵力还是战斗导致胜负。</summary>
+        static void DiagMatch(GameDatabase db, string idA, string idB)
+        {
+            var a = db.Archetype(idA);
+            var b = db.Archetype(idB);
+            var diff = db.Difficulty("hard");
+            var rnd = new Random(555);
+            var m = new Match(db, rnd.Next(1, int.MaxValue));
+            m.Start();
+            var ai0 = new AiController(m, m.players[0], a, diff);
+            var ai1 = new AiController(m, m.players[1], b, diff);
+            Console.WriteLine();
+            Console.WriteLine("== 诊断：" + a.name + "（左） vs " + b.name + "（右） ==");
+            Console.WriteLine("回合 | 左 Lv/金/单位/KV/城邦      | 右 Lv/金/单位/KV/城邦      | 结果");
+            int lastRound = 0;
+            int guard = 0;
+            while (m.phase != MatchPhase.GameOver && guard++ < 300000)
+            {
+                float dt = 1f / 30f;
+                if (rnd.Next(2) == 0) { ai0.Update(dt); ai1.Update(dt); } else { ai1.Update(dt); ai0.Update(dt); }
+                m.Tick(dt);
+                if (m.round != lastRound && m.phase == MatchPhase.Prep)
+                {
+                    lastRound = m.round;
+                    Console.WriteLine("R" + Pad(m.round.ToString(), 3) + " " + ArmyLine(db, m, 0) + "   VS   " + ArmyLine(db, m, 1));
+                }
+            }
+            Console.WriteLine("胜者：" + (m.winnerIndex == 0 ? a.name : b.name) + "  共 " + m.round + " 回合");
+        }
+
+        /// <summary>7 大流派互相对战的胜率矩阵，用于验证流派强度是否收敛。</summary>
+        static void ArchetypeMatrix(GameDatabase db, int n)
+        {
+            var archs = db.Archetypes;
+            var diff = db.Difficulty("hard");
+            if (archs.Length == 0) { Console.WriteLine("没有流派数据"); return; }
+            Console.WriteLine();
+            Console.WriteLine("== 流派胜率矩阵（每格 " + n + " 局，双方同为「困难」难度）==");
+            var rnd = new Random(20260202);
+            int[,] wins = new int[archs.Length, archs.Length];
+            int[] totalWins = new int[archs.Length], totalGames = new int[archs.Length];
+            for (int a = 0; a < archs.Length; a++)
+            {
+                for (int b = a + 1; b < archs.Length; b++)
+                {
+                    int wa = 0, wb = 0;
+                    for (int k = 0; k < n; k++)
+                    {
+                        var m = PlayMatch(db, archs[a], archs[b], diff, diff, rnd);
+                        if (m.winnerIndex == 0) wa++; else if (m.winnerIndex == 1) wb++;
+                    }
+                    wins[a, b] += wa;
+                    wins[b, a] += wb;
+                    totalWins[a] += wa; totalGames[a] += n;
+                    totalWins[b] += wb; totalGames[b] += n;
+                }
+            }
+            Console.Write("  行=我方 列=对手   ");
+            for (int b = 0; b < archs.Length; b++) Console.Write(Pad(archs[b].name, 7));
+            Console.WriteLine();
+            for (int a = 0; a < archs.Length; a++)
+            {
+                Console.Write("  " + Pad(archs[a].name, 10) + " ");
+                for (int b = 0; b < archs.Length; b++)
+                {
+                    if (a == b) { Console.Write(Pad("—", 7)); continue; }
+                    double wr = 100.0 * wins[a, b] / n;
+                    Console.Write(Pad(wr.ToString("0") + "%", 7));
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+            var ranked = new List<KeyValuePair<string, double>>();
+            for (int a = 0; a < archs.Length; a++)
+            {
+                double wr = totalGames[a] > 0 ? 100.0 * totalWins[a] / totalGames[a] : 0;
+                ranked.Add(new KeyValuePair<string, double>(archs[a].name, wr));
+                Console.WriteLine("  " + Pad(archs[a].name, 10) + " 综合胜率 " + wr.ToString("0.0") + "%   (" + totalWins[a] + "/" + totalGames[a] + ")");
+            }
+            double max = -1, min = 101, sum = 0;
+            foreach (var kv in ranked) { if (kv.Value > max) max = kv.Value; if (kv.Value < min) min = kv.Value; sum += kv.Value; }
+            Console.WriteLine("  极差 " + (max - min).ToString("0.0") + "%  (最高 " + max.ToString("0.0") + "% / 最低 " + min.ToString("0.0") + "% / 平均 " + (sum / ranked.Count).ToString("0.0") + "%)");
+            Console.WriteLine("  >>> 收敛目标：每个流派综合胜率落在 45%~55%");
+        }
+
+        static string Pad(string s, int width)
+        {
+            int len = 0;
+            foreach (var ch in s) len += ch > 255 ? 2 : 1;
+            var sb = new StringBuilder(s);
+            for (int i = len; i < width; i++) sb.Append(' ');
+            return sb.ToString();
+        }
+
+        /// <summary>难度阶梯：同一流派下各难度互打的胜率。</summary>
+        static void DifficultyLadder(GameDatabase db, int n)
+        {
+            var arch = db.Archetype("iron_wall") ?? (db.Archetypes.Length > 0 ? db.Archetypes[0] : null);
+            if (arch == null) return;
+            Console.WriteLine();
+            Console.WriteLine("== AI 难度阶梯（同一流派「" + arch.name + "」，各 " + n + " 局）==");
+            var rnd = new Random(31415);
+            var baseline = db.Difficulty("normal");
+            foreach (var d in db.Difficulties)
+            {
+                if (d.id == "normal") continue;
+                int wNormal = 0, wDiff = 0;
+                for (int k = 0; k < n; k++)
+                {
+                    var m = PlayMatch(db, arch, arch, baseline, d, rnd);
+                    if (m.winnerIndex == 0) wNormal++; else if (m.winnerIndex == 1) wDiff++;
+                }
+                double wr = 100.0 * wDiff / (wNormal + wDiff);
+                Console.WriteLine("  普通 vs " + Pad(d.name, 6) + " -> 该难度胜率 " + wr.ToString("0.0") + "%  (普通胜 " + wNormal + " / " + d.name + "胜 " + wDiff + ")");
+            }
+            Console.WriteLine("  >>> 期望：简单 < 35%，普通 ≈ 50%，困难 > 60%，噩梦 > 75%");
         }
 
         /// <summary>纯战斗隔离测试：双方阵容完全一致，检验战斗模拟本身是否存在左右偏差。</summary>

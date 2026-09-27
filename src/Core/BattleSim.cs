@@ -54,6 +54,7 @@ namespace Milaqi.Core
         public float fieldWidth = 1400f;
         public float fieldHeight = 420f;
         public float defConstant = 50f;
+        public float minDamageRatio = 0.2f;
         public float tickRate = 30f;
         public float maxSeconds = 30f;
         public float time;
@@ -74,6 +75,7 @@ namespace Milaqi.Core
             fieldWidth = c.fieldWidth;
             fieldHeight = c.fieldHeight;
             defConstant = c.defConstant;
+            minDamageRatio = c.minDamageRatio;
             tickRate = c.tickRate;
             maxSeconds = db.Balance.battleMaxSeconds;
         }
@@ -127,6 +129,11 @@ namespace Milaqi.Core
         }
 
         public void ClearUnits() { _units.Clear(); }
+
+        public void RemoveTeam(Team t)
+        {
+            for (int i = _units.Count - 1; i >= 0; i--) if (_units[i].team == t) _units.RemoveAt(i);
+        }
 
         static float Random01(int salt)
         {
@@ -336,8 +343,13 @@ namespace Milaqi.Core
 
         public float ComputeDamage(SimUnit a, SimUnit t)
         {
-            float phys = EffectiveAtk(a, a.st.atk) * (1f - t.st.pdef / (t.st.pdef + defConstant));
-            float mag = EffectiveAtk(a, a.st.matk) * (1f - t.st.mdef / (t.st.mdef + defConstant));
+            float rawPhys = EffectiveAtk(a, a.st.atk);
+            float rawMag = EffectiveAtk(a, a.st.matk);
+            float phys = rawPhys * (1f - t.st.pdef / (t.st.pdef + defConstant));
+            float mag = rawMag * (1f - t.st.mdef / (t.st.mdef + defConstant));
+            // 伤害下限：任何攻击至少打出 20% 原始伤害，避免高防单位对低攻兵种完全免疫
+            phys = Math.Max(phys, rawPhys * minDamageRatio);
+            mag = Math.Max(mag, rawMag * minDamageRatio);
             float dmg = Math.Max(0f, phys) + Math.Max(0f, mag);
             if (a.st.antiCavalry > 0f && t.def.HasTag("cavalry")) dmg *= 1f + a.st.antiCavalry;
             if (a.st.bonusVsBig > 0f && t.def.pop >= 3) dmg *= 1f + a.st.bonusVsBig;

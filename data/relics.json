@@ -32,11 +32,11 @@
       "name": "商队",
       "category": "economy",
       "rarity": "common",
-      "desc": "每回合开始额外获得 2 金币。",
+      "desc": "每回合开始额外获得 1 金币。",
       "effects": [
         {
           "type": "income",
-          "gold": 2
+          "gold": 1
         }
       ],
       "flavor": "金币的轰鸣声比战鼓更动听。"
@@ -46,12 +46,12 @@
       "name": "金库",
       "category": "economy",
       "rarity": "rare",
-      "desc": "利息比例 +10%，利息上限 +3。",
+      "desc": "利息比例 +6%，利息上限 +2。",
       "effects": [
         {
           "type": "interest",
-          "addPct": 0.1,
-          "capAdd": 3
+          "addPct": 0.06,
+          "capAdd": 2
         }
       ],
       "flavor": "钱生钱的道理，连国王都懂。"
@@ -90,12 +90,12 @@
       "name": "复利",
       "category": "economy",
       "rarity": "rare",
-      "desc": "每回合开始额外获得当前金币的 5%（最多 5 金币）。",
+      "desc": "每回合开始额外获得当前金币的 4%（最多 4 金币）。",
       "effects": [
         {
           "type": "compoundInterest",
-          "pct": 0.05,
-          "cap": 5
+          "pct": 0.04,
+          "cap": 4
         }
       ],
       "flavor": "利滚利，直到压垮敌人。"
@@ -119,15 +119,15 @@
       "name": "黄金时代",
       "category": "economy",
       "rarity": "epic",
-      "desc": "每回合基础收入 +3，第 10 回合起再 +3。",
+      "desc": "每回合基础收入 +2，第 10 回合起再 +2。",
       "effects": [
         {
           "type": "income",
-          "gold": 3
+          "gold": 2
         },
         {
           "type": "income",
-          "gold": 3,
+          "gold": 2,
           "fromRound": 10
         }
       ],
@@ -172,14 +172,14 @@
       "name": "秘法核心",
       "category": "power",
       "rarity": "rare",
-      "desc": "全体单位魔法攻击 +30%。",
+      "desc": "全体单位魔法攻击 +20%。",
       "effects": [
         {
           "type": "stat",
           "target": "all",
           "stat": "matk",
           "mode": "pct",
-          "value": 0.3
+          "value": 0.2
         }
       ],
       "flavor": "奥术在血脉中沸腾。"
@@ -189,14 +189,21 @@
       "name": "疾行靴",
       "category": "power",
       "rarity": "common",
-      "desc": "全体单位移动速度 +20%。",
+      "desc": "全体单位移动速度 +25%，刺客单位攻击 +6（固定）。",
       "effects": [
         {
           "type": "stat",
           "target": "all",
           "stat": "speed",
           "mode": "pct",
-          "value": 0.2
+          "value": 0.25
+        },
+        {
+          "type": "stat",
+          "target": "assassin",
+          "stat": "atk",
+          "mode": "flat",
+          "value": 6
         }
       ],
       "flavor": "先到者，先杀。"
@@ -240,21 +247,21 @@
       "name": "泰坦之心",
       "category": "power",
       "rarity": "epic",
-      "desc": "人口 ≥3 的单位生命 +35%、攻击 +15%。",
+      "desc": "人口 ≥3 的单位生命 +25%、攻击 +10%。",
       "effects": [
         {
           "type": "stat",
           "target": "big",
           "stat": "hp",
           "mode": "pct",
-          "value": 0.35
+          "value": 0.25
         },
         {
           "type": "stat",
           "target": "big",
           "stat": "atk",
           "mode": "pct",
-          "value": 0.15
+          "value": 0.1
         }
       ],
       "flavor": "庞大即正义。"
@@ -351,21 +358,28 @@
       "name": "弓术秘籍",
       "category": "unit",
       "rarity": "rare",
-      "desc": "远程单位射程 +25%、攻击速度 +10%。",
+      "desc": "远程单位射程 +30%、攻击速度 +12%、物理攻击 +8（固定）。",
       "effects": [
         {
           "type": "stat",
           "target": "ranged",
           "stat": "range",
           "mode": "pct",
-          "value": 0.25
+          "value": 0.3
         },
         {
           "type": "stat",
           "target": "ranged",
           "stat": "atkSpeed",
           "mode": "pct",
-          "value": 0.1
+          "value": 0.12
+        },
+        {
+          "type": "stat",
+          "target": "ranged",
+          "stat": "atk",
+          "mode": "flat",
+          "value": 8
         }
       ],
       "flavor": "箭雨所至，寸草不生。"
@@ -375,14 +389,14 @@
       "name": "法师塔",
       "category": "unit",
       "rarity": "rare",
-      "desc": "魔法单位魔法攻击 +35%。",
+      "desc": "魔法单位魔法攻击 +24%。",
       "effects": [
         {
           "type": "stat",
           "target": "magic",
           "stat": "matk",
           "mode": "pct",
-          "value": 0.35
+          "value": 0.24
         }
       ],
       "flavor": "塔尖所指，即为灰烬。"
@@ -392,7 +406,7 @@
       "name": "人海战术",
       "category": "unit",
       "rarity": "rare",
-      "desc": "人口 =1 的单位价格 -1、攻击 +20%、生命 +10%。",
+      "desc": "人口 =1 的单位价格 -1、物理攻击 +20（固定）、生命 +55（固定）。",
       "effects": [
         {
           "type": "costMod",
@@ -403,15 +417,15 @@
           "type": "stat",
           "target": "pop1",
           "stat": "atk",
-          "mode": "pct",
-          "value": 0.2
+          "mode": "flat",
+          "value": 20
         },
         {
           "type": "stat",
           "target": "pop1",
           "stat": "hp",
-          "mode": "pct",
-          "value": 0.1
+          "mode": "flat",
+          "value": 55
         }
       ],
       "flavor": "数量本身就是一种质量。"
@@ -421,14 +435,14 @@
       "name": "英雄荣耀",
       "category": "unit",
       "rarity": "epic",
-      "desc": "英雄单位全属性 +25%。",
+      "desc": "英雄单位全属性 +18%。",
       "effects": [
         {
           "type": "stat",
           "target": "hero",
           "stat": "all",
           "mode": "pct",
-          "value": 0.25
+          "value": 0.18
         }
       ],
       "flavor": "一人可当千军。"
@@ -462,12 +476,19 @@
       "name": "巨兽猎手",
       "category": "unit",
       "rarity": "rare",
-      "desc": "刺客单位对人口 ≥3 的单位造成 +40% 伤害。",
+      "desc": "刺客单位对人口 ≥3 的单位造成 +60% 伤害，且攻击 +8（固定）。",
       "effects": [
         {
           "type": "bonusVsBig",
           "target": "assassin",
-          "value": 0.4
+          "value": 0.6
+        },
+        {
+          "type": "stat",
+          "target": "assassin",
+          "stat": "atk",
+          "mode": "flat",
+          "value": 8
         }
       ],
       "flavor": "越庞大，越好下手。"
@@ -477,15 +498,15 @@
       "name": "不死军团",
       "category": "synergy",
       "rarity": "epic",
-      "desc": "每有 3 个亡灵单位，全体攻击 +6%（最多 5 层）。",
+      "desc": "每有 2 个亡灵单位，全体物理攻击 +10（固定，最多 5 层）。",
       "effects": [
         {
           "type": "synergy",
           "tag": "undead",
-          "perCount": 3,
+          "perCount": 2,
           "stat": "atk",
-          "mode": "pct",
-          "value": 0.06,
+          "mode": "flat",
+          "value": 10,
           "max": 5
         }
       ],
@@ -515,16 +536,16 @@
       "name": "万箭齐发",
       "category": "synergy",
       "rarity": "rare",
-      "desc": "每有 2 个远程单位，全体远程攻速 +5%（最多 5 层）。",
+      "desc": "每有 2 个远程单位，全体远程攻击速度 +0.06（固定，最多 6 层）。",
       "effects": [
         {
           "type": "synergy",
           "tag": "ranged",
           "perCount": 2,
           "stat": "atkSpeed",
-          "mode": "pct",
-          "value": 0.05,
-          "max": 5,
+          "mode": "flat",
+          "value": 0.06,
+          "max": 6,
           "target": "ranged"
         }
       ],
@@ -535,7 +556,7 @@
       "name": "铁骑冲锋",
       "category": "synergy",
       "rarity": "rare",
-      "desc": "每有 2 个骑兵单位，全体骑兵移速 +8%、攻击 +6%（最多 5 层）。",
+      "desc": "每有 2 个骑兵单位，全体骑兵移速 +8%、攻击 +6（固定，最多 5 层）。",
       "effects": [
         {
           "type": "synergy",
@@ -552,8 +573,8 @@
           "tag": "cavalry",
           "perCount": 2,
           "stat": "atk",
-          "mode": "pct",
-          "value": 0.06,
+          "mode": "flat",
+          "value": 6,
           "max": 5,
           "target": "cavalry"
         }
@@ -565,7 +586,7 @@
       "name": "奥术共鸣",
       "category": "synergy",
       "rarity": "rare",
-      "desc": "每有 2 个魔法单位，全体魔法攻击 +8%（最多 5 层）。",
+      "desc": "每有 2 个魔法单位，全体魔法攻击 +6%（最多 5 层）。",
       "effects": [
         {
           "type": "synergy",
@@ -573,7 +594,7 @@
           "perCount": 2,
           "stat": "matk",
           "mode": "pct",
-          "value": 0.08,
+          "value": 0.06,
           "max": 5
         }
       ],
@@ -584,15 +605,15 @@
       "name": "兽群羁绊",
       "category": "synergy",
       "rarity": "rare",
-      "desc": "每有 2 个兽族单位，全体兽族攻速 +8%、移速 +6%（最多 4 层）。",
+      "desc": "每有 2 个兽族单位，全体兽族攻击速度 +0.05（固定，最多 4 层）、移速 +6%。",
       "effects": [
         {
           "type": "synergy",
           "tag": "beast",
           "perCount": 2,
           "stat": "atkSpeed",
-          "mode": "pct",
-          "value": 0.08,
+          "mode": "flat",
+          "value": 0.05,
           "max": 4,
           "target": "beast"
         },
@@ -614,15 +635,15 @@
       "name": "军团旗",
       "category": "synergy",
       "rarity": "epic",
-      "desc": "每上阵 1 个单位，全体生命 +3%（最多 15 层）。",
+      "desc": "每上阵 1 个单位，全体生命 +16（固定，最多 15 层）。",
       "effects": [
         {
           "type": "synergy",
           "tag": "any",
           "perCount": 1,
           "stat": "hp",
-          "mode": "pct",
-          "value": 0.03,
+          "mode": "flat",
+          "value": 16,
           "max": 15
         }
       ],
