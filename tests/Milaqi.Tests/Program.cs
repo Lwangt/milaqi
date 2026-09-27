@@ -139,9 +139,11 @@ namespace Milaqi.Tests
             var p0 = m2.players[0];
             float before = p0.gold;
             int cap = m2.PopCap(p0);
-            Check(cap == p0.level + 1, "人口上限 = 等级 + 1（" + cap + "）", ref fails);
+            var popTab = db.Balance.round.popCapByLevel;
+            int expectCap = (popTab != null && popTab.Length >= p0.level) ? popTab[p0.level - 1] : p0.level + 1;
+            Check(cap == expectCap, "人口上限 = 配置曲线（Lv" + p0.level + " → " + cap + "）", ref fails);
             m2.AddXp(p0, 100f);
-            Check(p0.level > 3 && m2.PopCap(p0) == p0.level + 1, "升级后人口上限成长", ref fails);
+            Check(p0.level > 3 && m2.PopCap(p0) > expectCap, "升级后人口上限成长（" + expectCap + " → " + m2.PopCap(p0) + "）", ref fails);
             Check(p0.level <= db.Balance.round.maxLevel, "等级不超过上限", ref fails);
             m2.BuildBoard(p0);
             bool gotRelic = false;

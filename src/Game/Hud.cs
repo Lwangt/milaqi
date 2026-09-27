@@ -30,8 +30,9 @@ namespace Milaqi.Game
         Button[] relicButtons = new Button[3];
         Label[] relicTexts = new Label[3];
         Panel gemPanel;
-        Button[] gemButtons = new Button[3];
+        Button[] gemButtons = new Button[4];
         Button[] gemSkillButtons = new Button[3];
+        Button gemReroll;
         Label gemInfo;
         Control root;
 
@@ -352,25 +353,29 @@ namespace Milaqi.Game
 
         void BuildGemPanel()
         {
-            gemPanel = PanelAt(root, new Rect2(340, 140, 920, 520), UiTheme.Panel(new Color(0.10f, 0.13f, 0.18f, 0.985f), UiTheme.Arcane, 3, 16), true);
+            gemPanel = PanelAt(root, new Rect2(340, 130, 920, 540), UiTheme.Panel(new Color(0.10f, 0.13f, 0.18f, 0.985f), UiTheme.Arcane, 3, 16), true);
             gemPanel.MouseFilter = Control.MouseFilterEnum.Stop;
             var title = Lbl(gemPanel, new Rect2(20, 14, 880, 34), "宝石商店", 24, UiTheme.Arcane, HorizontalAlignment.Center);
             Lbl(gemPanel, new Rect2(20, 48, 880, 22), "购买后于下回合开始生效", 13, UiTheme.ParchDim, HorizontalAlignment.Center);
-            gemInfo = Lbl(gemPanel, new Rect2(20, 74, 880, 26), "", 16, UiTheme.Gold, HorizontalAlignment.Center);
-            for (int i = 0; i < 3; i++)
+            gemInfo = Lbl(gemPanel, new Rect2(20, 72, 880, 26), "", 17, UiTheme.Gold, HorizontalAlignment.Center);
+            // 4 个遗物货位
+            for (int i = 0; i < 4; i++)
             {
                 int idx = i;
-                gemButtons[i] = Btn(gemPanel, new Rect2(20 + i * 300, 108, 286, 150), "", 14, () => main.OnBuyGemRelic(idx));
+                gemButtons[i] = Btn(gemPanel, new Rect2(18 + i * 222, 104, 210, 152), "", 13, () => main.OnBuyGemRelic(idx));
                 gemButtons[i].ClipText = false;
             }
-            Lbl(gemPanel, new Rect2(20, 272, 880, 26), "技能强化（最高 3 级）", 18, UiTheme.Shadow);
+            // 刷新货架
+            gemReroll = Btn(gemPanel, new Rect2(18, 264, 210, 34), "", 14, () => main.OnRerollGemShop());
+            Lbl(gemPanel, new Rect2(240, 264, 660, 34), "商店每回合自动补货；花 2 宝石可以立刻换一批", 13, UiTheme.ParchDim);
+            Lbl(gemPanel, new Rect2(20, 306, 880, 24), "技能强化（最高 3 级）", 17, UiTheme.Shadow);
             for (int i = 0; i < 3; i++)
             {
                 int idx = i;
-                gemSkillButtons[i] = Btn(gemPanel, new Rect2(20 + i * 300, 306, 286, 60), "", 14, () => main.OnUpgradeSkill(idx));
+                gemSkillButtons[i] = Btn(gemPanel, new Rect2(18 + i * 298, 336, 286, 56), "", 14, () => main.OnUpgradeSkill(idx));
             }
-            Btn(gemPanel, new Rect2(360, 396, 200, 50), "关闭", 18, () => main.OnToggleGemShop(), true);
-            var note = Lbl(gemPanel, new Rect2(20, 400, 320, 90), "宝石来源：成长型遗物、放弃遗物（+3）", 13, UiTheme.ParchDim);
+            Btn(gemPanel, new Rect2(360, 408, 200, 46), "关闭", 18, () => main.OnToggleGemShop(), true);
+            var note = Lbl(gemPanel, new Rect2(18, 406, 330, 90), "宝石来源：每回合发放、每 3 回合额外 +1、放弃遗物 +5、成长型遗物", 13, UiTheme.ParchDim);
             note.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             gemPanel.Visible = false;
         }
@@ -541,7 +546,7 @@ namespace Milaqi.Game
             if (!main.gemShopOpen) return;
             var p = Me;
             gemInfo.Text = "宝石 " + (int)p.gems + "　　金币 " + (int)p.gold;
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 if (i >= p.gemShop.Count) { gemButtons[i].Text = "—"; gemButtons[i].Disabled = true; continue; }
                 var rd = match.db.Relic(p.gemShop[i]);
@@ -549,6 +554,12 @@ namespace Milaqi.Game
                 int cost = match.db.GemCost(rd.rarity);
                 gemButtons[i].Text = rd.name + "（" + Rarity(rd.rarity) + "）\n" + cost + " 宝石\n\n" + rd.desc;
                 gemButtons[i].Disabled = p.gems < cost;
+                gemButtons[i].Modulate = p.gems >= cost ? Colors.White : new Color(1f, 1f, 1f, 0.6f);
+            }
+            if (gemReroll != null)
+            {
+                gemReroll.Text = "刷新货架  2 宝石";
+                gemReroll.Disabled = p.gems < Match.GemShopRerollCost;
             }
             for (int i = 0; i < 3; i++)
             {

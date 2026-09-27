@@ -67,10 +67,11 @@ namespace Milaqi.Game
 
                 _cardTier.Add(Lbl(b, new Rect2(5, 1, 30, 18), "", 12, UiTheme.Gold));
                 _cardIcons.Add(Tex(b, new Rect2(20, 4, 60, 56), null));
-                _cardGold.Add(Tex(b, new Rect2(12, 64, 15, 15), UiArt.Get(UiArt.Gold)));
-                _cardPrice.Add(Lbl(b, new Rect2(30, 60, 62, 22), "", 15, UiTheme.Gold));
-                _cardPop.Add(Tex(b, new Rect2(12, 84, 15, 15), UiArt.Get(UiArt.Pop)));
-                _cardPopNum.Add(Lbl(b, new Rect2(30, 80, 62, 22), "", 15, UiTheme.Parchment));
+                // 金币与人口改成左右并排（之前上下叠放，看起来像重复了）
+                _cardGold.Add(Tex(b, new Rect2(7, 78, 14, 14), UiArt.Get(UiArt.Gold)));
+                _cardPrice.Add(Lbl(b, new Rect2(23, 74, 26, 20), "", 15, UiTheme.Gold));
+                _cardPop.Add(Tex(b, new Rect2(53, 78, 14, 14), UiArt.Get(UiArt.Pop)));
+                _cardPopNum.Add(Lbl(b, new Rect2(69, 74, 26, 20), "", 15, UiTheme.Parchment));
 
                 var info = new Button();
                 info.Text = "i";

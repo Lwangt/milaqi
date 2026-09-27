@@ -514,6 +514,7 @@ namespace Milaqi.Game
                     case NetManager.CmdAutoDeploy: match.AutoDeployAll(p); break;
                     case NetManager.CmdUnplace: match.UnplaceAll(p); break;
                     case NetManager.CmdRecallUnit: match.UnplaceUnit(p, r.ReadInt32()); break;
+                    case NetManager.CmdRerollGems: match.RerollGemShop(p); break;
                     case NetManager.CmdPickRelic: match.ChooseRelic(p, r.ReadString()); break;
                     case NetManager.CmdBuyGemRelic: match.BuyGemRelic(p, r.ReadString()); break;
                     case NetManager.CmdUpgradeSkill: match.UpgradeSkill(p, r.ReadString()); break;
@@ -581,6 +582,7 @@ namespace Milaqi.Game
         }
 
         public void OnToggleGemShop() { gemShopOpen = !gemShopOpen; }
+        public void OnRerollGemShop() { Send(NetManager.CmdRerollGems, null); }
 
         public void OnPickRelic(int index)
         {

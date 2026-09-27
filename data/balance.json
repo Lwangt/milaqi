@@ -130,13 +130,30 @@
     "battleBonusGoldWin": 1,
     "incomePerPop": 2.4,
     "xpPerRound": 6,
-    "xpPerRoundGrowth": 1
+    "xpPerRoundGrowth": 1,
+    "popCapByLevel": [
+      4,
+      6,
+      8,
+      10,
+      13,
+      16,
+      20,
+      24,
+      29,
+      34,
+      40,
+      46
+    ],
+    "gemPerRound": 1,
+    "gemBonusEveryRounds": 3,
+    "skipRelicGems": 5
   },
   "combat": {
     "tickRate": 30,
     "laneCount": 1,
-    "fieldWidth": 1100,
-    "fieldHeight": 420,
+    "fieldWidth": 1200,
+    "fieldHeight": 560,
     "spawnOffset": 90,
     "defConstant": 75,
     "acquireRangeExtra": 40,

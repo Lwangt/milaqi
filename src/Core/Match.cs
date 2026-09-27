@@ -137,7 +137,20 @@ namespace Milaqi.Core
             if (OnLog != null) OnLog(s);
         }
 
-        public int PopCap(PlayerState p) { return p.level + 1; }
+        /// <summary>
+        /// 人口上限。改为读配置表：整体约为旧版的 2 倍，且等级越高每级加得越多
+        /// （旧版是 level+1，高等级时成长几乎停滞）。
+        /// </summary>
+        public int PopCap(PlayerState p)
+        {
+            var t = db.Balance.round.popCapByLevel;
+            if (t != null && t.Length > 0)
+            {
+                int i = Math.Max(1, Math.Min(t.Length, p.level));
+                return t[i - 1];
+            }
+            return p.level + 1;
+        }
 
         public int PopUsed(PlayerState p) { return p.OwnedPop(db); }
 
@@ -234,7 +247,9 @@ namespace Milaqi.Core
                 // 金币收入随人口上限成长：由于部队每回合清空、需要重新购买，
                 // 收入必须大致覆盖「按当前人口买满一支军队」的开销，否则场上永远是残阵。
                 float goldGain = rcfg.baseIncome + PopCap(p) * rcfg.incomePerPop;
-                float gemGain = 0f;
+                // 宝石获取：每回合基础发放 + 每 N 回合额外奖励（之前只能靠遗物，太稀少）
+                float gemGain = rcfg.gemPerRound;
+                if (rcfg.gemBonusEveryRounds > 0f && round % (int)rcfg.gemBonusEveryRounds == 0) gemGain += 1f;
                 // 经验由系统每回合发放（金币要用来买兵，不该再和买经验抢预算）
                 float xpGain = rcfg.xpPerRound + round * rcfg.xpPerRoundGrowth;
                 var relics = EffectiveRelics(p);
@@ -366,8 +381,9 @@ namespace Milaqi.Core
             if (p.relicPicked) return;
             p.relicPicked = true;
             p.activeRelicOffers.Clear();
-            p.gems += 3;
-            Say(p.name + " 放弃了遗物，换取 3 颗宝石。");
+            int sg = Math.Max(1, db.Balance.round.skipRelicGems);
+            p.gems += sg;
+            Say(p.name + " 放弃了遗物，换取 " + sg + " 颗宝石。");
         }
 
         // ---------------------------------------------------------------- 商店
@@ -391,6 +407,18 @@ namespace Milaqi.Core
             for (int i = 0; i < list.Count; i++) p.shop.Add(new ShopOffer { unitId = list[i].id, price = UnitPrice(p, list[i]) });
         }
 
+        /// <summary>宝石商店刷新费用。</summary>
+        public const int GemShopRerollCost = 2;
+
+        /// <summary>花宝石刷新宝石商店的货架。</summary>
+        public bool RerollGemShop(PlayerState p)
+        {
+            if (p.gems < GemShopRerollCost) return false;
+            p.gems -= GemShopRerollCost;
+            BuildGemShop(p);
+            return true;
+        }
+
         void BuildGemShop(PlayerState p)
         {
             p.gemShop.Clear();
@@ -401,7 +429,7 @@ namespace Milaqi.Core
                 if (r == null || p.relicIds.Contains(r.id) || p.pendingRelics.Contains(r.id)) continue;
                 pool.Add(r);
             }
-            for (int i = 0; i < 3 && pool.Count > 0; i++)
+            for (int i = 0; i < 4 && pool.Count > 0; i++)
             {
                 int idx = Rand(pool.Count);
                 p.gemShop.Add(pool[idx].id);
@@ -568,9 +596,10 @@ namespace Milaqi.Core
             bool ranged = false;
             var def = db.Unit(o.id);
             if (def != null) ranged = def.range > 60f;
-            float lane = 0.5f + ((k % 5) - 2) * 0.16f;
-            lane = Math.Max(0.08f, Math.Min(0.92f, lane));
-            float depth = db.Balance.combat.spawnOffset + (k % 3) * 30f + (ranged ? -40f : 0f) + (k / 5) * 22f;
+            // 人口上限翻倍后队伍更大，站位改成 9 条横排 + 4 层纵深
+            float lane = 0.5f + ((k % 9) - 4) * 0.105f;
+            lane = Math.Max(0.06f, Math.Min(0.94f, lane));
+            float depth = db.Balance.combat.spawnOffset + (k % 4) * 28f + (ranged ? -50f : 0f) + (k / 9) * 24f;
             depth = Math.Max(30f, Math.Min(sim2.fieldWidth * 0.30f, depth));
             o.placed = true;
             o.x = p.Team == Team.Left ? depth : sim2.fieldWidth - depth;

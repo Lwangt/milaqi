@@ -134,6 +134,10 @@ namespace Milaqi.Core
         public int rerollCost = 2;
         public int relicEveryRounds = 2;
         public int relicChoices = 3;
+        public int[] popCapByLevel = System.Array.Empty<int>();  // 各等级的人口上限（索引 0 = 1 级）
+        public float gemPerRound = 1f;         // 每回合基础宝石
+        public float gemBonusEveryRounds = 3f; // 每 N 回合额外宝石
+        public int skipRelicGems = 5;          // 放弃遗物换取的宝石
         public float incomePerPop = 2.4f;      // 每点人口上限带来的金币收入
         public float xpPerRound = 6f;          // 每回合系统发放的基础经验
         public float xpPerRoundGrowth = 1f;    // 每回合递增的经验

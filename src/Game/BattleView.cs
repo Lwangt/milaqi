@@ -27,9 +27,18 @@ namespace Milaqi.Game
 
         // 回合结算横幅
         string _banner = "";
-        float _bannerT;
+        float _bannerT, _bannerMax = 2.8f;
         Color _bannerColor = Colors.White;
         float _seenP0Hp = -1f, _seenP1Hp = -1f;
+
+        // 回合开始 / 阶段切换的过场横幅
+        string _roundBanner = "";
+        string _roundSub = "";
+        float _roundBannerT, _roundBannerMax = 2.4f;
+        Color _roundColor = UiTheme.Gold;
+        int _seenRound = -1;
+        MatchPhase _seenPhase = MatchPhase.Prep;
+        float _flashT;
 
         sealed class FloatText { public Vector2 pos; public string text; public float life, max; public Color color; public float size; }
         sealed class Shot { public Vector2 from, to, cur; public float t, dur; public Color color; public Color core; public int kind; public float size; }
@@ -124,6 +133,31 @@ namespace Milaqi.Game
             _vtime += dt;
             if (_shake > 0f) _shake = Mathf.Max(0f, _shake - dt * 52f);
             if (_bannerT > 0f) _bannerT -= dt;
+            if (_roundBannerT > 0f) _roundBannerT -= dt;
+            if (_flashT > 0f) _flashT -= dt;
+
+            // 回合 / 阶段切换 → 过场横幅 + 闪光
+            if (match.round != _seenRound)
+            {
+                _seenRound = match.round;
+                _roundBanner = "第 " + match.round + " 回合";
+                _roundSub = "备战开始 · 人口上限 " + match.PopCap(match.players[main != null ? main.localIndex : 0]);
+                _roundColor = UiTheme.Gold;
+                _roundBannerT = _roundBannerMax;
+                _flashT = 0.35f;
+            }
+            if (match.phase != _seenPhase)
+            {
+                _seenPhase = match.phase;
+                if (match.phase == MatchPhase.Battle)
+                {
+                    _roundBanner = "交战开始";
+                    _roundSub = "双方部队出击";
+                    _roundColor = new Color(1f, 0.72f, 0.4f);
+                    _roundBannerT = 1.6f;
+                    AddShake(5f);
+                }
+            }
 
             // 城邦掉血 → 结算横幅 + 强烈震动
             if (main != null)
@@ -142,7 +176,7 @@ namespace Milaqi.Game
                     {
                         _banner = "本回合　造成 " + (int)myDealt + " 伤害　承受 " + (int)myTaken + " 伤害";
                         _bannerColor = myDealt > myTaken ? new Color(0.55f, 1f, 0.65f) : (myDealt < myTaken ? new Color(1f, 0.6f, 0.6f) : UiTheme.Parchment);
-                        _bannerT = 2.8f;
+                        _bannerT = _bannerMax;
                         AddShake(8f + Mathf.Min(14f, myTaken));
                     }
                 }
@@ -518,20 +552,50 @@ namespace Milaqi.Game
                     i == 0 ? (me ? new Color(0.6f, 0.85f, 1f) : new Color(1f, 0.68f, 0.68f)) : UiTheme.Parchment);
         }
 
-        /// <summary>回合结算横幅。</summary>
+        /// <summary>回合过场与结算横幅（都带淡入淡出与缩放动画）。</summary>
         void DrawBanner()
         {
-            if (_bannerT <= 0f || string.IsNullOrEmpty(_banner)) return;
             var font = GetThemeDefaultFont();
             if (font == null) return;
-            float a = Mathf.Clamp(_bannerT / 0.6f, 0f, 1f);
-            var c = _bannerColor; c.A = a;
-            float w = 520f, h = 46f;
-            var pos = new Vector2((Size.X - w) * 0.5f, _field.Position.Y - 74f);
-            DrawRect(new Rect2(pos, new Vector2(w, h)), new Color(0.08f, 0.07f, 0.12f, 0.9f * a));
-            DrawLine(pos, pos + new Vector2(w, 0), new Color(0.62f, 0.50f, 0.26f, a), 2f);
-            DrawLine(pos + new Vector2(0, h), pos + new Vector2(w, h), new Color(0.62f, 0.50f, 0.26f, a), 2f);
-            DrawString(font, pos + new Vector2(w * 0.5f, 32f), _banner, HorizontalAlignment.Center, 0f, 19, c);
+
+            // 过场闪光：整屏一闪
+            if (_flashT > 0f)
+            {
+                float fa = Mathf.Clamp(_flashT / 0.35f, 0f, 1f) * 0.22f;
+                DrawRect(new Rect2(Vector2.Zero, Size), new Color(1f, 0.92f, 0.72f, fa));
+            }
+
+            // ---- 回合开始 / 交战开始 ----
+            if (_roundBannerT > 0f && !string.IsNullOrEmpty(_roundBanner))
+            {
+                float k = 1f - _roundBannerT / _roundBannerMax;        // 0→1 进度
+                float a = Mathf.Min(1f, k / 0.12f) * Mathf.Min(1f, _roundBannerT / 0.5f);
+                float pop = 1f + 0.35f * Mathf.Max(0f, 1f - k / 0.25f); // 进场放大回落
+                int fs = (int)(44 * pop);
+                var cc = _roundColor; cc.A = a;
+                float cy = Size.Y * 0.40f;
+                DrawRect(new Rect2(0, cy - 58f, Size.X, 116f), new Color(0.06f, 0.05f, 0.10f, 0.72f * a));
+                DrawLine(new Vector2(Size.X * 0.22f, cy - 58f), new Vector2(Size.X * 0.78f, cy - 58f), new Color(0.62f, 0.50f, 0.26f, a), 2f);
+                DrawLine(new Vector2(Size.X * 0.22f, cy + 58f), new Vector2(Size.X * 0.78f, cy + 58f), new Color(0.62f, 0.50f, 0.26f, a), 2f);
+                DrawString(font, new Vector2(Size.X * 0.5f, cy + 8f), _roundBanner, HorizontalAlignment.Center, -1f, fs, cc);
+                var sc = UiTheme.ParchDim; sc.A = a;
+                DrawString(font, new Vector2(Size.X * 0.5f, cy + 40f), _roundSub, HorizontalAlignment.Center, -1f, 17, sc);
+            }
+
+            // ---- 回合结算结果 ----
+            if (_bannerT > 0f && !string.IsNullOrEmpty(_banner))
+            {
+                float k = 1f - _bannerT / _bannerMax;
+                float a = Mathf.Min(1f, k / 0.10f) * Mathf.Min(1f, _bannerT / 0.7f);
+                float slide = (1f - Mathf.Min(1f, k / 0.18f)) * 26f;   // 从上方滑入
+                var c = _bannerColor; c.A = a;
+                float w = 560f, h = 48f;
+                var pos = new Vector2((Size.X - w) * 0.5f, _field.Position.Y - 86f - slide);
+                DrawRect(new Rect2(pos, new Vector2(w, h)), new Color(0.08f, 0.07f, 0.12f, 0.92f * a));
+                DrawLine(pos, pos + new Vector2(w, 0), new Color(0.62f, 0.50f, 0.26f, a), 2f);
+                DrawLine(pos + new Vector2(0, h), pos + new Vector2(w, h), new Color(0.62f, 0.50f, 0.26f, a), 2f);
+                DrawString(font, pos + new Vector2(w * 0.5f, 33f), _banner, HorizontalAlignment.Center, -1f, 20, c);
+            }
         }
 
         void DrawGround()
