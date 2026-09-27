@@ -22,6 +22,7 @@ namespace Milaqi.Game
         Label roundLabel, roundSuffix, phaseLabel, timerLabel, leftHpText, rightHpText, hintLabel, logLabel;
         Label myTitle, foeTitle, topSideL, topSideR;
         Label gGold, gGem, gLevel, gXp, gPop, gHp, gKill, gStreak, gRelics;
+        Button xpButton, gemButton;
         Label eGold, eGem, eLevel, ePop, eKill, eRelics;
         Panel leftHpBar, rightHpBar, xpFill, myPanel, foePanel, logPanel;
         Button[] skillButtons = new Button[4];
@@ -41,6 +42,22 @@ namespace Milaqi.Game
         readonly List<Label> queuePops = new List<Label>();
         Label queueInfo;
 
+        /// <summary>
+        /// 该屏幕坐标是否被 HUD 的交互区域挡住。
+        /// BattleView 在 _Input 里判定战场点击时用它来区分「点战场」和「点界面」。
+        /// </summary>
+        public bool BlocksPoint(Vector2 pos)
+        {
+            if (relicPanel != null && relicPanel.Visible && new Rect2(relicPanel.GlobalPosition, relicPanel.Size).HasPoint(pos)) return true;
+            if (gemPanel != null && gemPanel.Visible && new Rect2(gemPanel.GlobalPosition, gemPanel.Size).HasPoint(pos)) return true;
+            if (new Rect2(0, 0, 1600, 104).HasPoint(pos)) return true;      // 顶部信息条
+            if (new Rect2(0, 634, 1600, 266).HasPoint(pos)) return true;    // 底部商店/队列/技能
+            if (myPanel != null && new Rect2(myPanel.GlobalPosition, myPanel.Size).HasPoint(pos)) return true;
+            if (foePanel != null && new Rect2(foePanel.GlobalPosition, foePanel.Size).HasPoint(pos)) return true;
+            if (logPanel != null && new Rect2(logPanel.GlobalPosition, logPanel.Size).HasPoint(pos)) return true;
+            return false;
+        }
+
         public PlayerState Me { get { return match.players[main != null ? main.localIndex : 0]; } }
         public PlayerState Foe { get { return match.players[1 - (main != null ? main.localIndex : 0)]; } }
 
@@ -48,6 +65,9 @@ namespace Milaqi.Game
         {
             root = new Control();
             root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+            // 必须设为 Ignore：Control 默认是 Stop，这个全屏 root 会把整屏鼠标事件都吃掉，
+            // 导致战场收不到点击（技能点不出来、队列也放不下去）。子节点仍然正常响应。
+            root.MouseFilter = Control.MouseFilterEnum.Ignore;
             AddChild(root);
             BuildBackdrop();
             BuildTop();
@@ -214,8 +234,12 @@ namespace Milaqi.Game
             xpFill = PanelAt(myPanel, new Rect2(14, 200, 0, 12), UiTheme.Panel(UiTheme.Emerald, UiTheme.Emerald, 0, 6));
 
             Lbl(myPanel, new Rect2(14, 220, 272, 22), "遗物", 14, UiTheme.GoldDim);
-            gRelics = Lbl(myPanel, new Rect2(14, 244, 272, 176), "", 13, new Color(0.86f, 0.80f, 0.62f));
+            gRelics = Lbl(myPanel, new Rect2(14, 244, 272, 104), "", 13, new Color(0.86f, 0.80f, 0.62f));
             gRelics.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+
+            // 买经验 / 宝石商店：之前只有快捷键 E 和 G，没有按钮入口
+            xpButton = Btn(myPanel, new Rect2(14, 356, 272, 32), "", 14, () => main.OnBuyXp(), true);
+            gemButton = Btn(myPanel, new Rect2(14, 394, 272, 32), "", 14, () => main.OnToggleGemShop());
 
             foePanel = PanelAt(root, new Rect2(1270, 116, 320, 232), UiTheme.Stone(), true);
             foeTitle = Lbl(foePanel, new Rect2(14, 8, 292, 26), "", 18, UiTheme.TeamRight);
@@ -402,7 +426,20 @@ namespace Milaqi.Game
             gKill.Text = ((int)match.sim.KillValueSum(Me.Team)).ToString();
             gStreak.Text = p0.winStreak > 0 ? ("连胜 " + p0.winStreak) : (p0.lossStreak > 0 ? ("连败 " + p0.lossStreak) : "势均力敌");
             xpFill.Size = new Vector2(272f * (need > 0 ? Mathf.Clamp(p0.xp / need, 0f, 1f) : 1f), 12);
-            gRelics.Text = RelicList(p0, 8);
+            gRelics.Text = RelicList(p0, 5);
+
+            // 买经验：等级未满且金币够时可点
+            int xpCost = rcfg.xpBuyCost;
+            bool canXp = match.phase == MatchPhase.Prep && p0.level < rcfg.maxLevel && p0.gold >= xpCost;
+            xpButton.Disabled = !canXp;
+            xpButton.Text = p0.level >= rcfg.maxLevel
+                ? "已满级 Lv " + rcfg.maxLevel
+                : "买经验  " + xpCost + " 金 → +" + rcfg.xpPerBuy + " 经验   (E)";
+            xpButton.Modulate = canXp ? Colors.White : new Color(1f, 1f, 1f, 0.5f);
+
+            // 宝石商店：随时可开，按钮上直接显示宝石数
+            gemButton.Text = "宝石商店   宝石 " + (int)p0.gems + "   (G)";
+            gemButton.Modulate = p0.gems > 0 ? Colors.White : new Color(1f, 1f, 1f, 0.6f);
 
             eGold.Text = ((int)p1.gold).ToString();
             eGem.Text = ((int)p1.gems).ToString();

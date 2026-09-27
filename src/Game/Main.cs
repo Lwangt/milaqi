@@ -358,9 +358,80 @@ namespace Milaqi.Game
             if (shotIndex >= shotTimes.Count) GetTree().Quit(0);
         }
 
+        // 调试用：--clicktest 在战斗阶段注入一次真实鼠标点击，验证输入链路是否通畅
+        // （曾经 HUD 的全屏 root 吃掉整屏鼠标事件，导致技能点不出去）
+        public bool clickTest;
+        bool clickTestChecked;
+        float clickTestT;
+        int clickTestStage;
+
+        void UpdateClickTest(double delta)
+        {
+            if (!clickTestChecked)
+            {
+                clickTestChecked = true;
+                foreach (var a in OS.GetCmdlineArgs()) if (a == "--clicktest") clickTest = true;
+                foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--clicktest") clickTest = true;
+                if (clickTest && !matchStarted && match != null) StartLocalMatch();
+            }
+            if (!clickTest || match == null || view == null) return;
+            // 先把遗物选掉：三选一弹窗是模态的，会盖住战场（否则测不到战场点击）
+            var p0 = match.players[localIndex];
+            if (!p0.relicPicked && p0.activeRelicOffers.Count > 0) match.ChooseRelic(p0, p0.activeRelicOffers[0]);
+            if (match.phase != MatchPhase.Battle) return;
+            clickTestT += (float)delta;
+            if (clickTestStage == 0 && clickTestT > 1.2f)
+            {
+                clickTestStage = 1;
+                OnSkill(0);
+                GD.Print("CLICKTEST skill selected = " + (selectedSkill ?? "null"));
+            }
+            else if (clickTestStage == 1 && clickTestT > 1.9f)
+            {
+                clickTestStage = 2;
+                var pos = view.ToScreen(match.sim.fieldWidth * 0.5f, match.sim.fieldHeight * 0.5f);
+                // 必须先把光标移进窗口，并注入一次移动事件，否则 Godot 的 mouse_over 不会更新
+                Input.WarpMouse(pos);
+                Input.ParseInputEvent(new InputEventMouseMotion { Position = pos, GlobalPosition = pos });
+                var hov = GetViewport().GuiGetHoveredControl();
+                GD.Print("CLICKTEST hovered=" + (hov != null ? hov.GetType().Name + "/" + hov.Name : "null"));
+                if (hov == null)
+                {
+                    // 逐层排查：把 Hud 的每个子控件都报一遍，找出谁挡住了战场
+                    var hud = GetNodeOrNull<Hud>("Hud");
+                    if (hud == null) foreach (var c in GetChildren()) if (c is Hud h2) hud = h2;
+                    if (hud != null)
+                    {
+                        foreach (var ch in hud.GetChildren())
+                        {
+                            var ctl = ch as Control;
+                            if (ctl == null) continue;
+                            bool hit = ctl.Visible && ctl.MouseFilter != Control.MouseFilterEnum.Ignore
+                                && new Rect2(ctl.GlobalPosition, ctl.Size).HasPoint(pos);
+                            if (hit) GD.Print("CLICKTEST BLOCKER = " + ctl.GetType().Name + "/" + ctl.Name
+                                + " rect=" + new Rect2(ctl.GlobalPosition, ctl.Size) + " filter=" + ctl.MouseFilter);
+                        }
+                    }
+                }
+                Input.ParseInputEvent(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = pos, GlobalPosition = pos });
+                Input.ParseInputEvent(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = pos, GlobalPosition = pos });
+                GD.Print("CLICKTEST injected click at " + pos);
+            }
+            else if (clickTestStage == 2 && clickTestT > 3.0f)
+            {
+                clickTestStage = 3;
+                bool cast = false;
+                for (int i = 0; i < match.log.Count; i++)
+                    if (match.log[i].text != null && match.log[i].text.Contains("释放")) cast = true;
+                GD.Print("CLICKTEST RESULT cast=" + cast + " selectedSkill=" + (selectedSkill ?? "null") + " phase=" + match.phase);
+                GetTree().Quit(0);
+            }
+        }
+
         public override void _Process(double delta)
         {
             UpdateShots(delta);
+            UpdateClickTest(delta);
             if (match == null) return;
             if (match.round != _lastRound) { _lastRound = match.round; match.players[0].skillCharges.Clear(); match.players[1].skillCharges.Clear(); }
             if (mode != GameMode.Client)
@@ -568,6 +639,18 @@ namespace Milaqi.Game
             Send(NetManager.CmdDeploy, w => { w.Write(uid); w.Write(fieldPos.X); w.Write(fieldPos.Y); });
         }
 
+        /// <summary>
+        /// 判断指针是否落在任何 UI 控件上（用于把「战场点击」和「界面点击」分开）。
+        /// 走 Godot 的 GUI 命中测试；同时把 HUD 的主要面板矩形也纳入判断。
+        /// </summary>
+        public bool IsPointerOverUi(Vector2 pos)
+        {
+            var hov = GetViewport().GuiGetHoveredControl();
+            if (hov != null && hov != view) return true;
+            if (hud != null && hud.BlocksPoint(pos)) return true;
+            return false;
+        }
+
         public void OnFieldRightClick(Vector2 fieldPos)
         {
             if (match.phase != MatchPhase.Prep) return;
@@ -576,6 +659,8 @@ namespace Milaqi.Game
 
         public override void _UnhandledInput(InputEvent @event)
         {
+            if (clickTest && @event is InputEventMouseButton mb0)
+                GD.Print("CLICKTEST Main._UnhandledInput " + mb0.ButtonIndex);
             if (match == null) return;
             if (@event is InputEventKey k && k.Pressed && !k.Echo)
             {

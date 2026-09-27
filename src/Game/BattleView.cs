@@ -21,6 +21,16 @@ namespace Milaqi.Game
         float _vtime;
         int _vfxJitter;
 
+        // 屏幕震动：受击、阵亡、城邦掉血时抖一下，战斗才有打击感
+        float _shake;
+        public void AddShake(float amount) { if (amount > _shake) _shake = Math.Min(26f, amount); }
+
+        // 回合结算横幅
+        string _banner = "";
+        float _bannerT;
+        Color _bannerColor = Colors.White;
+        float _seenP0Hp = -1f, _seenP1Hp = -1f;
+
         sealed class FloatText { public Vector2 pos; public string text; public float life, max; public Color color; public float size; }
         sealed class Shot { public Vector2 from, to, cur; public float t, dur; public Color color; public Color core; public int kind; public float size; }
         sealed class Slash { public Vector2 from, to; public float life, max; public Color color; public int kind; public float width; }
@@ -112,6 +122,31 @@ namespace Milaqi.Game
             float dt = (float)delta;
             if (dt > 0.1f) dt = 0.1f;
             _vtime += dt;
+            if (_shake > 0f) _shake = Mathf.Max(0f, _shake - dt * 52f);
+            if (_bannerT > 0f) _bannerT -= dt;
+
+            // 城邦掉血 → 结算横幅 + 强烈震动
+            if (main != null)
+            {
+                var q0 = match.players[0]; var q1 = match.players[1];
+                if (_seenP0Hp < 0f) { _seenP0Hp = q0.baseHp; _seenP1Hp = q1.baseHp; }
+                else if (q0.baseHp != _seenP0Hp || q1.baseHp != _seenP1Hp)
+                {
+                    float dealt = _seenP1Hp - q1.baseHp;
+                    float taken = _seenP0Hp - q0.baseHp;
+                    bool leftIsMe = main.localIndex == 0;
+                    float myDealt = leftIsMe ? dealt : taken;
+                    float myTaken = leftIsMe ? taken : dealt;
+                    _seenP0Hp = q0.baseHp; _seenP1Hp = q1.baseHp;
+                    if (myDealt > 0f || myTaken > 0f)
+                    {
+                        _banner = "本回合　造成 " + (int)myDealt + " 伤害　承受 " + (int)myTaken + " 伤害";
+                        _bannerColor = myDealt > myTaken ? new Color(0.55f, 1f, 0.65f) : (myDealt < myTaken ? new Color(1f, 0.6f, 0.6f) : UiTheme.Parchment);
+                        _bannerT = 2.8f;
+                        AddShake(8f + Mathf.Min(14f, myTaken));
+                    }
+                }
+            }
 
             var events = match.sim.Events;
             for (int i = 0; i < events.Count; i++)
@@ -180,6 +215,7 @@ namespace Milaqi.Game
                         }
                         break;
                     case SimEventKind.Death:
+                        AddShake(4f + e.value * 1.2f);
                         _puffs.Add(new Puff { pos = ToScreen(e.x, e.y), life = 0.5f, max = 0.5f, color = e.team == Team.Left ? new Color(0.5f, 0.7f, 1f, 0.6f) : new Color(1f, 0.55f, 0.55f, 0.6f), radius = 26f, kind = -1 });
                         for (int s = 0; s < 5; s++)
                         {
@@ -235,6 +271,10 @@ namespace Milaqi.Game
             if (match == null) return;
             var sim = match.sim;
             var sz = Size;
+
+            // 屏幕震动：整体偏移绘制（不影响布局与命中判定）
+            if (_shake > 0.2f)
+                DrawSetTransform(new Vector2((float)GD.RandRange(-1.0, 1.0), (float)GD.RandRange(-1.0, 1.0)) * _shake, 0f, Vector2.One);
 
             DrawRect(new Rect2(Vector2.Zero, sz), BgTop);
             DrawRect(new Rect2(0, sz.Y * 0.55f, sz.X, sz.Y * 0.45f), BgBottom);
@@ -408,7 +448,90 @@ namespace Milaqi.Game
                 float r = sd != null ? sd.LvF("radius", 1, 100f) : 100f;
                 DrawCircle(mouse, r * _scale, new Color(1f, 0.6f, 0.3f, 0.14f));
                 DrawArc(mouse, r * _scale, 0, Mathf.Tau, 48, new Color(1f, 0.75f, 0.4f, 0.9f), 2f);
+                // 预览：这个范围能覆盖几个敌人
+                int hit = 0;
+                var units0 = match.sim.Units;
+                var center = ToField(mouse);
+                for (int i = 0; i < units0.Count; i++)
+                {
+                    var u0 = units0[i];
+                    if (!u0.alive) continue;
+                    float dx = u0.x - center.X, dy = u0.y - center.Y;
+                    if (dx * dx + dy * dy <= r * r) hit++;
+                }
+                var f0 = GetThemeDefaultFont();
+                if (f0 != null)
+                {
+                    var tp = mouse + new Vector2(0, -r * _scale - 20f);
+                    DrawString(f0, tp, "可命中 " + hit + " 个单位", HorizontalAlignment.Center, 0f, 15, new Color(1f, 0.86f, 0.5f));
+                }
             }
+
+            DrawHoverInfo();
+            DrawBanner();
+            if (_shake > 0.2f) DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+        }
+
+        /// <summary>鼠标悬停在某个单位上时，就地显示它的战况信息。</summary>
+        void DrawHoverInfo()
+        {
+            if (match == null || main == null) return;
+            if (match.phase != MatchPhase.Battle && match.phase != MatchPhase.Prep) return;
+            var mp = GetLocalMousePosition();
+            if (!_field.Grow(30f).HasPoint(mp)) return;
+            SimUnit best = null;
+            float bestD = 30f * 30f;
+            var units = match.sim.Units;
+            for (int i = 0; i < units.Count; i++)
+            {
+                var u = units[i];
+                if (!u.alive) continue;
+                var sp = ToScreen(u.x, u.y);
+                float d = sp.DistanceSquaredTo(mp);
+                if (d < bestD) { bestD = d; best = u; }
+            }
+            if (best == null) return;
+            var font = GetThemeDefaultFont();
+            if (font == null) return;
+
+            var d0 = best.def;
+            bool me = main.localIndex == (best.team == Team.Left ? 0 : 1);
+            string[] lines = {
+                d0.name + "  T" + d0.tier + (me ? "（我方）" : "（敌方）"),
+                "生命 " + (int)Mathf.Max(0f, best.hp) + " / " + (int)best.maxHp,
+                "物攻 " + (int)best.st.atk + "　魔攻 " + (int)best.st.matk,
+                "物防 " + (int)best.st.pdef + "　魔防 " + (int)best.st.mdef,
+                "射程 " + (int)best.st.range + "　攻速 " + best.st.atkSpeed.ToString("0.00"),
+            };
+            float w = 210f, h = 22f + lines.Length * 19f;
+            var pos = new Vector2(mp.X + 18f, mp.Y - h - 6f);
+            if (pos.X + w > Size.X) pos.X = mp.X - w - 18f;
+            if (pos.Y < 4f) pos.Y = mp.Y + 18f;
+            DrawRect(new Rect2(pos, new Vector2(w, h)), new Color(0.09f, 0.08f, 0.13f, 0.95f));
+            DrawRect(new Rect2(pos, new Vector2(w, h)), new Color(0f, 0f, 0f, 0f), false, 2f, false);
+            DrawLine(pos, pos + new Vector2(w, 0), new Color(0.62f, 0.50f, 0.26f), 2f);
+            DrawLine(pos + new Vector2(0, h), pos + new Vector2(w, h), new Color(0.62f, 0.50f, 0.26f), 2f);
+            DrawLine(pos, pos + new Vector2(0, h), new Color(0.62f, 0.50f, 0.26f), 2f);
+            DrawLine(pos + new Vector2(w, 0), pos + new Vector2(w, h), new Color(0.62f, 0.50f, 0.26f), 2f);
+            for (int i = 0; i < lines.Length; i++)
+                DrawString(font, pos + new Vector2(10, 18 + i * 19), lines[i], HorizontalAlignment.Left, 0f, i == 0 ? 15 : 13,
+                    i == 0 ? (me ? new Color(0.6f, 0.85f, 1f) : new Color(1f, 0.68f, 0.68f)) : UiTheme.Parchment);
+        }
+
+        /// <summary>回合结算横幅。</summary>
+        void DrawBanner()
+        {
+            if (_bannerT <= 0f || string.IsNullOrEmpty(_banner)) return;
+            var font = GetThemeDefaultFont();
+            if (font == null) return;
+            float a = Mathf.Clamp(_bannerT / 0.6f, 0f, 1f);
+            var c = _bannerColor; c.A = a;
+            float w = 520f, h = 46f;
+            var pos = new Vector2((Size.X - w) * 0.5f, _field.Position.Y - 74f);
+            DrawRect(new Rect2(pos, new Vector2(w, h)), new Color(0.08f, 0.07f, 0.12f, 0.9f * a));
+            DrawLine(pos, pos + new Vector2(w, 0), new Color(0.62f, 0.50f, 0.26f, a), 2f);
+            DrawLine(pos + new Vector2(0, h), pos + new Vector2(w, h), new Color(0.62f, 0.50f, 0.26f, a), 2f);
+            DrawString(font, pos + new Vector2(w * 0.5f, 32f), _banner, HorizontalAlignment.Center, 0f, 19, c);
         }
 
         void DrawGround()
@@ -570,9 +693,39 @@ namespace Milaqi.Game
             DrawRect(new Rect2(bpos, new Vector2(bw * ratio, bh)), hpColor);
         }
 
+        /// <summary>
+        /// 战场点击直接在 _Input 里判定，不依赖 Godot 的 GUI 路由。
+        /// 原因：HUD 是更高层的 CanvasLayer，_GuiInput 会被它拦掉（实测 _Input 能收到、
+        /// _GuiInput 收不到），导致技能点不出去、队列落位和右键出售也一起失效。
+        /// 判定规则很简单：落在战场矩形内的鼠标点击就是战场操作——侧栏面板在矩形外，
+        /// 商店与技能按钮在下方，不会误触。
+        /// </summary>
+        public override void _Input(InputEvent @event)
+        {
+            if (match == null || main == null) return;
+            if (main.gemShopOpen) return;
+            if (match.phase != MatchPhase.Battle && match.phase != MatchPhase.Prep) return;
+            var mb = @event as InputEventMouseButton;
+            if (mb == null || !mb.Pressed) return;
+            if (mb.ButtonIndex != MouseButton.Left && mb.ButtonIndex != MouseButton.Right) return;
+            if (main.IsPointerOverUi(mb.Position)) return;
+            // 战场矩形稍微内缩，避免和两侧面板的边缘重叠
+            var r = new Rect2(_field.Position + new Vector2(5, 5), _field.Size - new Vector2(10, 10));
+            if (main.clickTest)
+                GD.Print("CLICKTEST _Input pos=" + mb.Position + " inField=" + r.HasPoint(mb.Position)
+                    + " field=" + _field + " overUi=" + main.IsPointerOverUi(mb.Position));
+            if (!r.HasPoint(mb.Position)) return;
+            var f = ToField(mb.Position);
+            if (mb.ButtonIndex == MouseButton.Left) main.OnFieldClick(f, !string.IsNullOrEmpty(selectedSkill));
+            else main.OnFieldRightClick(f);
+            GetViewport().SetInputAsHandled();
+        }
+
         public override void _GuiInput(InputEvent @event)
         {
             if (match == null || main == null) return;
+            // 正常情况下点击已由 _Input 处理（_GuiInput 会被 HUD 的 CanvasLayer 拦掉，实际很少走到这里）
+            if (@event is InputEventMouseButton) return;
             if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
             {
                 var f = ToField(mb.Position);
