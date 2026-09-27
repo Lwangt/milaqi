@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "baseHp": 190,
+  "baseHp": 380,
   "prepSeconds": 40,
   "battleMaxSeconds": 45,
   "round": {
