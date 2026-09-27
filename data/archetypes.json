@@ -120,28 +120,28 @@
             "target": "undead",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.28
+            "value": 0.34
           },
           {
             "type": "stat",
             "target": "undead",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.16
+            "value": 0.2
           },
           {
             "type": "stat",
             "target": "pop1",
             "stat": "atk",
             "mode": "flat",
-            "value": 10
+            "value": 12
           },
           {
             "type": "stat",
             "target": "pop1",
             "stat": "hp",
             "mode": "flat",
-            "value": 18
+            "value": 24
           }
         ]
       }
@@ -154,15 +154,20 @@
       "tagWeight": {
         "shield": 3,
         "giant": 2,
-        "human": 0.8
+        "human": 1,
+        "ranged": 1,
+        "machine": 0.8
       },
       "unitWeight": {
         "shieldman": 2,
         "guardian": 2,
         "templar": 2,
-        "chaos_golem": 1.8,
-        "swordsman": 1,
-        "titan": 1.4
+        "chaos_golem": 1.6,
+        "swordsman": 1.2,
+        "titan": 1.4,
+        "ballista": 1.3,
+        "cannoneer": 1.2,
+        "sniper": 1
       },
       "relicPriority": [
         "iron_wall",
@@ -186,26 +191,33 @@
           "thorn",
           "heal"
         ],
-        "tierBias": 0,
+        "tierBias": 2,
         "factionBonus": [
           {
             "type": "stat",
             "target": "shield",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.32
+            "value": 0.4
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "pdef",
             "mode": "pct",
-            "value": 0.3
+            "value": 0.35
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "mdef",
+            "mode": "pct",
+            "value": 0.35
+          },
+          {
+            "type": "stat",
+            "target": "shield",
+            "stat": "atk",
             "mode": "pct",
             "value": 0.3
           },
@@ -214,7 +226,14 @@
             "target": "giant",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.16
+            "value": 0.18
+          },
+          {
+            "type": "stat",
+            "target": "ranged",
+            "stat": "atk",
+            "mode": "flat",
+            "value": 6
           }
         ]
       }
@@ -313,15 +332,7 @@
           "arcane_blast"
         ],
         "tierBias": 0,
-        "factionBonus": [
-          {
-            "type": "stat",
-            "target": "magic",
-            "stat": "matk",
-            "mode": "pct",
-            "value": 0.14
-          }
-        ]
+        "factionBonus": []
       }
     },
     {
@@ -374,35 +385,35 @@
             "target": "assassin",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.38
+            "value": 0.24
           },
           {
             "type": "stat",
             "target": "assassin",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.18
+            "value": 0.12
           },
           {
             "type": "stat",
             "target": "cavalry",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.26
+            "value": 0.14
           },
           {
             "type": "stat",
             "target": "cavalry",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.14
+            "value": 0.08
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.15
+            "value": 0.1
           }
         ]
       }
@@ -495,7 +506,7 @@
         "warlord_crown"
       ],
       "style": {
-        "xpBias": 0.7,
+        "xpBias": 0.95,
         "rerollBias": 0.6,
         "saveBuffer": 4,
         "pricePenalty": 0,

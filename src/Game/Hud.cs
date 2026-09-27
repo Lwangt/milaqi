@@ -5,18 +5,20 @@ using Milaqi.Core;
 
 namespace Milaqi.Game
 {
-    /// <summary>HUD：顶部战况、左右双方信息、底部商店与技能、遗物选择弹窗。</summary>
+    /// <summary>
+    /// HUD：顶部战况 + 双方资源面板（全部使用小图标表示）+ 底部兵种商店。
+    /// </summary>
     public partial class Hud : CanvasLayer
     {
         public Match match;
         public Main main;
+        public ShopPanel shop;
 
-        Label roundLabel, phaseLabel, timerLabel, leftLabel, rightLabel, myStats, foeStats, logLabel, hintLabel, deployLabel, myRelics, foeRelics;
-        Label topSideL, topSideR, myTitle, foeTitle;
-        Panel myPanel, foePanel, logPanel;
-        Panel leftHpBar, rightHpBar, leftHpBack, rightHpBack, xpFill, xpBack;
-        Button[] shopButtons = new Button[5];
-        Button rerollBtn, xpBtn, readyBtn, autoDeployBtn, shopToggleBtn;
+        Label roundLabel, phaseLabel, timerLabel, leftHpText, rightHpText, hintLabel, logLabel, tipLabel;
+        Label myTitle, foeTitle, topSideL, topSideR;
+        Label gGold, gGem, gLevel, gXp, gPop, gHp, gKill, gStreak, gRelics;
+        Label eGold, eGem, eLevel, ePop, eKill, eRelics;
+        Panel leftHpBar, rightHpBar, xpFill, myPanel, foePanel, logPanel;
         Button[] skillButtons = new Button[4];
         Panel relicPanel;
         Button[] relicButtons = new Button[3];
@@ -27,14 +29,15 @@ namespace Milaqi.Game
         Label gemInfo;
         Control root;
 
-        public PlayerState Me { get { return match.players[main != null ? main.localIndex : 0]; } }
-        public PlayerState Foe { get { return match.players[1 - (main != null ? main.localIndex : 0)]; } }
-
         static readonly Color Gold = new Color(1f, 0.85f, 0.4f);
         static readonly Color Left = new Color(0.45f, 0.72f, 1f);
         static readonly Color Right = new Color(1f, 0.5f, 0.5f);
-        static readonly Color Dim = new Color(0.68f, 0.72f, 0.8f);
+        static readonly Color Dim = new Color(0.66f, 0.72f, 0.82f);
+        static readonly Color Txt = new Color(0.92f, 0.94f, 0.98f);
         static readonly Color PanelBg = new Color(0.09f, 0.11f, 0.16f, 0.92f);
+
+        public PlayerState Me { get { return match.players[main != null ? main.localIndex : 0]; } }
+        public PlayerState Foe { get { return match.players[1 - (main != null ? main.localIndex : 0)]; } }
 
         public override void _Ready()
         {
@@ -42,85 +45,14 @@ namespace Milaqi.Game
             root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
             AddChild(root);
 
-            var top = MakePanel(new Rect2(0, 0, 1600, 92), new Color(0.07f, 0.08f, 0.12f, 0.9f));
-            roundLabel = MakeLabel(top, new Rect2(18, 8, 320, 34), "", 26, Gold);
-            phaseLabel = MakeLabel(top, new Rect2(18, 46, 320, 26), "", 17, Dim);
-            timerLabel = MakeLabel(top, new Rect2(1330, 10, 250, 40), "", 30, Colors.White);
-            timerLabel.HorizontalAlignment = HorizontalAlignment.Right;
-
-            topSideL = MakeLabel(top, new Rect2(320, 8, 460, 26), "左侧王国", 16, Left);
-            leftHpBack = MakePanel(top, new Rect2(320, 36, 460, 30), new Color(0, 0, 0, 0.55f));
-            leftHpBar = MakePanel(top, new Rect2(320, 36, 460, 30), Left);
-            leftLabel = MakeLabel(top, new Rect2(320, 34, 460, 32), "", 17, Colors.Black);
-            leftLabel.HorizontalAlignment = HorizontalAlignment.Center;
-            leftLabel.VerticalAlignment = VerticalAlignment.Center;
-
-            topSideR = MakeLabel(top, new Rect2(880, 8, 460, 26), "右侧王国", 16, Right);
-            rightHpBack = MakePanel(top, new Rect2(880, 36, 460, 30), new Color(0, 0, 0, 0.55f));
-            rightHpBar = MakePanel(top, new Rect2(880, 36, 460, 30), Right);
-            rightLabel = MakeLabel(top, new Rect2(880, 34, 460, 32), "", 17, Colors.Black);
-            rightLabel.HorizontalAlignment = HorizontalAlignment.Center;
-            rightLabel.VerticalAlignment = VerticalAlignment.Center;
-
-            // ---- 左侧玩家面板 ----
-            var lp = MakePanel(new Rect2(14, 104, 300, 432), PanelBg);
-            myPanel = lp;
-            myTitle = MakeLabel(lp, new Rect2(12, 8, 280, 24), "我方王国", 18, Left);
-            myStats = MakeLabel(lp, new Rect2(12, 34, 280, 200), "", 16, Colors.White);
-            myStats.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            xpBack = MakePanel(lp, new Rect2(12, 236, 276, 12), new Color(0, 0, 0, 0.6f));
-            xpFill = MakePanel(lp, new Rect2(12, 236, 0, 12), new Color(0.55f, 0.85f, 0.5f));
-            myRelics = MakeLabel(lp, new Rect2(12, 258, 280, 166), "", 13, new Color(0.86f, 0.78f, 0.55f));
-            myRelics.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-
-            // ---- 右侧敌方面板 ----
-            var rp = MakePanel(new Rect2(1286, 104, 300, 232), PanelBg);
-            foePanel = rp;
-            foeTitle = MakeLabel(rp, new Rect2(12, 8, 280, 24), "敌方王国", 18, Right);
-            foeStats = MakeLabel(rp, new Rect2(12, 34, 280, 130), "", 16, Colors.White);
-            foeStats.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            foeRelics = MakeLabel(rp, new Rect2(12, 168, 280, 44), "", 12, new Color(0.95f, 0.72f, 0.72f));
-            foeRelics.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-
-            var lg = MakePanel(new Rect2(1286, 348, 300, 188), PanelBg);
-            logPanel = lg;
-            MakeLabel(lg, new Rect2(12, 6, 280, 22), "战报", 16, Dim);
-            logLabel = MakeLabel(lg, new Rect2(12, 30, 276, 150), "", 12, new Color(0.8f, 0.84f, 0.9f));
-            logLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-
-            // ---- 底部：商店与操作 ----
-            var bottom = MakePanel(new Rect2(0, 640, 1600, 260), new Color(0.07f, 0.08f, 0.12f, 0.94f));
-            MakeLabel(bottom, new Rect2(20, 6, 400, 24), "兵种商店（人口不足或金币不足时无法购买）", 15, Dim);
-            for (int i = 0; i < 5; i++)
-            {
-                int idx = i;
-                shopButtons[i] = MakeButton(bottom, new Rect2(20 + i * 208, 34, 196, 92), "", 15, () => main.OnBuyUnit(idx));
-            }
-            rerollBtn = MakeButton(bottom, new Rect2(1072, 34, 200, 40), "刷新（2 金）", 16, () => main.OnReroll());
-            xpBtn = MakeButton(bottom, new Rect2(1072, 80, 200, 40), "买经验（4 金）", 16, () => main.OnBuyXp());
-            readyBtn = MakeButton(bottom, new Rect2(1290, 34, 290, 86), "开始战斗", 22, () => main.OnReady());
-            autoDeployBtn = MakeButton(bottom, new Rect2(1072, 126, 200, 30), "自动部署待上阵", 14, () => main.OnAutoDeploy());
-            shopToggleBtn = MakeButton(bottom, new Rect2(1290, 126, 290, 30), "宝石商店 / 技能强化", 14, () => main.OnToggleGemShop());
-            deployLabel = MakeLabel(bottom, new Rect2(20, 132, 1030, 22), "", 14, Gold);
-
-            MakeLabel(bottom, new Rect2(20, 160, 400, 22), "技能（战斗中点击后，再点战场释放）", 14, Dim);
-            for (int i = 0; i < 4; i++)
-            {
-                int idx = i;
-                skillButtons[i] = MakeButton(bottom, new Rect2(20 + i * 200, 186, 190, 56), "", 15, () => main.OnSkill(idx));
-            }
-            hintLabel = MakeLabel(bottom, new Rect2(840, 160, 740, 90), "", 15, Dim);
-            hintLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-
+            BuildTop();
+            BuildSidePanels();
+            BuildBottom();
             BuildRelicPanel();
             BuildGemPanel();
         }
 
-        Panel MakePanel(Rect2 rect, Color color)
-        {
-            return MakePanel(root, rect, color);
-        }
-
+        // ---------------------------------------------------------------- 构件
         Panel MakePanel(Control parent, Rect2 rect, Color color)
         {
             var p = new Panel();
@@ -148,6 +80,25 @@ namespace Milaqi.Game
             return l;
         }
 
+        TextureRect MakeIcon(Control parent, Rect2 rect, string icon)
+        {
+            var t = new TextureRect();
+            t.Texture = UiArt.Get(icon);
+            t.Position = rect.Position;
+            t.Size = rect.Size;
+            t.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+            t.MouseFilter = Control.MouseFilterEnum.Ignore;
+            parent.AddChild(t);
+            return t;
+        }
+
+        /// <summary>一行：小图标 + 数字/文本</summary>
+        Label IconRow(Control parent, float x, float y, string icon, float w = 150f, int fontSize = 16, Color? color = null)
+        {
+            MakeIcon(parent, new Rect2(x, y, 18, 18), icon);
+            return MakeLabel(parent, new Rect2(x + 22, y - 3, w, 24), "", fontSize, color ?? Txt);
+        }
+
         Button MakeButton(Control parent, Rect2 rect, string text, int size, Action onPress)
         {
             var b = new Button();
@@ -156,16 +107,104 @@ namespace Milaqi.Game
             b.Size = rect.Size;
             b.AddThemeFontSizeOverride("font_size", size);
             b.ClipText = true;
+            b.FocusMode = Control.FocusModeEnum.None;
             b.Pressed += onPress;
             parent.AddChild(b);
             return b;
         }
 
+        // ---------------------------------------------------------------- 顶部
+        void BuildTop()
+        {
+            var top = MakePanel(root, new Rect2(0, 0, 1600, 92), new Color(0.07f, 0.08f, 0.12f, 0.92f));
+            roundLabel = MakeLabel(top, new Rect2(18, 8, 300, 34), "", 26, Gold);
+            phaseLabel = MakeLabel(top, new Rect2(18, 46, 300, 26), "", 17, Dim);
+            timerLabel = MakeLabel(top, new Rect2(1330, 10, 250, 40), "", 30, Colors.White);
+            timerLabel.HorizontalAlignment = HorizontalAlignment.Right;
+
+            topSideL = MakeLabel(top, new Rect2(320, 8, 460, 24), "", 15, Left);
+            MakePanel(top, new Rect2(320, 34, 460, 30), new Color(0, 0, 0, 0.55f));
+            leftHpBar = MakePanel(top, new Rect2(320, 34, 460, 30), Left);
+            MakeIcon(top, new Rect2(326, 39, 20, 20), UiArt.Hp);
+            leftHpText = MakeLabel(top, new Rect2(350, 34, 430, 30), "", 16, Colors.Black);
+            leftHpText.VerticalAlignment = VerticalAlignment.Center;
+
+            topSideR = MakeLabel(top, new Rect2(880, 8, 460, 24), "", 15, Right);
+            MakePanel(top, new Rect2(880, 34, 460, 30), new Color(0, 0, 0, 0.55f));
+            rightHpBar = MakePanel(top, new Rect2(880, 34, 460, 30), Right);
+            MakeIcon(top, new Rect2(886, 39, 20, 20), UiArt.Hp);
+            rightHpText = MakeLabel(top, new Rect2(910, 34, 430, 30), "", 16, Colors.Black);
+            rightHpText.VerticalAlignment = VerticalAlignment.Center;
+        }
+
+        // ---------------------------------------------------------------- 左右信息面板
+        void BuildSidePanels()
+        {
+            myPanel = MakePanel(root, new Rect2(14, 104, 300, 430), PanelBg);
+            myTitle = MakeLabel(myPanel, new Rect2(12, 8, 276, 24), "", 18, Left);
+
+            gGold = IconRow(myPanel, 12, 40, UiArt.Gold);
+            gGem = IconRow(myPanel, 158, 40, UiArt.Gem);
+            gLevel = IconRow(myPanel, 12, 68, UiArt.Level);
+            gXp = IconRow(myPanel, 158, 68, UiArt.Xp);
+            gPop = IconRow(myPanel, 12, 96, UiArt.Pop, 276f);
+            gHp = IconRow(myPanel, 12, 124, UiArt.Hp);
+            gKill = IconRow(myPanel, 158, 124, UiArt.Kill);
+            gStreak = IconRow(myPanel, 12, 152, UiArt.Flame, 276f, 16, Dim);
+            MakePanel(myPanel, new Rect2(12, 182, 276, 12), new Color(0, 0, 0, 0.6f));
+            xpFill = MakePanel(myPanel, new Rect2(12, 182, 0, 12), new Color(0.55f, 0.85f, 0.5f));
+            gRelics = MakeLabel(myPanel, new Rect2(12, 202, 276, 220), "", 13, new Color(0.88f, 0.8f, 0.58f));
+            gRelics.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+
+            foePanel = MakePanel(root, new Rect2(1286, 104, 300, 236), PanelBg);
+            foeTitle = MakeLabel(foePanel, new Rect2(12, 8, 276, 24), "", 18, Right);
+            eGold = IconRow(foePanel, 12, 40, UiArt.Gold);
+            eGem = IconRow(foePanel, 158, 40, UiArt.Gem);
+            eLevel = IconRow(foePanel, 12, 68, UiArt.Level);
+            ePop = IconRow(foePanel, 158, 68, UiArt.Pop);
+            eKill = IconRow(foePanel, 12, 96, UiArt.Kill);
+            eRelics = MakeLabel(foePanel, new Rect2(12, 128, 276, 100), "", 13, new Color(0.95f, 0.72f, 0.72f));
+            eRelics.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+
+            logPanel = MakePanel(root, new Rect2(1286, 352, 300, 184), PanelBg);
+            MakeLabel(logPanel, new Rect2(12, 6, 276, 22), "战报", 15, Dim);
+            logLabel = MakeLabel(logPanel, new Rect2(12, 30, 276, 146), "", 12, new Color(0.8f, 0.84f, 0.9f));
+            logLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        }
+
+        // ---------------------------------------------------------------- 底部
+        void BuildBottom()
+        {
+            MakePanel(root, new Rect2(0, 640, 1600, 260), new Color(0.07f, 0.08f, 0.12f, 0.95f));
+
+            bool tipDebug = false;
+            foreach (var a in OS.GetCmdlineArgs()) if (a == "--tipdebug") tipDebug = true;
+            foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--tipdebug") tipDebug = true;
+            shop = new ShopPanel();
+            shop.forceTooltip = tipDebug;
+            shop.main = main;
+            shop.Position = new Vector2(0, 646);
+            shop.Size = new Vector2(1600, 112);
+            root.AddChild(shop);
+
+            MakeIcon(root, new Rect2(20, 772, 18, 18), UiArt.Matk);
+            MakeLabel(root, new Rect2(42, 766, 400, 24), "技能（战斗中先点技能，再点战场释放）", 14, Dim);
+            for (int i = 0; i < 4; i++)
+            {
+                int idx = i;
+                skillButtons[i] = MakeButton(root, new Rect2(20 + i * 200, 796, 190, 56), "", 15, () => main.OnSkill(idx));
+            }
+            hintLabel = MakeLabel(root, new Rect2(840, 766, 740, 90), "", 14, Dim);
+            hintLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            tipLabel = MakeLabel(root, new Rect2(20, 862, 1560, 24), "", 13, new Color(0.7f, 0.76f, 0.86f));
+        }
+
+        // ---------------------------------------------------------------- 遗物 / 宝石弹窗
         void BuildRelicPanel()
         {
-            relicPanel = MakePanel(new Rect2(300, 200, 1000, 420), new Color(0.10f, 0.09f, 0.16f, 0.97f));
+            relicPanel = MakePanel(root, new Rect2(300, 200, 1000, 420), new Color(0.10f, 0.09f, 0.16f, 0.97f));
             relicPanel.MouseFilter = Control.MouseFilterEnum.Stop;
-            var title = MakeLabel(relicPanel, new Rect2(24, 16, 952, 34), "肉鸽遗物 · 三选一（每 2 回合出现一次）", 24, Gold);
+            var title = MakeLabel(relicPanel, new Rect2(24, 16, 952, 34), "遗物 · 三选一", 24, Gold);
             title.HorizontalAlignment = HorizontalAlignment.Center;
             for (int i = 0; i < 3; i++)
             {
@@ -181,9 +220,9 @@ namespace Milaqi.Game
 
         void BuildGemPanel()
         {
-            gemPanel = MakePanel(new Rect2(340, 150, 920, 500), new Color(0.08f, 0.11f, 0.14f, 0.97f));
+            gemPanel = MakePanel(root, new Rect2(340, 150, 920, 500), new Color(0.08f, 0.11f, 0.14f, 0.97f));
             gemPanel.MouseFilter = Control.MouseFilterEnum.Stop;
-            var title = MakeLabel(gemPanel, new Rect2(20, 14, 880, 32), "宝石商店（购买后于下回合开始生效）", 22, new Color(0.6f, 0.9f, 1f));
+            var title = MakeLabel(gemPanel, new Rect2(20, 14, 880, 32), "宝石商店（下回合生效）", 22, new Color(0.6f, 0.9f, 1f));
             title.HorizontalAlignment = HorizontalAlignment.Center;
             gemInfo = MakeLabel(gemPanel, new Rect2(20, 50, 880, 26), "", 16, Gold);
             for (int i = 0; i < 3; i++)
@@ -192,111 +231,104 @@ namespace Milaqi.Game
                 gemButtons[i] = MakeButton(gemPanel, new Rect2(20 + i * 300, 86, 286, 150), "", 15, () => main.OnBuyGemRelic(idx));
                 gemButtons[i].ClipText = false;
             }
-            MakeLabel(gemPanel, new Rect2(20, 250, 880, 26), "技能强化（每级提升效果，最高 3 级）", 18, new Color(0.8f, 0.75f, 1f));
+            MakeLabel(gemPanel, new Rect2(20, 250, 880, 26), "技能强化（最高 3 级）", 18, new Color(0.8f, 0.75f, 1f));
             for (int i = 0; i < 3; i++)
             {
                 int idx = i;
                 gemSkillButtons[i] = MakeButton(gemPanel, new Rect2(20 + i * 300, 284, 286, 60), "", 15, () => main.OnUpgradeSkill(idx));
             }
             MakeButton(gemPanel, new Rect2(360, 370, 200, 50), "关闭", 18, () => main.OnToggleGemShop());
-            var gemNote = MakeLabel(gemPanel, new Rect2(20, 380, 320, 80), "宝石来源：成长型遗物、放弃遗物（+3）", 14, Dim);
-            gemNote.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            var note = MakeLabel(gemPanel, new Rect2(20, 380, 320, 80), "宝石来源：成长型遗物、放弃遗物（+3）", 14, Dim);
+            note.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             gemPanel.Visible = false;
         }
 
+        static string Rarity(string r)
+        {
+            if (r == "epic") return "史诗";
+            if (r == "rare") return "稀有";
+            return "普通";
+        }
+
+        string Line(string icon, string text) { return text; }
+
+        // ---------------------------------------------------------------- 刷新
         public void Refresh()
         {
-            if (match == null) return;
+            if (match == null || main == null) return;
             var p0 = Me;
             var p1 = Foe;
             var rcfg = match.db.Balance.round;
 
-            // 客户端（右侧玩家）时镜像两侧信息面板，保证「我方面板」总在自己那一侧
-            bool meLeft = (main != null ? main.localIndex : 0) == 0;
+            bool meLeft = main.localIndex == 0;
             float myX = meLeft ? 14f : 1286f;
             float foeX = meLeft ? 1286f : 14f;
             myPanel.Position = new Vector2(myX, 104);
             foePanel.Position = new Vector2(foeX, 104);
-            logPanel.Position = new Vector2(foeX, 348);
-            myTitle.Text = (meLeft ? "左侧王国" : "右侧王国") + "（你）";
+            logPanel.Position = new Vector2(foeX, 352);
+            myTitle.Text = meLeft ? "左侧王国" : "右侧王国";
             foeTitle.Text = meLeft ? "右侧王国" : "左侧王国";
             topSideL.Text = "左侧王国" + (meLeft ? "（你）" : "");
             topSideR.Text = "右侧王国" + (meLeft ? "" : "（你）");
 
             roundLabel.Text = "第 " + match.round + " 回合";
-            string phase = match.phase == MatchPhase.Prep ? "准备阶段" : match.phase == MatchPhase.Battle ? "战斗中" : match.phase == MatchPhase.Settle ? "结算中" : "游戏结束";
-            phaseLabel.Text = phase + (match.phase == MatchPhase.Prep ? "  剩余 " + Mathf.Ceil(match.phaseTimer) + "s" : "");
+            string phase = match.phase == MatchPhase.Prep ? "准备" : match.phase == MatchPhase.Battle ? "战斗中" : match.phase == MatchPhase.Settle ? "结算" : "结束";
+            phaseLabel.Text = phase;
             timerLabel.Text = match.phase == MatchPhase.Battle
                 ? (match.sim.maxSeconds - match.sim.time).ToString("0.0") + "s"
-                : (winnerText(match));
+                : (match.phase == MatchPhase.Prep ? Mathf.Ceil(match.phaseTimer) + "s" : (match.phase == MatchPhase.GameOver ? (match.winnerIndex >= 0 ? match.players[match.winnerIndex].name + " 胜" : "平局") : ""));
 
             float maxHp = Mathf.Max(1f, match.db.Balance.baseHp);
             leftHpBar.Size = new Vector2(460f * Mathf.Clamp(p0.baseHp / maxHp, 0f, 1f), 30);
             rightHpBar.Size = new Vector2(460f * Mathf.Clamp(p1.baseHp / maxHp, 0f, 1f), 30);
-            leftLabel.Text = "城邦生命 " + Mathf.Ceil(p0.baseHp) + " / " + (int)maxHp;
-            rightLabel.Text = "城邦生命 " + Mathf.Ceil(p1.baseHp) + " / " + (int)maxHp;
+            leftHpText.Text = "   " + Mathf.Ceil(p0.baseHp) + " / " + (int)maxHp;
+            rightHpText.Text = "   " + Mathf.Ceil(p1.baseHp) + " / " + (int)maxHp;
 
-            int popCap = match.PopCap(p0);
-            int popUsed = match.PopUsed(p0);
+            int popCap = match.PopCap(p0), popUsed = match.PopUsed(p0);
             int need = rcfg.XpToNext(p0.level);
-            myStats.Text = "金币 " + (int)p0.gold + "   宝石 " + (int)p0.gems + "\n"
-                + "等级 " + p0.level + " / " + rcfg.maxLevel + "   经验 " + (int)p0.xp + " / " + need + "\n"
-                + "人口 " + popUsed + " / " + popCap + "\n"
-                + "存活单位 " + match.sim.AliveCount(Me.Team) + "   杀戮值 " + (int)match.sim.KillValueSum(Me.Team) + "\n"
-                + "待部署 " + p0.pendingDeploy.Count + "\n"
-                + "连胜 " + p0.winStreak + "  连败 " + p0.lossStreak;
-            myRelics.Text = "遗物（" + p0.relicIds.Count + "）：\n" + RelicList(p0, 6);
-            float xpRatio = need > 0 ? Mathf.Clamp(p0.xp / need, 0f, 1f) : 1f;
-            xpFill.Size = new Vector2(276f * xpRatio, 14);
+            gGold.Text = ((int)p0.gold).ToString();
+            gGem.Text = ((int)p0.gems).ToString();
+            gLevel.Text = p0.level.ToString();
+            gXp.Text = (int)p0.xp + " / " + need;
+            gPop.Text = popUsed + " / " + popCap;
+            gHp.Text = Mathf.Ceil(p0.baseHp) + "";
+            gKill.Text = ((int)match.sim.KillValueSum(Me.Team)).ToString();
+            gStreak.Text = p0.winStreak > 0 ? ("连胜 " + p0.winStreak) : (p0.lossStreak > 0 ? ("连败 " + p0.lossStreak) : "—");
+            xpFill.Size = new Vector2(276f * (need > 0 ? Mathf.Clamp(p0.xp / need, 0f, 1f) : 1f), 12);
+            gRelics.Text = "遗物（" + p0.relicIds.Count + "）\n" + RelicList(p0, 7);
 
-            foeStats.Text = "金币 " + (int)p1.gold + "   宝石 " + (int)p1.gems + "\n"
-                + "等级 " + p1.level + "   人口 " + match.PopUsed(p1) + " / " + match.PopCap(p1) + "\n"
-                + "存活单位 " + match.sim.AliveCount(Foe.Team) + "   杀戮值 " + (int)match.sim.KillValueSum(Foe.Team);
-            foeRelics.Text = "遗物（" + p1.relicIds.Count + "）：\n" + RelicList(p1, 2);
+            eGold.Text = ((int)p1.gold).ToString();
+            eGem.Text = ((int)p1.gems).ToString();
+            eLevel.Text = p1.level.ToString();
+            ePop.Text = match.PopUsed(p1) + " / " + match.PopCap(p1);
+            eKill.Text = ((int)match.sim.KillValueSum(Foe.Team)).ToString();
+            eRelics.Text = "遗物（" + p1.relicIds.Count + "）\n" + RelicList(p1, 4);
 
             var logs = match.log;
             string logText = "";
-            int from = Mathf.Max(0, logs.Count - 9);
+            int from = Mathf.Max(0, logs.Count - 8);
             for (int i = from; i < logs.Count; i++) logText += "· " + logs[i].text + "\n";
             logLabel.Text = logText;
 
-            for (int i = 0; i < 5; i++)
-            {
-                var b = shopButtons[i];
-                if (i >= p0.shop.Count) { b.Text = "—"; b.Disabled = true; continue; }
-                var offer = p0.shop[i];
-                var def = match.db.Unit(offer.unitId);
-                if (def == null) { b.Text = "—"; b.Disabled = true; continue; }
-                int price = match.UnitPrice(p0, def);
-                bool canPop = match.PopUsed(p0) + def.pop <= popCap;
-                b.Text = "T" + def.tier + " " + def.name + "\n" + price + " 金 · 人口 " + def.pop + (offer.sold ? "\n已购买" : "");
-                b.Disabled = offer.sold || p0.gold < price || !canPop || match.phase != MatchPhase.Prep;
-            }
-
-            rerollBtn.Disabled = match.phase != MatchPhase.Prep || p0.gold < rcfg.rerollCost;
-            xpBtn.Disabled = match.phase != MatchPhase.Prep || p0.gold < rcfg.xpBuyCost || p0.level >= rcfg.maxLevel;
-            readyBtn.Disabled = match.phase != MatchPhase.Prep;
-            readyBtn.Text = p0.ready ? "已准备（等待对手）" : "开始战斗";
-            deployLabel.Text = p0.pendingDeploy.Count > 0
-                ? "有待部署单位：" + p0.pendingDeploy.Count + " 个 —— 点击战场自己那半边放置，或点「自动部署待上阵」"
-                : "";
+            if (shop != null) { shop.match = match; }
 
             for (int i = 0; i < 4; i++)
             {
                 var b = skillButtons[i];
-                if (i >= p0.skills.Count) { b.Text = "未解锁"; b.Disabled = true; b.Modulate = new Color(1, 1, 1, 0.4f); continue; }
+                if (i >= p0.skills.Count) { b.Text = "未解锁"; b.Disabled = true; b.Modulate = new Color(1, 1, 1, 0.35f); continue; }
                 string sid = p0.skills[i];
                 var sd = match.db.Skill(sid);
                 int lv = Mathf.Max(1, p0.SkillLevel(sid));
                 bool active = main.selectedSkill == sid;
-                b.Text = (sd != null ? sd.name : sid) + " Lv" + lv + (active ? "\n[释放中]" : "");
+                b.Text = (sd != null ? sd.name : sid) + " Lv" + lv + (active ? "  ◀释放中" : "");
                 b.Modulate = active ? new Color(1f, 0.9f, 0.5f) : Colors.White;
                 b.Disabled = match.phase != MatchPhase.Battle;
             }
 
             hintLabel.Text = match.phase == MatchPhase.Prep
-                ? "操作提示：\n· 点击商店购买兵种 → 点击战场" + (meLeft ? "左" : "右") + "半边部署\n· 人口受等级限制（当前 " + popUsed + "/" + popCap + "）；右键点击自己的兵可以出售换人口\n· 每 2 回合三选一遗物，宝石商店的东西下回合生效\n· 快捷键：空格=开始战斗  R=刷新  E=买经验  D=自动部署"
-                : "战斗中：点击技能按钮 → 点击战场任意位置释放。\n战后按双方存活单位的杀戮值差值对敌方城邦造成伤害。";
+                ? "左键点战场自己那半边部署部队\n右键点自己的兵出售（返还 60% 金币，腾人口换强兵）\n空格=开始战斗  E=买经验  D=自动部署  G=宝石商店  M=菜单"
+                : "战斗中：点技能 → 点战场释放\n战后按双方存活单位的杀戮值差值扣除敌方城邦生命";
+            tipLabel.Text = "存活的兵不会消失：买下的部队永久属于你，每回合全员满血重新上阵";
 
             RefreshRelicPanel();
             RefreshGemPanel();
@@ -304,7 +336,7 @@ namespace Milaqi.Game
 
         string RelicList(PlayerState p, int maxLines)
         {
-            if (p.relicIds.Count == 0) return "  暂无\n";
+            if (p.relicIds.Count == 0) return "  暂无";
             string s = "";
             int shown = Mathf.Min(maxLines, p.relicIds.Count);
             for (int i = 0; i < shown; i++)
@@ -312,14 +344,8 @@ namespace Milaqi.Game
                 var rd = match.db.Relic(p.relicIds[i]);
                 if (rd != null) s += "  · " + rd.name + "\n";
             }
-            if (p.relicIds.Count > shown) s += "  …… 还有 " + (p.relicIds.Count - shown) + " 个\n";
+            if (p.relicIds.Count > shown) s += "  …… 还有 " + (p.relicIds.Count - shown) + " 个";
             return s;
-        }
-
-        static string winnerText(Match m)
-        {
-            if (m.phase == MatchPhase.GameOver) return m.winnerIndex >= 0 ? m.players[m.winnerIndex].name + " 获胜" : "平局";
-            return "";
         }
 
         void RefreshRelicPanel()
@@ -340,19 +366,12 @@ namespace Milaqi.Game
             }
         }
 
-        static string Rarity(string r)
-        {
-            if (r == "epic") return "史诗";
-            if (r == "rare") return "稀有";
-            return "普通";
-        }
-
         void RefreshGemPanel()
         {
             gemPanel.Visible = main.gemShopOpen;
             if (!main.gemShopOpen) return;
             var p = Me;
-            gemInfo.Text = "当前宝石：" + (int)p.gems + "   金币：" + (int)p.gold;
+            gemInfo.Text = "宝石 " + (int)p.gems + "   金币 " + (int)p.gold;
             for (int i = 0; i < 3; i++)
             {
                 if (i >= p.gemShop.Count) { gemButtons[i].Text = "—"; gemButtons[i].Disabled = true; continue; }
@@ -370,7 +389,7 @@ namespace Milaqi.Game
                 int lv = Mathf.Max(1, p.SkillLevel(sid));
                 if (lv >= 3) { gemSkillButtons[i].Text = (sd != null ? sd.name : sid) + " 已满级"; gemSkillButtons[i].Disabled = true; continue; }
                 int cost = 5 + lv * 4;
-                gemSkillButtons[i].Text = "强化 " + (sd != null ? sd.name : sid) + " Lv" + lv + " → Lv" + (lv + 1) + "\n" + cost + " 宝石";
+                gemSkillButtons[i].Text = "强化 " + (sd != null ? sd.name : sid) + " Lv" + lv + " → " + (lv + 1) + "\n" + cost + " 宝石";
                 gemSkillButtons[i].Disabled = p.gems < cost;
             }
         }

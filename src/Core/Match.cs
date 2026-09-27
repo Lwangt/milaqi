@@ -223,8 +223,11 @@ namespace Milaqi.Core
         {
             round++;
             var rcfg = db.Balance.round;
-            foreach (var p in players)
+            // 每回合交替结算顺序：双方共用一条随机数流，固定让 0 号先抽会积累出先手优势
+            int firstIdx = (round & 1) == 0 ? 0 : 1;
+            for (int pi = 0; pi < 2; pi++)
             {
+                var p = players[(firstIdx + pi) & 1];
                 ApplyPendingPurchases(p, first);
                 float goldGain = rcfg.baseIncome;
                 float gemGain = 0f;
@@ -352,35 +355,23 @@ namespace Milaqi.Core
         }
 
         // ---------------------------------------------------------------- 商店
+        /// <summary>
+        /// 兵种商店 = 当前回合已解锁的全部兵种（不再随机抽卡，也不需要刷新）。
+        /// 玩家的选择空间只受金币与人口限制。
+        /// </summary>
         public void RollShop(PlayerState p)
         {
             p.shop.Clear();
-            var odds = db.Balance.round.OddsFor(p.level);
-            var poolByTier = new List<UnitDef>[5];
-            for (int t = 0; t < 5; t++) poolByTier[t] = new List<UnitDef>();
+            var list = new List<UnitDef>();
             for (int i = 0; i < db.Units.Length; i++)
             {
                 var u = db.Units[i];
-                if (u == null || u.unlockRound > round || u.tier < 1 || u.tier > 5) continue;
-                poolByTier[u.tier - 1].Add(u);
+                if (u == null || u.tier < 1 || u.tier > 5) continue;
+                if (u.unlockRound > round) continue;
+                list.Add(u);
             }
-            for (int s = 0; s < db.Balance.round.shopSize; s++)
-            {
-                int roll = Rand(100), acc = 0, tier = 0;
-                for (int t = 0; t < 5; t++)
-                {
-                    acc += odds[t];
-                    if (roll < acc) { tier = t; break; }
-                }
-                var list = poolByTier[tier];
-                if (list.Count == 0)
-                {
-                    for (int t = tier - 1; t >= 0 && list.Count == 0; t--) list = poolByTier[t];
-                }
-                if (list.Count == 0) continue;
-                var pick = list[Rand(list.Count)];
-                p.shop.Add(new ShopOffer { unitId = pick.id, price = UnitPrice(p, pick) });
-            }
+            list.Sort((a, b) => a.tier != b.tier ? a.tier.CompareTo(b.tier) : (a.price != b.price ? a.price.CompareTo(b.price) : string.CompareOrdinal(a.id, b.id)));
+            for (int i = 0; i < list.Count; i++) p.shop.Add(new ShopOffer { unitId = list[i].id, price = UnitPrice(p, list[i]) });
         }
 
         void BuildGemShop(PlayerState p)
@@ -405,14 +396,12 @@ namespace Milaqi.Core
         {
             if (phase != MatchPhase.Prep || slotIndex < 0 || slotIndex >= p.shop.Count) return false;
             var offer = p.shop[slotIndex];
-            if (offer.sold) return false;
             var def = db.Unit(offer.unitId);
             if (def == null) return false;
             int price = UnitPrice(p, def);
             if (p.gold < price) return false;
             if (PopUsed(p) + def.pop > PopCap(p)) return false;
             p.gold -= price;
-            offer.sold = true;
             p.roster.Add(new OwnedUnit { id = def.id });
             return true;
         }
@@ -445,15 +434,8 @@ namespace Milaqi.Core
 
         void RollShopAfterLevel(PlayerState p) { if (p.isAI) return; }
 
-        public bool Reroll(PlayerState p)
-        {
-            if (phase != MatchPhase.Prep) return false;
-            int cost = db.Balance.round.rerollCost;
-            if (p.gold < cost) return false;
-            p.gold -= cost;
-            RollShop(p);
-            return true;
-        }
+        /// <summary>刷新功能已移除（商店直接列出全部已解锁兵种）。保留接口给旧存档/协议兼容。</summary>
+        public bool Reroll(PlayerState p) { return false; }
 
         public bool BuyGemRelic(PlayerState p, string relicId)
         {

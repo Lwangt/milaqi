@@ -62,7 +62,7 @@ namespace Milaqi.Core
         public float saveBuffer = 4f;
         public int reserveGold;
         public bool allowUpgrade = true;    // 是否会「卖弱兵换强兵」
-        public int maxRerolls = 2;          // 每回合最多刷新次数
+        public int maxRerolls = 2;          // 已废弃（商店不再刷新），保留字段兼容
         public float buyRandomness = 0.1f;  // 买兵时的随机程度（越高越差）
     }
 

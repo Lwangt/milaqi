@@ -20,7 +20,6 @@ namespace Milaqi.Core
         float skillTimer;
         int lastRound = -1;
         int xpBuysThisRound;
-        int rerollsThisRound;
         int deployIndex;
         readonly Dictionary<string, int> deployCycle = new Dictionary<string, int>();
 
@@ -45,7 +44,6 @@ namespace Milaqi.Core
                 skillTimer = 1.5f;
                 deployIndex = 0;
                 xpBuysThisRound = 0;
-                rerollsThisRound = 0;
             }
             if (match.phase == MatchPhase.Prep)
             {
@@ -257,13 +255,8 @@ namespace Milaqi.Core
                 }
             }
 
-            // 刷新：人口没满却买不到合适的东西就换一批
+            // 商店已包含全部已解锁兵种，不需要刷新
             bool popRoom = match.PopUsed(player) + 1 <= match.PopCap(player);
-            if (!bought && popRoom && rerollsThisRound < difficulty.maxRerolls && player.gold >= db.Balance.round.rerollCost + 6f)
-            {
-                rerollsThisRound++;
-                if (match.Reroll(player)) return;
-            }
             bool noRoom = match.PopUsed(player) >= match.PopCap(player);
             bool upgraded = difficulty.allowUpgrade && TryUpgrade(scored, foe);
             bought |= upgraded;

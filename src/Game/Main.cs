@@ -367,7 +367,6 @@ namespace Milaqi.Game
             Send(NetManager.CmdBuy, w => w.Write(slot));
         }
 
-        public void OnReroll() { Send(NetManager.CmdReroll, null); }
         public void OnBuyXp() { Send(NetManager.CmdBuyXp, null); }
 
         public void OnAutoDeploy() { Send(NetManager.CmdAutoDeploy, null); }
@@ -448,7 +447,6 @@ namespace Milaqi.Game
                 switch (k.Keycode)
                 {
                     case Key.Space: OnReady(); break;
-                    case Key.R: OnReroll(); break;
                     case Key.E: OnBuyXp(); break;
                     case Key.D: OnAutoDeploy(); break;
                     case Key.G: OnToggleGemShop(); break;

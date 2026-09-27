@@ -1,0 +1,191 @@
+{
+  "militia": {
+    "body": "infantry",
+    "weapon": "sword"
+  },
+  "spearman": {
+    "body": "infantry",
+    "weapon": "spear"
+  },
+  "archer": {
+    "body": "archer",
+    "weapon": "bow",
+    "extra": [
+      "cloak"
+    ]
+  },
+  "skeleton": {
+    "body": "undead",
+    "weapon": "sword"
+  },
+  "goblin": {
+    "body": "beast",
+    "weapon": "dagger"
+  },
+  "swordsman": {
+    "body": "infantry",
+    "weapon": "sword",
+    "extra": [
+      "shield"
+    ]
+  },
+  "shieldman": {
+    "body": "heavy",
+    "extra": [
+      "shield"
+    ]
+  },
+  "pikeman": {
+    "body": "heavy",
+    "weapon": "lange"
+  },
+  "apprentice_mage": {
+    "body": "mage",
+    "weapon": "staff"
+  },
+  "wolf_rider": {
+    "body": "cavalry",
+    "weapon": "lange"
+  },
+  "crossbowman": {
+    "body": "archer",
+    "weapon": "crossbow"
+  },
+  "knight": {
+    "body": "cavalry",
+    "weapon": "spear",
+    "extra": [
+      "plume"
+    ]
+  },
+  "guardian": {
+    "body": "heavy",
+    "extra": [
+      "tower",
+      "plume"
+    ]
+  },
+  "ranger": {
+    "body": "archer",
+    "weapon": "bow",
+    "extra": [
+      "cloak"
+    ]
+  },
+  "vampire": {
+    "body": "undead",
+    "weapon": "claw",
+    "extra": [
+      "cloak"
+    ]
+  },
+  "ballista": {
+    "body": "machine",
+    "weapon": "ballista"
+  },
+  "zealot": {
+    "body": "infantry",
+    "weapon": "dual"
+  },
+  "ice_mage": {
+    "body": "mage",
+    "weapon": "orb"
+  },
+  "templar": {
+    "body": "heavy",
+    "weapon": "sword",
+    "extra": [
+      "shield",
+      "plume"
+    ]
+  },
+  "sniper": {
+    "body": "archer",
+    "weapon": "crossbow",
+    "extra": [
+      "cloak"
+    ]
+  },
+  "cannoneer": {
+    "body": "machine",
+    "weapon": "cannon"
+  },
+  "chaos_golem": {
+    "body": "giant",
+    "weapon": "club"
+  },
+  "necromancer": {
+    "body": "undead",
+    "weapon": "staff"
+  },
+  "shadow_assassin": {
+    "body": "assassin",
+    "weapon": "dual"
+  },
+  "guan_yu": {
+    "body": "hero",
+    "weapon": "glaive",
+    "extra": [
+      "plume"
+    ]
+  },
+  "zhao_yun": {
+    "body": "cavalry",
+    "weapon": "spear",
+    "extra": [
+      "plume"
+    ]
+  },
+  "titan": {
+    "body": "giant",
+    "weapon": "club",
+    "extra": [
+      "crown"
+    ]
+  },
+  "wind_swordsman": {
+    "body": "assassin",
+    "weapon": "dual",
+    "extra": [
+      "hood"
+    ]
+  },
+  "archmage": {
+    "body": "mage",
+    "weapon": "orb",
+    "extra": [
+      "crown"
+    ]
+  },
+  "dragon_knight": {
+    "body": "cavalry",
+    "weapon": "lange",
+    "extra": [
+      "wings",
+      "plume"
+    ]
+  },
+  "war_beast": {
+    "body": "beast",
+    "weapon": "claw"
+  },
+  "lich": {
+    "body": "undead",
+    "weapon": "staff",
+    "extra": [
+      "crown",
+      "cloak"
+    ]
+  },
+  "gargoyle": {
+    "body": "machine",
+    "weapon": "claw",
+    "extra": [
+      "wings"
+    ]
+  },
+  "reinforcement": {
+    "body": "infantry",
+    "weapon": "sword"
+  }
+}

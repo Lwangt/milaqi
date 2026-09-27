@@ -172,14 +172,14 @@
       "name": "秘法核心",
       "category": "power",
       "rarity": "rare",
-      "desc": "全体单位魔法攻击 +20%。",
+      "desc": "全体单位魔法攻击 +14%。",
       "effects": [
         {
           "type": "stat",
           "target": "all",
           "stat": "matk",
           "mode": "pct",
-          "value": 0.2
+          "value": 0.14
         }
       ],
       "flavor": "奥术在血脉中沸腾。"
@@ -389,14 +389,14 @@
       "name": "法师塔",
       "category": "unit",
       "rarity": "rare",
-      "desc": "魔法单位魔法攻击 +24%。",
+      "desc": "魔法单位魔法攻击 +16%。",
       "effects": [
         {
           "type": "stat",
           "target": "magic",
           "stat": "matk",
           "mode": "pct",
-          "value": 0.24
+          "value": 0.16
         }
       ],
       "flavor": "塔尖所指，即为灰烬。"
@@ -654,13 +654,13 @@
       "name": "奥术水晶",
       "category": "skill",
       "rarity": "rare",
-      "desc": "技能伤害 +30%。",
+      "desc": "技能伤害 +18%。",
       "effects": [
         {
           "type": "skillMod",
           "stat": "damage",
           "mode": "pct",
-          "value": 0.3
+          "value": 0.18
         }
       ],
       "flavor": "水晶越亮，毁灭越近。"
