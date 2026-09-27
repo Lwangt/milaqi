@@ -510,6 +510,16 @@ namespace Milaqi.Core
             return true;
         }
 
+        /// <summary>撤回单个已上场的单位（回到待出战队列）。</summary>
+        public bool UnplaceUnit(PlayerState p, int rosterIndex)
+        {
+            if (rosterIndex < 0 || rosterIndex >= p.roster.Count) return false;
+            if (!p.roster[rosterIndex].placed) return false;
+            p.roster[rosterIndex].placed = false;
+            RebuildTeam(p);
+            return true;
+        }
+
         /// <summary>把所有部队撤回待出战队列（清空战场布阵）。</summary>
         public void UnplaceAll(PlayerState p)
         {

@@ -199,7 +199,7 @@ namespace Milaqi.Game
                 int idx = i;
                 skillButtons[i] = MakeButton(root, new Rect2(20 + i * 200, 834, 190, 50), "", 15, () => main.OnSkill(idx));
             }
-            hintLabel = MakeLabel(root, new Rect2(840, 806, 740, 84), "", 14, Dim);
+            hintLabel = MakeLabel(root, new Rect2(840, 812, 740, 82), "", 13, Dim);
             hintLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         }
 
@@ -213,13 +213,13 @@ namespace Milaqi.Game
 
         void BuildQueue()
         {
-            queuePanel = MakePanel(root, new Rect2(14, 754, 878, 50), PanelBg);
-            MakeLabel(queuePanel, new Rect2(8, 13, 58, 24), "待出战", 14, Dim);
+            queuePanel = MakePanel(root, new Rect2(14, 752, 1088, 52), PanelBg);
+            MakeLabel(queuePanel, new Rect2(8, 15, 44, 24), "部队", 14, Dim);
             for (int i = 0; i < QueueChips; i++)
             {
                 int idx = i;
                 var b = new Button();
-                b.Position = new Vector2(66 + i * 48, 3);
+                b.Position = new Vector2(52 + i * 48, 4);
                 b.Size = new Vector2(44, 44);
                 b.FocusMode = Control.FocusModeEnum.None;
                 var sb = new StyleBoxFlat();
@@ -231,59 +231,66 @@ namespace Milaqi.Game
                 var hov = (StyleBoxFlat)sb.Duplicate();
                 hov.BorderColor = new Color(1f, 0.88f, 0.5f);
                 b.AddThemeStyleboxOverride("hover", hov);
-                b.Pressed += () => { var id = ChipUnitId(idx); if (id != null) main.OnQueueSelect(id); };
+                b.Pressed += () => main.OnQueueChip(idx);
                 queuePanel.AddChild(b);
                 queueChips.Add(b);
                 queueIcons.Add(MakeIcon(b, new Rect2(2, 1, 40, 40), null));
-                queuePops.Add(MakeLabel(b, new Rect2(28, 24, 16, 18), "", 11, Gold));
+                // 人口数字加深色底，避免和立绘糊在一起
+                var bg = new Panel();
+                var bsb = new StyleBoxFlat();
+                bsb.BgColor = new Color(0f, 0f, 0f, 0.72f);
+                bsb.CornerRadiusTopLeft = bsb.CornerRadiusTopRight = bsb.CornerRadiusBottomLeft = bsb.CornerRadiusBottomRight = 6;
+                bg.AddThemeStyleboxOverride("panel", bsb);
+                bg.Position = new Vector2(26, 27);
+                bg.Size = new Vector2(16, 15);
+                bg.MouseFilter = Control.MouseFilterEnum.Ignore;
+                b.AddChild(bg);
+                queuePops.Add(MakeLabel(b, new Rect2(26, 25, 16, 18), "", 11, Gold));
             }
-            queueInfo = MakeLabel(queuePanel, new Rect2(66, 13, 800, 24), "", 13, Dim);
-            MakeButton(root, new Rect2(900, 754, 110, 24), "自动布阵", 13, () => main.OnAutoDeploy());
-            MakeButton(root, new Rect2(900, 780, 110, 24), "撤回全部", 13, () => main.OnUnplaceAll());
-            MakeButton(root, new Rect2(1016, 754, 104, 50), "取消选中", 13, () => main.OnQueueSelect(null));
-        }
-
-        string ChipUnitId(int chipIndex)
-        {
-            if (match == null || main == null) return null;
-            var p = Me;
-            int n = 0;
-            for (int i = 0; i < p.roster.Count; i++)
-            {
-                if (p.roster[i].placed) continue;
-                if (n == chipIndex) return p.roster[i].id;
-                n++;
-            }
-            return null;
+            queueInfo = MakeLabel(queuePanel, new Rect2(824, 6, 256, 42), "", 11, Dim);
+            queueInfo.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            MakeButton(root, new Rect2(1296, 754, 140, 24), "自动布阵", 13, () => main.OnAutoDeploy());
+            MakeButton(root, new Rect2(1296, 782, 140, 24), "撤回全部", 13, () => main.OnUnplaceAll());
+            MakeButton(root, new Rect2(1444, 754, 140, 50), "取消选中", 13, () => main.OnQueueSelect(null));
         }
 
         void RefreshQueue()
         {
             if (match == null || main == null) return;
             var p = Me;
-            int n = 0;
+            int placed = 0, pending = 0;
             for (int i = 0; i < QueueChips; i++)
             {
-                string id = ChipUnitId(i);
                 var b = queueChips[i];
-                if (id == null) { b.Visible = false; queueIcons[i].Visible = false; queuePops[i].Visible = false; continue; }
-                n++;
-                var def = match.db.Unit(id);
-                b.Visible = true; queueIcons[i].Visible = true; queuePops[i].Visible = true;
-                queueIcons[i].Texture = UnitPortrait.Get(id);
+                if (i >= p.roster.Count) { b.Visible = false; continue; }
+                var o = p.roster[i];
+                var def = match.db.Unit(o.id);
+                b.Visible = true;
+                queueIcons[i].Texture = UnitPortrait.Get(o.id);
                 queuePops[i].Text = def != null ? def.pop.ToString() : "";
-                bool sel = main.queueSelected == id;
-                b.Modulate = sel ? new Color(1f, 0.92f, 0.6f) : Colors.White;
-                b.Scale = sel ? new Vector2(1.08f, 1.08f) : Vector2.One;
+                if (o.placed) placed++; else pending++;
+
+                bool sel = !o.placed && main.queueSelected == o.id;
+                // 已上场：正常亮度 + 绿色描边；待部署：半透明 + 黄色描边；选中：高亮放大
+                b.Modulate = o.placed ? Colors.White : new Color(1f, 1f, 1f, sel ? 1f : 0.55f);
+                b.Scale = sel ? new Vector2(1.1f, 1.1f) : Vector2.One;
+                b.AddThemeStyleboxOverride("normal", ChipStyle(o.placed, sel));
+                b.AddThemeStyleboxOverride("hover", ChipStyle(o.placed, true));
+                b.TooltipText = (def != null ? def.name : o.id) + (o.placed ? "（已上场，点击撤回）" : "（待部署，点击选中）");
             }
-            int total = 0;
-            for (int i = 0; i < p.roster.Count; i++) if (!p.roster[i].placed) total++;
-            if (total > 0)
-                queueInfo.Text = "  " + total + " 个单位待部署 —— 点一个选中它，再点战场自己那半边放下";
-            else if (p.roster.Count > 0)
-                queueInfo.Text = "  全部已布阵（" + p.roster.Count + " 个单位）";
-            else
-                queueInfo.Text = "  队列为空 —— 点上面的兵种卡片购买（一次买一个）";
+            queueInfo.Text = "已上场 " + placed + "  待部署 " + pending + "  人口 " + match.PopUsed(p) + "/" + match.PopCap(p)
+                + (pending > 0 ? "\n选中后点战场放下" : "\n点已上场的可撤回");
+        }
+
+        static StyleBoxFlat ChipStyle(bool placed, bool highlight)
+        {
+            var sb = new StyleBoxFlat();
+            sb.BgColor = new Color(0.15f, 0.17f, 0.24f, placed ? 0.95f : 0.6f);
+            sb.BorderColor = highlight ? new Color(1f, 0.88f, 0.5f)
+                                      : (placed ? new Color(0.38f, 0.85f, 0.5f) : new Color(0.55f, 0.5f, 0.35f));
+            sb.BorderWidthTop = sb.BorderWidthBottom = sb.BorderWidthLeft = sb.BorderWidthRight = highlight ? 3 : 2;
+            sb.CornerRadiusTopLeft = sb.CornerRadiusTopRight = sb.CornerRadiusBottomLeft = sb.CornerRadiusBottomRight = 7;
+            return sb;
         }
 
         // ---------------------------------------------------------------- 遗物 / 宝石弹窗

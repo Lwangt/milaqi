@@ -442,6 +442,7 @@ namespace Milaqi.Game
                         }
                     case NetManager.CmdAutoDeploy: match.AutoDeployAll(p); break;
                     case NetManager.CmdUnplace: match.UnplaceAll(p); break;
+                    case NetManager.CmdRecallUnit: match.UnplaceUnit(p, r.ReadInt32()); break;
                     case NetManager.CmdPickRelic: match.ChooseRelic(p, r.ReadString()); break;
                     case NetManager.CmdBuyGemRelic: match.BuyGemRelic(p, r.ReadString()); break;
                     case NetManager.CmdUpgradeSkill: match.UpgradeSkill(p, r.ReadString()); break;
@@ -475,6 +476,21 @@ namespace Milaqi.Game
         {
             if (unitId == null) { queueSelected = null; return; }
             queueSelected = queueSelected == unitId ? null : unitId;
+        }
+
+        /// <summary>点击队列里的第 idx 个单位：已上场则撤回，未上场则选中/取消选中。</summary>
+        public void OnQueueChip(int idx)
+        {
+            var p = match.players[localIndex];
+            if (idx < 0 || idx >= p.roster.Count) return;
+            var o = p.roster[idx];
+            if (o.placed)
+            {
+                queueSelected = null;
+                Send(NetManager.CmdRecallUnit, w => w.Write(idx));
+                return;
+            }
+            queueSelected = queueSelected == o.id ? null : o.id;
         }
 
         public void OnUnplaceAll()
