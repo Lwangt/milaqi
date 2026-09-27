@@ -79,7 +79,7 @@ namespace Milaqi.Game
             foeTitle = MakeLabel(rp, new Rect2(12, 8, 280, 24), "敌方王国", 18, Right);
             foeStats = MakeLabel(rp, new Rect2(12, 34, 280, 130), "", 16, Colors.White);
             foeStats.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            foeRelics = MakeLabel(rp, new Rect2(12, 168, 280, 56), "", 13, new Color(0.95f, 0.72f, 0.72f));
+            foeRelics = MakeLabel(rp, new Rect2(12, 168, 280, 44), "", 12, new Color(0.95f, 0.72f, 0.72f));
             foeRelics.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 
             var lg = MakePanel(new Rect2(1286, 348, 300, 188), PanelBg);
@@ -245,14 +245,14 @@ namespace Milaqi.Game
                 + "存活单位 " + match.sim.AliveCount(Me.Team) + "   杀戮值 " + (int)match.sim.KillValueSum(Me.Team) + "\n"
                 + "待部署 " + p0.pendingDeploy.Count + "\n"
                 + "连胜 " + p0.winStreak + "  连败 " + p0.lossStreak;
-            myRelics.Text = "遗物（" + p0.relicIds.Count + "）：\n" + RelicList(p0, 8);
+            myRelics.Text = "遗物（" + p0.relicIds.Count + "）：\n" + RelicList(p0, 6);
             float xpRatio = need > 0 ? Mathf.Clamp(p0.xp / need, 0f, 1f) : 1f;
             xpFill.Size = new Vector2(276f * xpRatio, 14);
 
             foeStats.Text = "金币 " + (int)p1.gold + "   宝石 " + (int)p1.gems + "\n"
                 + "等级 " + p1.level + "   人口 " + match.PopUsed(p1) + " / " + match.PopCap(p1) + "\n"
                 + "存活单位 " + match.sim.AliveCount(Foe.Team) + "   杀戮值 " + (int)match.sim.KillValueSum(Foe.Team);
-            foeRelics.Text = "遗物（" + p1.relicIds.Count + "）：\n" + RelicList(p1, 3);
+            foeRelics.Text = "遗物（" + p1.relicIds.Count + "）：\n" + RelicList(p1, 2);
 
             var logs = match.log;
             string logText = "";
