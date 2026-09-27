@@ -124,7 +124,7 @@
           "meteor",
           "summon"
         ],
-        "tierBias": 7,
+        "tierBias": 8,
         "factionBonus": []
       }
     },
@@ -221,7 +221,7 @@
       "icon": "bow",
       "desc": "极限远程输出 + 少量重甲前排。用射程和攻速把敌人消灭在接触之前。",
       "tagWeight": {
-        "ranged": 1.2,
+        "ranged": 0.8,
         "human": 0.9,
         "shield": 0.9
       },
@@ -269,8 +269,8 @@
       "icon": "magic",
       "desc": "魔法伤害无视物理防御，专治重甲与大群低血单位。",
       "tagWeight": {
-        "magic": 1.6,
-        "elemental": 1.1,
+        "magic": 1.1,
+        "elemental": 0.9,
         "undead": 0.7,
         "human": 0.8,
         "shield": 0.7
@@ -310,15 +310,7 @@
           "arcane_blast"
         ],
         "tierBias": 0,
-        "factionBonus": [
-          {
-            "type": "stat",
-            "target": "magic",
-            "stat": "matk",
-            "mode": "pct",
-            "value": 0.06
-          }
-        ]
+        "factionBonus": []
       }
     },
     {
@@ -373,42 +365,35 @@
             "target": "assassin",
             "stat": "hp",
             "mode": "pct",
-            "value": 1.1
+            "value": 1.3
           },
           {
             "type": "stat",
             "target": "assassin",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.6
+            "value": 0.72
           },
           {
             "type": "stat",
             "target": "cavalry",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.6
+            "value": 0.72
           },
           {
             "type": "stat",
             "target": "cavalry",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.35
-          },
-          {
-            "type": "stat",
-            "target": "cavalry",
-            "stat": "speed",
-            "mode": "pct",
-            "value": 0.18
+            "value": 0.42
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.25
+            "value": 0.3
           }
         ]
       }
@@ -459,35 +444,35 @@
           "heal",
           "horn"
         ],
-        "tierBias": 6,
+        "tierBias": 7,
         "factionBonus": [
           {
             "type": "stat",
             "target": "hero",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.6
+            "value": 0.9
           },
           {
             "type": "stat",
             "target": "hero",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.45
+            "value": 0.7
           },
           {
             "type": "stat",
             "target": "giant",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.4
+            "value": 0.55
           },
           {
             "type": "stat",
             "target": "giant",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.25
+            "value": 0.35
           }
         ]
       }
@@ -546,14 +531,14 @@
             "target": "all",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.7
+            "value": 0.85
           },
           {
             "type": "stat",
             "target": "all",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.5
+            "value": 0.6
           }
         ]
       }

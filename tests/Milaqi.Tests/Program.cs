@@ -54,6 +54,16 @@ namespace Milaqi.Tests
                 ArchetypeMatrix(db, n);
             }
             if (mode == "regress") { fails += Regression(db); }
+            if (mode == "cross")
+            {
+                // cross <A> <nA> <B> <nB> <局数>  —— 同人口跨兵种对抗，检验单兵强度是否平衡
+                string a = args.Length > 1 ? args[1] : "archer";
+                int na = args.Length > 2 ? int.Parse(args[2]) : 6;
+                string b = args.Length > 3 ? args[3] : "militia";
+                int nb = args.Length > 4 ? int.Parse(args[4]) : 6;
+                int n = args.Length > 5 ? int.Parse(args[5]) : 400;
+                CrossTest(db, a, na, b, nb, n);
+            }
             if (mode == "diag")
             {
                 string a = args.Length > 1 ? args[1] : "greed";
@@ -288,6 +298,38 @@ namespace Milaqi.Tests
             double bias = (lw + rw) > 0 ? 100.0 * Math.Abs(lw - rw) / (lw + rw) : 0;
             Check(bias < 8.0, "镜像阵容左右胜率偏差 < 8%（实测 " + bias.ToString("0.0") + "%）", ref fails);
             return fails;
+        }
+
+        /// <summary>同人口跨兵种对抗：A 方 na 个 vs B 方 nb 个，看谁赢。用于检验单兵强度。</summary>
+        static void CrossTest(GameDatabase db, string a, int na, string b, int nb, int n)
+        {
+            var da = db.Unit(a); var dbb = db.Unit(b);
+            if (da == null || dbb == null) { Console.WriteLine("兵种 id 错误"); return; }
+            int popA = da.pop * na, popB = dbb.pop * nb;
+            int aw = 0, bw = 0, tie = 0;
+            double kv = 0;
+            for (int i = 0; i < n; i++)
+            {
+                var m = new Match(db, 70000 + i * 17);
+                m.Start();
+                m.players[0].roster.Clear(); m.players[1].roster.Clear();
+                m.sim.ClearUnits();
+                for (int k = 0; k < na; k++) m.players[0].roster.Add(new OwnedUnit { id = a });
+                for (int k = 0; k < nb; k++) m.players[1].roster.Add(new OwnedUnit { id = b });
+                m.BeginBattle();
+                float t = 0f;
+                while (!m.sim.BattleOver && t < 50f) { m.sim.Step(1f / 30f); t += 1f / 30f; }
+                float l, r; m.sim.Settle(out l, out r);
+                kv += l - r;
+                if (l > r) aw++; else if (r > l) bw++; else tie++;
+            }
+            Console.WriteLine();
+            Console.WriteLine("== 同人口对抗： " + da.name + " x" + na + "（" + popA + " 人口） vs "
+                + dbb.name + " x" + nb + "（" + popB + " 人口），" + n + " 局 ==");
+            Console.WriteLine("  " + da.name + " 胜 " + (100.0 * aw / n).ToString("0.0") + "%   "
+                + dbb.name + " 胜 " + (100.0 * bw / n).ToString("0.0") + "%   平 " + tie
+                + "   平均杀戮值差 " + (kv / n).ToString("0.0"));
+            Console.WriteLine("  （人口相等时应在 50% 附近才算平衡）");
         }
 
         /// <summary>把一场战斗的过程压成一个签名，用于检测「所有对局完全相同」。</summary>
