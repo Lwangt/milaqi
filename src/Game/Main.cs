@@ -441,6 +441,7 @@ namespace Milaqi.Game
                             break;
                         }
                     case NetManager.CmdAutoDeploy: match.AutoDeployAll(p); break;
+                    case NetManager.CmdUnplace: match.UnplaceAll(p); break;
                     case NetManager.CmdPickRelic: match.ChooseRelic(p, r.ReadString()); break;
                     case NetManager.CmdBuyGemRelic: match.BuyGemRelic(p, r.ReadString()); break;
                     case NetManager.CmdUpgradeSkill: match.UpgradeSkill(p, r.ReadString()); break;
@@ -457,9 +458,29 @@ namespace Milaqi.Game
         }
 
         // ---------------------------------------------------------------- UI 回调
+        /// <summary>当前在「待出战队列」里选中的兵种（点击战场即部署它）</summary>
+        public string queueSelected;
+        ulong _lastBuyMs;
+
         public void OnBuyUnit(int slot)
         {
+            // 防抖：防止一次点击被重复派发（双击/触控板/低帧率）导致连买
+            ulong now = Time.GetTicksMsec();
+            if (now - _lastBuyMs < 150) return;
+            _lastBuyMs = now;
             Send(NetManager.CmdBuy, w => w.Write(slot));
+        }
+
+        public void OnQueueSelect(string unitId)
+        {
+            if (unitId == null) { queueSelected = null; return; }
+            queueSelected = queueSelected == unitId ? null : unitId;
+        }
+
+        public void OnUnplaceAll()
+        {
+            Send(NetManager.CmdUnplace, null);
+            queueSelected = null;
         }
 
         public void OnBuyXp() { Send(NetManager.CmdBuyXp, null); }
@@ -524,7 +545,10 @@ namespace Milaqi.Game
                 ? fieldPos.X <= match.sim.fieldWidth * 0.5f
                 : fieldPos.X >= match.sim.fieldWidth * 0.5f;
             if (!mySide) return;
-            string uid = p.pendingDeploy[0];
+            // 优先部署队列里选中的兵种，没选就按队列顺序取第一个
+            string uid = null;
+            if (!string.IsNullOrEmpty(queueSelected) && p.pendingDeploy.Contains(queueSelected)) uid = queueSelected;
+            if (uid == null) uid = p.pendingDeploy[0];
             Send(NetManager.CmdDeploy, w => { w.Write(uid); w.Write(fieldPos.X); w.Write(fieldPos.Y); });
         }
 

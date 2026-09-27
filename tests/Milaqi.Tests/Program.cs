@@ -136,6 +136,24 @@ namespace Milaqi.Tests
             p1.gems = 100;
             bool upgraded = m2.UpgradeSkill(p1, "meteor");
             Check(upgraded && p1.pendingSkillUpgrades.Count == 1, "宝石可强化技能（下回合生效）", ref fails);
+
+            Console.WriteLine("== 购买与结算自检 ==");
+            var m3 = new Match(db, 321);
+            m3.Start();
+            var p3 = m3.players[0];
+            int r0 = p3.roster.Count;
+            float g0 = p3.gold;
+            var d0 = db.Unit(p3.shop[0].unitId);
+            int price0 = m3.UnitPrice(p3, d0);
+            bool bought1 = m3.BuyUnit(p3, 0);
+            Check(bought1 && p3.roster.Count == r0 + 1, "点一次只买 1 个（名册 " + r0 + " -> " + p3.roster.Count + "）", ref fails);
+            Check(Math.Abs((g0 - p3.gold) - price0) < 0.01f, "点一次只扣 1 个的钱（" + (g0 - p3.gold) + " / 单价 " + price0 + "）", ref fails);
+            Check(p3.roster[p3.roster.Count - 1].placed == false, "新买的兵进入待出战队列", ref fails);
+            m3.BeginBattle();
+            float t3 = 0f;
+            while (!m3.sim.BattleOver && t3 < 40f) { m3.sim.Step(1f / 30f); t3 += 1f / 30f; }
+            m3.Tick(0.02f);
+            Check(m3.phase != MatchPhase.Battle && m3.sim.Units.Count == 0, "结算后战场清空（剩余 " + m3.sim.Units.Count + "）", ref fails);
             return fails;
         }
 

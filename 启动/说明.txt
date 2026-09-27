@@ -1,0 +1,25 @@
+米拉奇战纪 启动器
+
+游戏本体： E:\code\milaqi\build\windows\Milaqi.exe
+下载版：   https://github.com/Lwangt/milaqi/releases/latest
+
+双击对应的 .bat 即可启动：
+  1-正常启动(开始菜单).bat        进开始菜单：单机 / 创建房间 / 填 IP 加入
+  2-测试模式-直接开打.bat          跳过菜单，直接和 AI 打一局（推荐测试用）
+  3-AI演示模式.bat                 双方都由 AI 托管，纯看戏
+  4-3D兵种图鉴.bat                 把所有兵种的 3D 模型排成网格展示
+  5-联机-创建房间.bat              作为主机开房，监听 UDP 27015
+  6-联机-加入房间(改IP).bat        加入房间，用记事本改里面的 IP 即可
+
+命令行参数（自己写快捷方式时用）：
+  --local              直接开局对战 AI
+  --demo               双方 AI 托管
+  --modelsheet         3D 模型总览图
+  --tipdebug           固定显示商店悬浮属性卡（截图用）
+  --detaildebug        固定打开 3D 详情窗（截图用）
+  --host --port=27015  开房
+  --join=IP --port=P   加入
+  --shots=5,30,90      在指定秒数自动截图后退出
+  --selftest           无窗口自检
+
+注意：参数要写在 -- 之后，例如  Milaqi.exe -- --local

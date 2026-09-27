@@ -40,6 +40,7 @@ namespace Milaqi.Game
         public const byte CmdHello = 12;
         public const byte CmdChat = 13;
         public const byte CmdSell = 14;
+        public const byte CmdUnplace = 15;
 
         public override void _Ready()
         {

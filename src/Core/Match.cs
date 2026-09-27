@@ -289,6 +289,10 @@ namespace Milaqi.Core
                     GrantRelicOffer(p, first);
                 }
             }
+            // 准备阶段把双方的部队按阵容摆回战场（满血），方便玩家调整站位
+            for (int i = 0; i < 2; i++) RebuildTeam(players[i]);
+            sim.ClearEvents();
+
             phase = MatchPhase.Prep;
             phaseTimer = db.Balance.prepSeconds;
             Say("第 " + round + " 回合开始，双方获得经济。");
@@ -506,6 +510,13 @@ namespace Milaqi.Core
             return true;
         }
 
+        /// <summary>把所有部队撤回待出战队列（清空战场布阵）。</summary>
+        public void UnplaceAll(PlayerState p)
+        {
+            for (int i = 0; i < p.roster.Count; i++) p.roster[i].placed = false;
+            sim.RemoveTeam(p.Team);
+        }
+
         public void AutoDeployAll(PlayerState p)
         {
             int guard = 0;
@@ -604,6 +615,10 @@ namespace Milaqi.Core
                 Say("游戏结束！" + (winnerIndex >= 0 ? players[winnerIndex].name + " 获胜！" : "双方同归于尽。"));
                 return;
             }
+            // 结算完毕：清空战场，部队不跨回合残留（下回合准备阶段再按阵容重新摆出）
+            sim.ClearUnits();
+            sim.ClearEvents();
+
             phase = MatchPhase.Settle;
             phaseTimer = 3.5f;
         }

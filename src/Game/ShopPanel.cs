@@ -15,7 +15,7 @@ namespace Milaqi.Game
         public Match match;
 
         const int Cols = 11;
-        const int CardW = 96, CardH = 118, StepX = 100;
+        const int CardW = 96, CardH = 104, StepX = 100;
 
         readonly List<Button> _cards = new List<Button>();
         readonly List<TextureRect> _cardIcons = new List<TextureRect>();
@@ -90,11 +90,11 @@ namespace Milaqi.Game
                 AddChild(b);
                 _cards.Add(b);
 
-                _cardIcons.Add(Tex(b, new Rect2(16, 4, 64, 62), null));
-                _cardGold.Add(Tex(b, new Rect2(9, 72, 16, 16), UiArt.Get(UiArt.Gold)));
-                _cardPrice.Add(Lbl(b, new Rect2(28, 68, 60, 24), "", 15, Gold, HorizontalAlignment.Left));
-                _cardPop.Add(Tex(b, new Rect2(9, 94, 16, 16), UiArt.Get(UiArt.Pop)));
-                _cardPopNum.Add(Lbl(b, new Rect2(28, 90, 60, 24), "", 15, Txt, HorizontalAlignment.Left));
+                _cardIcons.Add(Tex(b, new Rect2(18, 1, 60, 56), null));
+                _cardGold.Add(Tex(b, new Rect2(10, 61, 15, 15), UiArt.Get(UiArt.Gold)));
+                _cardPrice.Add(Lbl(b, new Rect2(28, 57, 60, 22), "", 15, Gold, HorizontalAlignment.Left));
+                _cardPop.Add(Tex(b, new Rect2(10, 82, 15, 15), UiArt.Get(UiArt.Pop)));
+                _cardPopNum.Add(Lbl(b, new Rect2(28, 78, 60, 22), "", 15, Txt, HorizontalAlignment.Left));
 
                 var info = new Button();
                 info.Text = "i";
@@ -109,15 +109,15 @@ namespace Milaqi.Game
                 _cardInfo.Add(info);
             }
 
-            _prev = IconBtn(new Rect2(1126, 6, 46, 44), UiArt.ArrowL, () => { _page = Math.Max(0, _page - 1); });
-            _next = IconBtn(new Rect2(1230, 6, 46, 44), UiArt.ArrowR, () => { _page++; });
-            _pageLabel = Lbl(this, new Rect2(1176, 6, 50, 44), "1/1", 16, Txt, HorizontalAlignment.Center);
+            _prev = IconBtn(new Rect2(1126, 4, 46, 42), UiArt.ArrowL, () => { _page = Math.Max(0, _page - 1); });
+            _next = IconBtn(new Rect2(1230, 4, 46, 42), UiArt.ArrowR, () => { _page++; });
+            _pageLabel = Lbl(this, new Rect2(1176, 4, 50, 42), "1/1", 16, Txt, HorizontalAlignment.Center);
             _pageLabel.VerticalAlignment = VerticalAlignment.Center;
-            _info = Lbl(this, new Rect2(1120, 56, 160, 56), "", 13, Dim, HorizontalAlignment.Left);
+            _info = Lbl(this, new Rect2(1120, 50, 160, 52), "", 12, Dim, HorizontalAlignment.Left);
             _info.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 
             _ready = new Button();
-            _ready.Position = new Vector2(1296, 4);
+            _ready.Position = new Vector2(1296, 2);
             _ready.Size = new Vector2(288, CardH);
             _ready.AddThemeFontSizeOverride("font_size", 23);
             _ready.FocusMode = FocusModeEnum.None;

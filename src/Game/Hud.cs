@@ -14,7 +14,7 @@ namespace Milaqi.Game
         public Main main;
         public ShopPanel shop;
 
-        Label roundLabel, phaseLabel, timerLabel, leftHpText, rightHpText, hintLabel, logLabel, tipLabel;
+        Label roundLabel, phaseLabel, timerLabel, leftHpText, rightHpText, hintLabel, logLabel;
         Label myTitle, foeTitle, topSideL, topSideR;
         Label gGold, gGem, gLevel, gXp, gPop, gHp, gKill, gStreak, gRelics;
         Label eGold, eGem, eLevel, ePop, eKill, eRelics;
@@ -190,16 +190,100 @@ namespace Milaqi.Game
             shop.Size = new Vector2(1600, 112);
             root.AddChild(shop);
 
-            MakeIcon(root, new Rect2(20, 772, 18, 18), UiArt.Matk);
-            MakeLabel(root, new Rect2(42, 766, 400, 24), "技能（战斗中先点技能，再点战场释放）", 14, Dim);
+            BuildQueue();
+
+            MakeIcon(root, new Rect2(20, 812, 18, 18), UiArt.Matk);
+            MakeLabel(root, new Rect2(42, 806, 260, 24), "技能", 14, Dim);
             for (int i = 0; i < 4; i++)
             {
                 int idx = i;
-                skillButtons[i] = MakeButton(root, new Rect2(20 + i * 200, 796, 190, 56), "", 15, () => main.OnSkill(idx));
+                skillButtons[i] = MakeButton(root, new Rect2(20 + i * 200, 834, 190, 50), "", 15, () => main.OnSkill(idx));
             }
-            hintLabel = MakeLabel(root, new Rect2(840, 766, 740, 90), "", 14, Dim);
+            hintLabel = MakeLabel(root, new Rect2(840, 806, 740, 84), "", 14, Dim);
             hintLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            tipLabel = MakeLabel(root, new Rect2(20, 862, 1560, 24), "", 13, new Color(0.7f, 0.76f, 0.86f));
+        }
+
+        // ---------------------------------------------------------------- 待出战队列
+        const int QueueChips = 16;
+        Panel queuePanel;
+        readonly List<Button> queueChips = new List<Button>();
+        readonly List<TextureRect> queueIcons = new List<TextureRect>();
+        readonly List<Label> queuePops = new List<Label>();
+        Label queueInfo;
+
+        void BuildQueue()
+        {
+            queuePanel = MakePanel(root, new Rect2(14, 754, 878, 50), PanelBg);
+            MakeLabel(queuePanel, new Rect2(8, 13, 58, 24), "待出战", 14, Dim);
+            for (int i = 0; i < QueueChips; i++)
+            {
+                int idx = i;
+                var b = new Button();
+                b.Position = new Vector2(66 + i * 48, 3);
+                b.Size = new Vector2(44, 44);
+                b.FocusMode = Control.FocusModeEnum.None;
+                var sb = new StyleBoxFlat();
+                sb.BgColor = new Color(0.15f, 0.17f, 0.24f, 0.9f);
+                sb.BorderColor = new Color(0.36f, 0.44f, 0.6f);
+                sb.BorderWidthTop = sb.BorderWidthBottom = sb.BorderWidthLeft = sb.BorderWidthRight = 2;
+                sb.CornerRadiusTopLeft = sb.CornerRadiusTopRight = sb.CornerRadiusBottomLeft = sb.CornerRadiusBottomRight = 7;
+                b.AddThemeStyleboxOverride("normal", sb);
+                var hov = (StyleBoxFlat)sb.Duplicate();
+                hov.BorderColor = new Color(1f, 0.88f, 0.5f);
+                b.AddThemeStyleboxOverride("hover", hov);
+                b.Pressed += () => { var id = ChipUnitId(idx); if (id != null) main.OnQueueSelect(id); };
+                queuePanel.AddChild(b);
+                queueChips.Add(b);
+                queueIcons.Add(MakeIcon(b, new Rect2(2, 1, 40, 40), null));
+                queuePops.Add(MakeLabel(b, new Rect2(28, 24, 16, 18), "", 11, Gold));
+            }
+            queueInfo = MakeLabel(queuePanel, new Rect2(66, 13, 800, 24), "", 13, Dim);
+            MakeButton(root, new Rect2(900, 754, 110, 24), "自动布阵", 13, () => main.OnAutoDeploy());
+            MakeButton(root, new Rect2(900, 780, 110, 24), "撤回全部", 13, () => main.OnUnplaceAll());
+            MakeButton(root, new Rect2(1016, 754, 104, 50), "取消选中", 13, () => main.OnQueueSelect(null));
+        }
+
+        string ChipUnitId(int chipIndex)
+        {
+            if (match == null || main == null) return null;
+            var p = Me;
+            int n = 0;
+            for (int i = 0; i < p.roster.Count; i++)
+            {
+                if (p.roster[i].placed) continue;
+                if (n == chipIndex) return p.roster[i].id;
+                n++;
+            }
+            return null;
+        }
+
+        void RefreshQueue()
+        {
+            if (match == null || main == null) return;
+            var p = Me;
+            int n = 0;
+            for (int i = 0; i < QueueChips; i++)
+            {
+                string id = ChipUnitId(i);
+                var b = queueChips[i];
+                if (id == null) { b.Visible = false; queueIcons[i].Visible = false; queuePops[i].Visible = false; continue; }
+                n++;
+                var def = match.db.Unit(id);
+                b.Visible = true; queueIcons[i].Visible = true; queuePops[i].Visible = true;
+                queueIcons[i].Texture = UnitPortrait.Get(id);
+                queuePops[i].Text = def != null ? def.pop.ToString() : "";
+                bool sel = main.queueSelected == id;
+                b.Modulate = sel ? new Color(1f, 0.92f, 0.6f) : Colors.White;
+                b.Scale = sel ? new Vector2(1.08f, 1.08f) : Vector2.One;
+            }
+            int total = 0;
+            for (int i = 0; i < p.roster.Count; i++) if (!p.roster[i].placed) total++;
+            if (total > 0)
+                queueInfo.Text = "  " + total + " 个单位待部署 —— 点一个选中它，再点战场自己那半边放下";
+            else if (p.roster.Count > 0)
+                queueInfo.Text = "  全部已布阵（" + p.roster.Count + " 个单位）";
+            else
+                queueInfo.Text = "  队列为空 —— 点上面的兵种卡片购买（一次买一个）";
         }
 
         // ---------------------------------------------------------------- 遗物 / 宝石弹窗
@@ -314,6 +398,7 @@ namespace Milaqi.Game
             logLabel.Text = logText;
 
             if (shop != null) { shop.match = match; }
+            RefreshQueue();
 
             for (int i = 0; i < 4; i++)
             {
@@ -329,9 +414,8 @@ namespace Milaqi.Game
             }
 
             hintLabel.Text = match.phase == MatchPhase.Prep
-                ? "左键点战场自己那半边部署部队\n右键点自己的兵出售（返还 60% 金币，腾人口换强兵）\n空格=开始战斗  E=买经验  D=自动部署  G=宝石商店  M=菜单"
-                : "战斗中：点技能 → 点战场释放\n战后按双方存活单位的杀戮值差值扣除敌方城邦生命";
-            tipLabel.Text = "存活的兵不会消失：买下的部队永久属于你，每回合全员满血重新上阵";
+                ? "① 点兵种卡片购买（一次一只，进入待出战队列）\n② 在队列里选中一个，再点战场自己那半边放下\n③ 点「开始战斗」派兵出击\n右键点战场上的兵可出售（返 60% 金币）"
+                : "战斗中：点技能 → 点战场释放\n回合结束按双方存活单位的杀戮值差值扣敌方城邦生命，然后清空战场";
 
             RefreshRelicPanel();
             RefreshGemPanel();
