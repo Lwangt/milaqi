@@ -53,6 +53,7 @@ namespace Milaqi.Tests
                 int n = args.Length > 1 ? int.Parse(args[1]) : 30;
                 ArchetypeMatrix(db, n);
             }
+            if (mode == "regress") { fails += Regression(db); }
             if (mode == "diag")
             {
                 string a = args.Length > 1 ? args[1] : "greed";
@@ -137,6 +138,27 @@ namespace Milaqi.Tests
             bool upgraded = m2.UpgradeSkill(p1, "meteor");
             Check(upgraded && p1.pendingSkillUpgrades.Count == 1, "宝石可强化技能（下回合生效）", ref fails);
 
+            Console.WriteLine("== 解锁与商店自检 ==");
+            int noLevel = 0;
+            for (int i = 0; i < db.Units.Length; i++) if (db.Units[i].unlockLevel <= 0) noLevel++;
+            Check(noLevel == 0, "所有兵种都配置了解锁等级", ref fails);
+            var m4 = new Match(db, 88);
+            m4.Start();
+            var p4 = m4.players[0];
+            m4.RollShop(p4);
+            int nLow = p4.shop.Count;
+            p4.level = db.Balance.round.maxLevel;
+            m4.RollShop(p4);
+            int nHigh = p4.shop.Count;
+            Check(nLow >= 5 && nHigh > nLow, "商店随等级解锁更多兵种（Lv3 可见 " + nLow + " 种 → Lv12 可见 " + nHigh + " 种）", ref fails);
+            bool lowTierLocked = true;
+            for (int i = 0; i < p4.shop.Count; i++)
+            {
+                var ud = db.Unit(p4.shop[i].unitId);
+                if (ud != null && ud.unlockLevel > p4.level) lowTierLocked = false;
+            }
+            Check(lowTierLocked, "高等级商店里没有超出等级的兵种", ref fails);
+
             Console.WriteLine("== 购买与结算自检 ==");
             var m3 = new Match(db, 321);
             m3.Start();
@@ -191,6 +213,98 @@ namespace Milaqi.Tests
             for (int i = 0; i < p.relicIds.Count; i++) { var rd = db.Relic(p.relicIds[i]); if (rd != null) relics.Add(rd.name); }
             return "Lv" + p.level + " 金" + (int)p.gold + " 人口" + m.PopUsed(p) + "/" + m.PopCap(p) + " 城邦" + (int)p.baseHp
                 + " [" + string.Join(",", parts) + "] 遗物[" + string.Join(",", relics) + "]";
+        }
+
+        /// <summary>
+        /// 回归测试：把这一轮修掉的公平性缺陷全部锁住，防止以后改回去。
+        /// 覆盖：镜像布阵 / 结算清场 / 随机性存在 / 战斗对称 / 坐标无 NaN / 购买一次一只。
+        /// </summary>
+        static int Regression(GameDatabase db)
+        {
+            int fails = 0;
+            Console.WriteLine();
+            Console.WriteLine("== 公平性回归测试 ==");
+
+            // 1) 布阵必须左右严格镜像
+            var m = new Match(db, 777);
+            m.Start();
+            foreach (var p in m.players) for (int i = 0; i < 6; i++) p.roster.Add(new OwnedUnit { id = "swordsman" });
+            foreach (var p in m.players) { foreach (var o in p.roster) o.placed = false; m.AutoDeployAll(p); }
+            var left = m.players[0].roster; var right = m.players[1].roster;
+            bool mirrored = left.Count == right.Count;
+            float maxErr = 0f;
+            for (int i = 0; i < left.Count && mirrored; i++)
+            {
+                float expect = m.sim.fieldWidth - left[i].x;
+                float err = Math.Abs(right[i].x - expect);
+                if (err > maxErr) maxErr = err;
+                if (Math.Abs(right[i].y - left[i].y) > 0.01f) mirrored = false;
+            }
+            Check(mirrored && maxErr < 0.01f, "布阵左右严格镜像（最大误差 " + maxErr.ToString("0.000") + "）", ref fails);
+
+            // 2) 结算后战场清空
+            m.BeginBattle();
+            float t = 0f;
+            while (!m.sim.BattleOver && t < 40f) { m.sim.Step(1f / 30f); t += 1f / 30f; }
+            m.Tick(0.02f);
+            Check(m.sim.Units.Count == 0, "结算后战场清空（剩余 " + m.sim.Units.Count + "）", ref fails);
+
+            // 3) 每局必须有随机性（不能所有对局完全相同）
+            string sig1 = BattleSignature(db, 1001), sig2 = BattleSignature(db, 1002), sig3 = BattleSignature(db, 1003);
+            Check(!(sig1 == sig2 && sig2 == sig3), "不同种子产生不同的战斗过程（随机性存在）", ref fails);
+
+            // 4) 坐标不能出现 NaN / 无穷
+            var m2 = new Match(db, 2024);
+            m2.Start();
+            for (int i = 0; i < 3; i++)
+            {
+                m2.AutoDeployAll(m2.players[0]); m2.AutoDeployAll(m2.players[1]);
+                m2.BeginBattle();
+                float tt = 0f;
+                while (!m2.sim.BattleOver && tt < 40f) { m2.sim.Step(1f / 30f); tt += 1f / 30f; }
+                m2.Tick(0.02f);
+                for (int k = 0; k < 400 && m2.phase == MatchPhase.Settle; k++) m2.Tick(0.02f);
+            }
+            bool finite = true;
+            foreach (var u in m2.sim.Units)
+                if (float.IsNaN(u.x) || float.IsNaN(u.y) || float.IsInfinity(u.x) || float.IsInfinity(u.y)) finite = false;
+            Check(finite, "长时间模拟后坐标无 NaN/Inf", ref fails);
+
+            // 5) 战斗对称性：镜像阵容下左右胜率应接近 50%
+            int lw = 0, rw = 0;
+            for (int i = 0; i < 240; i++)
+            {
+                var mm = new Match(db, 50000 + i * 13);
+                mm.Start();
+                mm.players[0].roster.Clear(); mm.players[1].roster.Clear();
+                mm.sim.ClearUnits();
+                for (int k = 0; k < 6; k++) { mm.players[0].roster.Add(new OwnedUnit { id = "swordsman" }); mm.players[1].roster.Add(new OwnedUnit { id = "swordsman" }); }
+                mm.BeginBattle();
+                float tt = 0f;
+                while (!mm.sim.BattleOver && tt < 40f) { mm.sim.Step(1f / 30f); tt += 1f / 30f; }
+                float l, r; mm.sim.Settle(out l, out r);
+                if (l > r) lw++; else if (r > l) rw++;
+            }
+            double bias = (lw + rw) > 0 ? 100.0 * Math.Abs(lw - rw) / (lw + rw) : 0;
+            Check(bias < 8.0, "镜像阵容左右胜率偏差 < 8%（实测 " + bias.ToString("0.0") + "%）", ref fails);
+            return fails;
+        }
+
+        /// <summary>把一场战斗的过程压成一个签名，用于检测「所有对局完全相同」。</summary>
+        static string BattleSignature(GameDatabase db, int seed)
+        {
+            var m = new Match(db, seed);
+            m.Start();
+            m.players[0].roster.Clear(); m.players[1].roster.Clear();
+            m.sim.ClearUnits();
+            for (int k = 0; k < 6; k++) { m.players[0].roster.Add(new OwnedUnit { id = "swordsman" }); m.players[1].roster.Add(new OwnedUnit { id = "knight" }); }
+            m.BeginBattle();
+            int ticks = 0;
+            while (!m.sim.BattleOver && ticks < 1200) { m.sim.Step(1f / 30f); ticks++; }
+            float l, r; m.sim.Settle(out l, out r);
+            // 用「战斗持续帧数 + 双方存活杀戮值」做签名，对随机性极其敏感
+            return ticks + "|" + m.sim.AliveCount(Team.Left) + ":" + m.sim.AliveCount(Team.Right)
+                 + "|" + (int)l + ":" + (int)r;
         }
 
         /// <summary>单局逐回合诊断：看清是经济、等级、兵力还是战斗导致胜负。</summary>

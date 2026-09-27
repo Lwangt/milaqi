@@ -113,7 +113,11 @@ namespace Milaqi.Core
             float s = d.tier * (12f + archetype.style.tierBias);
             if (d.tags != null)
                 for (int i = 0; i < d.tags.Length; i++) s += 15f * archetype.TagW(d.tags[i]);
-            s += 18f * archetype.UnitW(d.id);
+            float uw = archetype.UnitW(d.id);
+            s += 18f * uw;
+            // 流派如果定义了兵源白名单，名单外的兵重罚——否则 AI 会跑去买不属于本流派的超模单位，
+            // 流派身份会被「哪个标签的高费兵更强」淹没（实测会让胜率极差冲到 60%+）
+            if (archetype.unitWeight != null && archetype.unitWeight.Count > 0 && uw <= 0f) s -= 55f;
             s -= d.price * (1f + archetype.style.pricePenalty) * 0.55f;
             s += d.pop * archetype.style.popWeight * 1.2f;
             s += CounterScore(d, foe) * difficulty.counterPick;

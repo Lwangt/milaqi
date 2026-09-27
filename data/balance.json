@@ -1,8 +1,8 @@
 {
   "version": 1,
   "baseHp": 190,
-  "prepSeconds": 35,
-  "battleMaxSeconds": 30,
+  "prepSeconds": 40,
+  "battleMaxSeconds": 38,
   "round": {
     "startGold": 10,
     "startLevel": 3,

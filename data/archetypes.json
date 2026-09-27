@@ -87,30 +87,32 @@
       "icon": "swarm",
       "desc": "用低费亡灵铺场，靠死亡召唤与数量羁绊堆出攻击加成，以量取胜。",
       "tagWeight": {
-        "undead": 3.5,
-        "beast": 0.8,
-        "human": 0.4,
-        "shield": 0.5
+        "undead": 2.4,
+        "human": 0.8,
+        "shield": 0.6,
+        "beast": 0.6
       },
       "unitWeight": {
-        "skeleton": 2.6,
-        "goblin": 1.6,
-        "vampire": 2.2,
-        "necromancer": 2.2,
-        "lich": 1.6,
-        "shieldman": 0.7
+        "skeleton": 1.4,
+        "goblin": 0.9,
+        "vampire": 2,
+        "necromancer": 2,
+        "lich": 1.8,
+        "shieldman": 1.2,
+        "swordsman": 1.2,
+        "knight": 1
       },
       "relicPriority": [
-        "undead_legion",
+        "undead_pact",
         "legion_banner",
         "swarm_tactics",
-        "undead_pact",
         "warlord_crown",
         "gem_vein",
-        "mage_tower",
+        "undead_legion",
         "philosopher_stone",
-        "berserker_rage",
-        "titan_heart"
+        "war_banner",
+        "iron_wall",
+        "golden_era"
       ],
       "style": {
         "xpBias": 0.9,
@@ -122,37 +124,8 @@
           "meteor",
           "summon"
         ],
-        "tierBias": -10,
-        "factionBonus": [
-          {
-            "type": "stat",
-            "target": "undead",
-            "stat": "hp",
-            "mode": "pct",
-            "value": 0.4
-          },
-          {
-            "type": "stat",
-            "target": "undead",
-            "stat": "atk",
-            "mode": "pct",
-            "value": 0.24
-          },
-          {
-            "type": "stat",
-            "target": "pop1",
-            "stat": "atk",
-            "mode": "flat",
-            "value": 14
-          },
-          {
-            "type": "stat",
-            "target": "pop1",
-            "stat": "hp",
-            "mode": "flat",
-            "value": 30
-          }
-        ]
+        "tierBias": 7,
+        "factionBonus": []
       }
     },
     {
@@ -161,22 +134,24 @@
       "icon": "shield",
       "desc": "高双防前排顶住阵线，靠杀戮值差磨死对手，克制一切物理输出。",
       "tagWeight": {
-        "shield": 3,
-        "giant": 2,
+        "shield": 2.2,
+        "giant": 1.6,
+        "plant": 1,
         "human": 1,
-        "ranged": 1,
-        "machine": 0.8
+        "machine": 0.7
       },
       "unitWeight": {
-        "shieldman": 2,
-        "guardian": 2,
-        "templar": 2,
-        "chaos_golem": 1.6,
-        "swordsman": 1.2,
-        "titan": 1.4,
-        "ballista": 1.3,
-        "cannoneer": 1.2,
-        "sniper": 1
+        "shieldman": 1.6,
+        "dwarf": 1.5,
+        "guardian": 1.6,
+        "ogre": 1.2,
+        "templar": 1.6,
+        "treant": 1.4,
+        "chaos_golem": 1.4,
+        "frost_giant": 1.4,
+        "titan": 1.3,
+        "ballista": 1.1,
+        "cannoneer": 1.1
       },
       "relicPriority": [
         "iron_wall",
@@ -200,42 +175,42 @@
           "thorn",
           "heal"
         ],
-        "tierBias": 2,
+        "tierBias": 4,
         "factionBonus": [
           {
             "type": "stat",
             "target": "shield",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.36
+            "value": 1
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "pdef",
             "mode": "pct",
-            "value": 0.32
+            "value": 0.7
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "mdef",
             "mode": "pct",
-            "value": 0.32
+            "value": 0.7
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.22
+            "value": 0.75
           },
           {
             "type": "stat",
             "target": "giant",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.2
+            "value": 0.5
           }
         ]
       }
@@ -246,32 +221,33 @@
       "icon": "bow",
       "desc": "极限远程输出 + 少量重甲前排。用射程和攻速把敌人消灭在接触之前。",
       "tagWeight": {
-        "ranged": 3,
-        "human": 0.8,
+        "ranged": 1.2,
+        "human": 0.9,
         "shield": 0.9
       },
       "unitWeight": {
-        "archer": 1.6,
-        "crossbowman": 1.8,
-        "ranger": 2,
-        "sniper": 1.8,
-        "ballista": 1.6,
-        "cannoneer": 1.4,
+        "archer": 1.3,
+        "crossbowman": 1.4,
+        "ranger": 1.5,
+        "elf_ranger": 1.3,
+        "sniper": 0.8,
+        "ballista": 0.8,
+        "cannoneer": 0.8,
         "shieldman": 1.5,
         "guardian": 1.3,
-        "templar": 1.2
+        "swordsman": 1.2
       },
       "relicPriority": [
+        "iron_wall",
+        "steel_phalanx",
+        "war_banner",
+        "giant_blood",
         "archery_manual",
         "volley",
         "hunters_mark",
         "swift_boots",
-        "warlord_crown",
-        "war_banner",
         "philosopher_stone",
-        "steel_phalanx",
-        "iron_wall",
-        "hero_glory"
+        "warlord_crown"
       ],
       "style": {
         "xpBias": 1,
@@ -283,16 +259,8 @@
           "frost",
           "meteor"
         ],
-        "tierBias": -2,
-        "factionBonus": [
-          {
-            "type": "stat",
-            "target": "ranged",
-            "stat": "range",
-            "mode": "pct",
-            "value": 0.1
-          }
-        ]
+        "tierBias": 0,
+        "factionBonus": []
       }
     },
     {
@@ -301,15 +269,23 @@
       "icon": "magic",
       "desc": "魔法伤害无视物理防御，专治重甲与大群低血单位。",
       "tagWeight": {
-        "magic": 3,
-        "human": 0.8
+        "magic": 1.6,
+        "elemental": 1.1,
+        "undead": 0.7,
+        "human": 0.8,
+        "shield": 0.7
       },
       "unitWeight": {
-        "apprentice_mage": 1.8,
-        "ice_mage": 1.8,
-        "archmage": 2,
-        "lich": 1.6,
-        "necromancer": 1.4
+        "apprentice_mage": 1.5,
+        "ice_mage": 1.6,
+        "fire_elemental": 1.6,
+        "archmage": 1.6,
+        "lich": 1.4,
+        "necromancer": 1.4,
+        "siren": 1.4,
+        "bone_dragon": 1.4,
+        "shieldman": 1.2,
+        "guardian": 1
       },
       "relicPriority": [
         "mage_tower",
@@ -334,7 +310,15 @@
           "arcane_blast"
         ],
         "tierBias": 0,
-        "factionBonus": []
+        "factionBonus": [
+          {
+            "type": "stat",
+            "target": "magic",
+            "stat": "matk",
+            "mode": "pct",
+            "value": 0.06
+          }
+        ]
       }
     },
     {
@@ -343,20 +327,22 @@
       "icon": "dagger",
       "desc": "高机动单位绕开前排直切后排，前期用狼骑兵过渡。",
       "tagWeight": {
-        "assassin": 3,
-        "cavalry": 2.6,
-        "beast": 1.4,
-        "shield": 0.9
+        "assassin": 2.4,
+        "cavalry": 2.2,
+        "beast": 1.3,
+        "shield": 0.7
       },
       "unitWeight": {
-        "wolf_rider": 2.4,
-        "shadow_assassin": 2.2,
-        "gargoyle": 1.8,
-        "wind_swordsman": 1.8,
+        "wolf_rider": 1.8,
+        "centaur": 1.6,
+        "griffin": 1.6,
         "knight": 1.6,
-        "zhao_yun": 1.4,
-        "shieldman": 1.3,
-        "guardian": 0.8
+        "shadow_assassin": 1.6,
+        "gargoyle": 1.5,
+        "wind_swordsman": 1.5,
+        "spider_queen": 1.4,
+        "zhao_yun": 1.3,
+        "shieldman": 1
       },
       "relicPriority": [
         "giant_slayer",
@@ -380,42 +366,49 @@
           "horn",
           "meteor"
         ],
-        "tierBias": -2,
+        "tierBias": 0,
         "factionBonus": [
           {
             "type": "stat",
             "target": "assassin",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.24
+            "value": 1.1
           },
           {
             "type": "stat",
             "target": "assassin",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.12
+            "value": 0.6
           },
           {
             "type": "stat",
             "target": "cavalry",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.14
+            "value": 0.6
           },
           {
             "type": "stat",
             "target": "cavalry",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.08
+            "value": 0.35
+          },
+          {
+            "type": "stat",
+            "target": "cavalry",
+            "stat": "speed",
+            "mode": "pct",
+            "value": 0.18
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.1
+            "value": 0.25
           }
         ]
       }
@@ -426,17 +419,23 @@
       "icon": "crown",
       "desc": "少而精：用高人口精英单位换取高质量，靠单体强度碾压。",
       "tagWeight": {
-        "hero": 3.5,
-        "giant": 2,
-        "human": 0.6
+        "hero": 2.2,
+        "giant": 1.6,
+        "dragon": 1.3,
+        "demon": 1.2
       },
       "unitWeight": {
-        "guan_yu": 2.2,
-        "zhao_yun": 2,
-        "titan": 2,
-        "dragon_knight": 1.8,
-        "archmage": 1.6,
-        "war_beast": 1.6
+        "guan_yu": 1.6,
+        "zhao_yun": 1.5,
+        "titan": 1.5,
+        "dragon_knight": 1.4,
+        "war_beast": 1.3,
+        "dragon": 1.4,
+        "demon_lord": 1.4,
+        "phoenix": 1.2,
+        "archmage": 1.2,
+        "templar": 1.1,
+        "chaos_golem": 1.2
       },
       "relicPriority": [
         "hero_glory",
@@ -460,21 +459,35 @@
           "heal",
           "horn"
         ],
-        "tierBias": 8,
+        "tierBias": 6,
         "factionBonus": [
           {
             "type": "stat",
             "target": "hero",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.12
+            "value": 0.6
           },
           {
             "type": "stat",
             "target": "hero",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.08
+            "value": 0.45
+          },
+          {
+            "type": "stat",
+            "target": "giant",
+            "stat": "hp",
+            "mode": "pct",
+            "value": 0.4
+          },
+          {
+            "type": "stat",
+            "target": "giant",
+            "stat": "atk",
+            "mode": "pct",
+            "value": 0.25
           }
         ]
       }
@@ -485,40 +498,64 @@
       "icon": "coin",
       "desc": "前期不打架只吃利息，中期用经济与人口差碾压；赌的是活到后期。",
       "tagWeight": {
-        "human": 1,
-        "machine": 1
+        "human": 1.5,
+        "shield": 1.2,
+        "giant": 1,
+        "machine": 0.8
       },
       "unitWeight": {
-        "shieldman": 1.2,
-        "ballista": 1.2,
+        "swordsman": 1.4,
+        "shieldman": 1.4,
+        "knight": 1.3,
+        "guardian": 1.3,
+        "templar": 1.3,
+        "dwarf": 1.3,
+        "treant": 1.2,
+        "frost_giant": 1.3,
+        "titan": 1.2,
         "cannoneer": 1.2,
-        "guardian": 1.2,
-        "templar": 1.2
+        "ballista": 1.2,
+        "sniper": 1.1
       },
       "relicPriority": [
         "merchant_caravan",
         "war_banner",
         "iron_wall",
-        "interest_bank",
         "giant_blood",
+        "hunters_mark",
+        "interest_bank",
+        "swift_boots",
         "compound_interest",
         "philosopher_stone",
-        "hunters_mark",
-        "swift_boots",
-        "tome_of_wisdom"
+        "golden_era"
       ],
       "style": {
-        "xpBias": 0.7,
+        "xpBias": 1.25,
         "rerollBias": 0.6,
-        "saveBuffer": 4,
+        "saveBuffer": 6,
         "pricePenalty": 0,
         "popWeight": 1.15,
         "skills": [
           "heal",
           "thorn"
         ],
-        "tierBias": 2,
-        "factionBonus": []
+        "tierBias": 3,
+        "factionBonus": [
+          {
+            "type": "stat",
+            "target": "all",
+            "stat": "hp",
+            "mode": "pct",
+            "value": 0.7
+          },
+          {
+            "type": "stat",
+            "target": "all",
+            "stat": "atk",
+            "mode": "pct",
+            "value": 0.5
+          }
+        ]
       }
     }
   ]

@@ -312,7 +312,7 @@
       "name": "亡灵契约",
       "category": "unit",
       "rarity": "rare",
-      "desc": "亡灵单位价格 -1；亡灵单位死亡时 35% 概率原地召唤一个骷髅兵。",
+      "desc": "亡灵单位价格 -1；亡灵单位死亡时 12% 概率原地召唤一个骷髅兵。",
       "effects": [
         {
           "type": "costMod",
@@ -324,7 +324,7 @@
           "target": "undead",
           "unit": "skeleton",
           "count": 1,
-          "chance": 0.35
+          "chance": 0.12
         }
       ],
       "flavor": "死亡不是终点，只是换了个形态。"
@@ -406,7 +406,7 @@
       "name": "人海战术",
       "category": "unit",
       "rarity": "rare",
-      "desc": "人口 =1 的单位价格 -1、物理攻击 +20（固定）、生命 +55（固定）。",
+      "desc": "人口 =1 的单位价格 -1、物理攻击 +6（固定）、生命 +14（固定）。",
       "effects": [
         {
           "type": "costMod",
@@ -418,14 +418,14 @@
           "target": "pop1",
           "stat": "atk",
           "mode": "flat",
-          "value": 20
+          "value": 6
         },
         {
           "type": "stat",
           "target": "pop1",
           "stat": "hp",
           "mode": "flat",
-          "value": 55
+          "value": 14
         }
       ],
       "flavor": "数量本身就是一种质量。"
@@ -498,7 +498,7 @@
       "name": "不死军团",
       "category": "synergy",
       "rarity": "epic",
-      "desc": "每有 2 个亡灵单位，全体物理攻击 +10（固定，最多 5 层）。",
+      "desc": "每有 2 个亡灵单位，全体物理攻击 +4（固定，最多 4 层）。",
       "effects": [
         {
           "type": "synergy",
@@ -506,8 +506,8 @@
           "perCount": 2,
           "stat": "atk",
           "mode": "flat",
-          "value": 10,
-          "max": 5
+          "value": 4,
+          "max": 4
         }
       ],
       "flavor": "亡者越众，怒火越盛。"
@@ -635,7 +635,7 @@
       "name": "军团旗",
       "category": "synergy",
       "rarity": "epic",
-      "desc": "每上阵 1 个单位，全体生命 +16（固定，最多 15 层）。",
+      "desc": "每上阵 1 个单位，全体生命 +5（固定，最多 10 层）。",
       "effects": [
         {
           "type": "synergy",
@@ -643,8 +643,8 @@
           "perCount": 1,
           "stat": "hp",
           "mode": "flat",
-          "value": 16,
-          "max": 15
+          "value": 5,
+          "max": 10
         }
       ],
       "flavor": "旗不倒，阵不散。"

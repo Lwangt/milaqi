@@ -437,7 +437,8 @@ namespace Milaqi.Core
             }
             if (!string.IsNullOrEmpty(victim.st.deathSummonUnit) && victim.st.deathSummonChance > 0f)
             {
-                float r = Random01(victim.id * 7919 + (int)(time * 100f));
+                _simRng ^= _simRng << 13; _simRng ^= _simRng >> 17; _simRng ^= _simRng << 5;
+                float r = (_simRng & 0xFFFF) / 65535f;
                 if (r < victim.st.deathSummonChance)
                 {
                     var sd = db.Unit(victim.st.deathSummonUnit);
