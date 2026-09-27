@@ -282,12 +282,14 @@ namespace Milaqi.Game
 
             var p = ToScreen(u.x, u.y) + new Vector2(lunge * dir, bob);
 
-            var tex = UnitArt.Get(u.def.id);
+            var tex = UnitPortrait.Get(u.def.id);
             if (tex != null)
             {
-                float size = r * 2.9f;
+                float size = r * 3.4f;
+                // 3D 立绘本身已是类别配色，这里只叠加一层阵营色调区分敌我
+                var teamTint = Colors.White.Lerp(left ? new Color(0.62f, 0.82f, 1f) : new Color(1f, 0.66f, 0.68f), 0.55f);
                 DrawSetTransform(p, 0f, new Vector2(left ? 1f : -1f, 1f));
-                DrawTextureRect(tex, new Rect2(-size * 0.5f, -size * 0.5f, size, size), false, tint);
+                DrawTextureRect(tex, new Rect2(-size * 0.5f, -size * 0.5f, size, size), false, teamTint);
                 DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
             }
             else

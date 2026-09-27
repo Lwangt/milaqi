@@ -86,6 +86,8 @@ namespace Milaqi.Game
             t.Texture = UiArt.Get(icon);
             t.Position = rect.Position;
             t.Size = rect.Size;
+            // 关键：默认 ExpandMode=KeepSize 会把控件最小尺寸顶成贴图尺寸，导致图标撑大压住旁边的文字
+            t.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
             t.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
             t.MouseFilter = Control.MouseFilterEnum.Ignore;
             parent.AddChild(t);
@@ -177,11 +179,12 @@ namespace Milaqi.Game
         {
             MakePanel(root, new Rect2(0, 640, 1600, 260), new Color(0.07f, 0.08f, 0.12f, 0.95f));
 
-            bool tipDebug = false;
-            foreach (var a in OS.GetCmdlineArgs()) if (a == "--tipdebug") tipDebug = true;
-            foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--tipdebug") tipDebug = true;
+            bool tipDebug = false, detDebug = false;
+            foreach (var a in OS.GetCmdlineArgs()) { if (a == "--tipdebug") tipDebug = true; if (a == "--detaildebug") detDebug = true; }
+            foreach (var a in OS.GetCmdlineUserArgs()) { if (a == "--tipdebug") tipDebug = true; if (a == "--detaildebug") detDebug = true; }
             shop = new ShopPanel();
             shop.forceTooltip = tipDebug;
+            shop.forceDetail = detDebug;
             shop.main = main;
             shop.Position = new Vector2(0, 646);
             shop.Size = new Vector2(1600, 112);

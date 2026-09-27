@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Godot;
 using Milaqi.Core;
@@ -60,11 +61,28 @@ namespace Milaqi.Game
             SetupWindow();
             db = LoadDatabase();
 
+            bool wantModelSheet = false;
+            foreach (var a in OS.GetCmdlineArgs()) if (a == "--modelsheet") wantModelSheet = true;
+            foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--modelsheet") wantModelSheet = true;
+            if (wantModelSheet) { BuildModelSheet(); InitShotMode(false); return; }
             bool selfTest = false;
             foreach (var a in OS.GetCmdlineArgs()) if (a == "--selftest" || a == "selftest") selfTest = true;
             foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--selftest" || a == "selftest") selfTest = true;
             if (selfTest) { RunSelfTest(); return; }
 
+            var baker = new PortraitBaker();
+            AddChild(baker);
+            _ = BakeThenStart(baker);
+        }
+
+        async System.Threading.Tasks.Task BakeThenStart(PortraitBaker baker)
+        {
+            await baker.Bake(db);
+            BuildUiAndStart();
+        }
+
+        void BuildUiAndStart()
+        {
             view = new BattleView();
             view.main = this;
             view.SetAnchorsPreset(Control.LayoutPreset.FullRect);
@@ -113,6 +131,61 @@ namespace Milaqi.Game
         public GameDatabase LoadDatabase()
         {
             return GameDatabase.Load(ReadRes);
+        }
+
+        /// <summary>调试：把所有兵种 3D 模型排成网格渲染，用于检查建模质量。</summary>
+        void BuildModelSheet()
+        {
+            var env = new WorldEnvironment();
+            var e = new Godot.Environment();
+            e.BackgroundMode = Godot.Environment.BGMode.Color;
+            e.BackgroundColor = new Color(0.07f, 0.08f, 0.12f);
+            e.AmbientLightSource = Godot.Environment.AmbientSource.Color;
+            e.AmbientLightColor = new Color(0.55f, 0.6f, 0.75f);
+            e.AmbientLightEnergy = 0.5f;
+            e.TonemapMode = Godot.Environment.ToneMapper.Aces;
+            env.Environment = e;
+            AddChild(env);
+
+            var key = new DirectionalLight3D();
+            key.RotationDegrees = new Vector3(-48, 38, 0);
+            key.LightEnergy = 1.5f;
+            key.ShadowEnabled = true;
+            AddChild(key);
+            var fill = new DirectionalLight3D();
+            fill.RotationDegrees = new Vector3(-20, -130, 0);
+            fill.LightEnergy = 0.55f;
+            fill.LightColor = new Color(0.7f, 0.8f, 1f);
+            AddChild(fill);
+
+            var grid = new Node3D();
+            AddChild(grid);
+            int cols = 6, n = 0;
+            var units = new List<UnitDef>();
+            for (int i = 0; i < db.Units.Length; i++) if (db.Units[i].unlockRound < 900) units.Add(db.Units[i]);
+            foreach (var d in units)
+            {
+                var holder = new Node3D();
+                float spacing = 2.6f;
+                holder.Position = new Vector3((n % cols - (cols - 1) * 0.5f) * spacing, (n / cols) * 2.6f + 0.6f, 0);
+                holder.AddChild(UnitModel.Build(d, null));
+                grid.AddChild(holder);
+                var lbl = new Label3D();
+                lbl.Text = d.name;
+                lbl.FontSize = 48;
+                lbl.PixelSize = 0.004f;
+                lbl.Position = new Vector3(0, -0.15f, 0.6f);
+                lbl.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
+                holder.AddChild(lbl);
+                n++;
+            }
+            float rows = Mathf.Ceil(units.Count / (float)cols);
+            var cam = new Camera3D();
+            AddChild(cam);
+            float cx = 0, cy = (rows - 1) * 2.6f * 0.5f;
+            cam.Position = new Vector3(cx, cy + 0.8f, 9.5f + rows * 0.9f);
+            cam.LookAt(new Vector3(cx, cy - 0.2f, 0));
+            GD.Print("MODELSHEET: " + units.Count + " models, rows=" + rows);
         }
 
         /// <summary>无窗口自检：验证数据加载与一局完整模拟（导出后的 exe 也用它验证）。</summary>
@@ -245,7 +318,9 @@ namespace Milaqi.Game
         float shotElapsed;
         readonly System.Collections.Generic.List<float> shotTimes = new System.Collections.Generic.List<float>();
         int shotIndex;
-        void InitShotMode()
+        void InitShotMode() { InitShotMode(true); }
+
+        void InitShotMode(bool autoStart)
         {
             string raw = null;
             var all = new System.Collections.Generic.List<string>();
@@ -263,7 +338,7 @@ namespace Milaqi.Game
                 if (float.TryParse(part, out v)) shotTimes.Add(v);
             }
             shotMode = shotTimes.Count > 0;
-            if (shotMode && !matchStarted) StartLocalMatch();
+            if (shotMode && autoStart && !matchStarted && match != null) StartLocalMatch();
         }
 
         void UpdateShots(double delta)
