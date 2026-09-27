@@ -121,7 +121,57 @@ namespace Milaqi.Core
             s -= d.price * (1f + archetype.style.pricePenalty) * 0.55f;
             s += d.pop * archetype.style.popWeight * 1.2f;
             s += CounterScore(d, foe) * difficulty.counterPick;
+            s += CompositionScore(d);
             return s;
+        }
+
+        /// <summary>
+        /// 阵容结构分 —— 这是流派平衡的关键机制。
+        /// 之前 AI 只按「单体评分」贪心买兵，结果各流派都退化成「堆当前最强的那一类兵」，
+        /// 流派胜率完全由「哪个标签的高费兵更强」决定，怎么调印记都会阶跃式摆动。
+        /// 现在强制保证三条结构性约束：
+        ///   ① 前排配额：前排人口占比低于目标时，前排兵获得大幅加分（保证站得住）
+        ///   ② 后排纪律：前排不足时不再堆后排
+        ///   ③ 多样性：同一兵种买太多会递减收益（防止 7 个骷髅兵刷屏）
+        /// </summary>
+        float CompositionScore(UnitDef d)
+        {
+            float totalPop = 0f, frontPop = 0f;
+            int sameCount = 0;
+            for (int i = 0; i < player.roster.Count; i++)
+            {
+                var o = player.roster[i];
+                var u = db.Unit(o.id);
+                if (u == null) continue;
+                totalPop += u.pop;
+                if (o.id == d.id) sameCount++;
+                if (!IsBackline(u)) frontPop += u.pop;
+            }
+            float targetFront = archetype.style.frontlineTarget > 0f ? archetype.style.frontlineTarget : 0.38f;
+            float curFront = totalPop > 1f ? frontPop / totalPop : 0f;
+            bool dBack = IsBackline(d);
+            float s = 0f;
+
+            if (!dBack)
+            {
+                if (curFront < targetFront) s += (targetFront - curFront) * 190f;
+                else s -= (curFront - targetFront) * 45f;
+            }
+            else
+            {
+                if (curFront < targetFront * 0.65f) s -= 55f;
+                else if (curFront >= targetFront) s += 14f;
+            }
+            // 多样性：第 4 个同兵种开始递减
+            if (sameCount >= 3) s -= (sameCount - 2) * 16f;
+            return s;
+        }
+
+        static bool IsBackline(UnitDef u)
+        {
+            // 只看射程：刺客/骑兵是近战单位，一样要顶在前面吸收伤害。
+            // （之前把刺客也算后排，导致刺客流被自己的结构约束惩罚，被迫买盾兵，胜率掉到 5%）
+            return u.range >= 60;
         }
 
         float RelicScore(RelicDef r)

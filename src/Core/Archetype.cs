@@ -12,6 +12,7 @@ namespace Milaqi.Core
         public float pricePenalty = 0f;   // 正值偏好低费兵，负值偏好高费兵
         public float popWeight = 1f;
         public float tierBias = 0f;   // 正值偏好高费精英，负值偏好低费铺场
+        public float frontlineTarget = 0.38f;   // 理想的前排人口占比（阵容结构约束）
         public EffectDef[] factionBonus = Array.Empty<EffectDef>();   // 流派印记：固有加成
         public string[] skills = Array.Empty<string>();
     }
