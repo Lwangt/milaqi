@@ -38,6 +38,16 @@ namespace Milaqi.Tests
                 int n = args.Length > 1 ? int.Parse(args[1]) : 60;
                 BatchSim(db, n);
             }
+            if (mode == "battle")
+            {
+                int n = args.Length > 1 ? int.Parse(args[1]) : 300;
+                PureBattleTest(db, n);
+            }
+            if (mode == "flip")
+            {
+                int n = args.Length > 1 ? int.Parse(args[1]) : 200;
+                BatchSim(db, n, true);
+            }
             Console.WriteLine(fails == 0 ? "[OK] 全部自检通过" : "[FAIL] 有 " + fails + " 项自检失败");
             return fails == 0 ? 0 : 1;
         }
@@ -114,10 +124,49 @@ namespace Milaqi.Tests
             return fails;
         }
 
-        static void BatchSim(GameDatabase db, int n)
+        /// <summary>纯战斗隔离测试：双方阵容完全一致，检验战斗模拟本身是否存在左右偏差。</summary>
+        static void PureBattleTest(GameDatabase db, int n)
         {
             Console.WriteLine();
-            Console.WriteLine("== 批量 AI 对战（" + n + " 局）==");
+            Console.WriteLine("== 纯战斗隔离测试（双方完全同阵容，" + n + " 局）==");
+            string[] comps = { "militia", "archer", "swordsman", "knight" };
+            foreach (var comp in comps)
+            {
+                int leftWin = 0, rightWin = 0, tie = 0;
+                double kvSum = 0;
+                int unitCount = comp == "militia" ? 8 : (comp == "knight" ? 4 : 6);
+                for (int i = 0; i < n; i++)
+                {
+                    var m = new Match(db, 90000 + i * 37);
+                    m.Start();
+                    m.sim.ClearUnits();
+                    m.players[0].pendingDeploy.Clear();
+                    m.players[1].pendingDeploy.Clear();
+                    for (int k = 0; k < unitCount; k++)
+                    {
+                        m.players[0].pendingDeploy.Add(comp);
+                        m.players[1].pendingDeploy.Add(comp);
+                    }
+                    m.BeginBattle();
+                    float t = 0f;
+                    while (!m.sim.BattleOver && t < 40f) { m.sim.Step(1f / 30f); t += 1f / 30f; }
+                    float l, rr;
+                    m.sim.Settle(out l, out rr);
+                    kvSum += l - rr;
+                    if (l > rr) leftWin++; else if (rr > l) rightWin++; else tie++;
+                }
+                double bias = (leftWin + rightWin) > 0 ? 100.0 * Math.Abs(leftWin - rightWin) / (leftWin + rightWin) : 0;
+                Console.WriteLine("  " + comp + " x" + unitCount + "x2 : 左胜 " + leftWin + " / 右胜 " + rightWin + " / 平 " + tie +
+                    " 偏差 " + bias.ToString("0.0") + "% 平均杀戮值差 " + (kvSum / n).ToString("0.00"));
+            }
+        }
+
+        static void BatchSim(GameDatabase db, int n) { BatchSim(db, n, false); }
+
+        static void BatchSim(GameDatabase db, int n, bool flipOrder)
+        {
+            Console.WriteLine();
+            Console.WriteLine("== 批量 AI 对战（" + n + " 局" + (flipOrder ? "，交替更新顺序" : "") + "）==");
             var roundCounts = new List<int>();
             int leftWin = 0, rightWin = 0, draw = 0, timeouts = 0;
             float totalBattleTime = 0f;
@@ -136,8 +185,10 @@ namespace Milaqi.Tests
                 while (m.phase != MatchPhase.GameOver && guard++ < 200000)
                 {
                     float dt = 1f / 30f;
-                    ai0.Update(dt);
-                    ai1.Update(dt);
+                    // 双方 AI 在同 tick 内顺序执行会引入系统偏差（后行动方占优），
+                    // 因此每 tick 随机化更新顺序，模拟真实对局中双方操作天然交错的情况。
+                    if (rnd.Next(2) == 0) { ai0.Update(dt); ai1.Update(dt); }
+                    else { ai1.Update(dt); ai0.Update(dt); }
                     bool wasBattle = m.phase == MatchPhase.Battle;
                     m.Tick(dt);
                     if (wasBattle && m.phase != MatchPhase.Battle)

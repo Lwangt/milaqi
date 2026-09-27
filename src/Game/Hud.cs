@@ -12,6 +12,8 @@ namespace Milaqi.Game
         public Main main;
 
         Label roundLabel, phaseLabel, timerLabel, leftLabel, rightLabel, myStats, foeStats, logLabel, hintLabel, deployLabel, myRelics, foeRelics;
+        Label topSideL, topSideR, myTitle, foeTitle;
+        Panel myPanel, foePanel, logPanel;
         Panel leftHpBar, rightHpBar, leftHpBack, rightHpBack, xpFill, xpBack;
         Button[] shopButtons = new Button[5];
         Button rerollBtn, xpBtn, readyBtn, autoDeployBtn, shopToggleBtn;
@@ -46,14 +48,14 @@ namespace Milaqi.Game
             timerLabel = MakeLabel(top, new Rect2(1330, 10, 250, 40), "", 30, Colors.White);
             timerLabel.HorizontalAlignment = HorizontalAlignment.Right;
 
-            MakeLabel(top, new Rect2(320, 8, 460, 26), "左侧王国（你）", 16, Left);
+            topSideL = MakeLabel(top, new Rect2(320, 8, 460, 26), "左侧王国", 16, Left);
             leftHpBack = MakePanel(top, new Rect2(320, 36, 460, 30), new Color(0, 0, 0, 0.55f));
             leftHpBar = MakePanel(top, new Rect2(320, 36, 460, 30), Left);
             leftLabel = MakeLabel(top, new Rect2(320, 34, 460, 32), "", 17, Colors.Black);
             leftLabel.HorizontalAlignment = HorizontalAlignment.Center;
             leftLabel.VerticalAlignment = VerticalAlignment.Center;
 
-            MakeLabel(top, new Rect2(880, 8, 460, 26), "右侧王国", 16, Right);
+            topSideR = MakeLabel(top, new Rect2(880, 8, 460, 26), "右侧王国", 16, Right);
             rightHpBack = MakePanel(top, new Rect2(880, 36, 460, 30), new Color(0, 0, 0, 0.55f));
             rightHpBar = MakePanel(top, new Rect2(880, 36, 460, 30), Right);
             rightLabel = MakeLabel(top, new Rect2(880, 34, 460, 32), "", 17, Colors.Black);
@@ -62,7 +64,8 @@ namespace Milaqi.Game
 
             // ---- 左侧玩家面板 ----
             var lp = MakePanel(new Rect2(14, 104, 300, 432), PanelBg);
-            MakeLabel(lp, new Rect2(12, 8, 280, 24), "我方王国", 18, Left);
+            myPanel = lp;
+            myTitle = MakeLabel(lp, new Rect2(12, 8, 280, 24), "我方王国", 18, Left);
             myStats = MakeLabel(lp, new Rect2(12, 34, 280, 200), "", 16, Colors.White);
             myStats.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             xpBack = MakePanel(lp, new Rect2(12, 236, 276, 12), new Color(0, 0, 0, 0.6f));
@@ -72,13 +75,15 @@ namespace Milaqi.Game
 
             // ---- 右侧敌方面板 ----
             var rp = MakePanel(new Rect2(1286, 104, 300, 232), PanelBg);
-            MakeLabel(rp, new Rect2(12, 8, 280, 24), "敌方王国", 18, Right);
+            foePanel = rp;
+            foeTitle = MakeLabel(rp, new Rect2(12, 8, 280, 24), "敌方王国", 18, Right);
             foeStats = MakeLabel(rp, new Rect2(12, 34, 280, 130), "", 16, Colors.White);
             foeStats.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             foeRelics = MakeLabel(rp, new Rect2(12, 168, 280, 56), "", 13, new Color(0.95f, 0.72f, 0.72f));
             foeRelics.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 
             var lg = MakePanel(new Rect2(1286, 348, 300, 188), PanelBg);
+            logPanel = lg;
             MakeLabel(lg, new Rect2(12, 6, 280, 22), "战报", 16, Dim);
             logLabel = MakeLabel(lg, new Rect2(12, 30, 276, 150), "", 12, new Color(0.8f, 0.84f, 0.9f));
             logLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
@@ -206,6 +211,18 @@ namespace Milaqi.Game
             var p1 = Foe;
             var rcfg = match.db.Balance.round;
 
+            // 客户端（右侧玩家）时镜像两侧信息面板，保证「我方面板」总在自己那一侧
+            bool meLeft = (main != null ? main.localIndex : 0) == 0;
+            float myX = meLeft ? 14f : 1286f;
+            float foeX = meLeft ? 1286f : 14f;
+            myPanel.Position = new Vector2(myX, 104);
+            foePanel.Position = new Vector2(foeX, 104);
+            logPanel.Position = new Vector2(foeX, 348);
+            myTitle.Text = (meLeft ? "左侧王国" : "右侧王国") + "（你）";
+            foeTitle.Text = meLeft ? "右侧王国" : "左侧王国";
+            topSideL.Text = "左侧王国" + (meLeft ? "（你）" : "");
+            topSideR.Text = "右侧王国" + (meLeft ? "" : "（你）");
+
             roundLabel.Text = "第 " + match.round + " 回合";
             string phase = match.phase == MatchPhase.Prep ? "准备阶段" : match.phase == MatchPhase.Battle ? "战斗中" : match.phase == MatchPhase.Settle ? "结算中" : "游戏结束";
             phaseLabel.Text = phase + (match.phase == MatchPhase.Prep ? "  剩余 " + Mathf.Ceil(match.phaseTimer) + "s" : "");
@@ -278,7 +295,7 @@ namespace Milaqi.Game
             }
 
             hintLabel.Text = match.phase == MatchPhase.Prep
-                ? "操作提示：\n· 点击商店购买兵种 → 点击战场自己那半边部署\n· 人口受等级限制（当前 " + popUsed + "/" + popCap + "），人海战术无法无脑铺开\n· 每 2 回合三选一遗物，宝石商店的东西下回合生效\n· 快捷键：空格=开始战斗  R=刷新  E=买经验  D=自动部署"
+                ? "操作提示：\n· 点击商店购买兵种 → 点击战场" + (meLeft ? "左" : "右") + "半边部署\n· 人口受等级限制（当前 " + popUsed + "/" + popCap + "），人海战术无法无脑铺开\n· 每 2 回合三选一遗物，宝石商店的东西下回合生效\n· 快捷键：空格=开始战斗  R=刷新  E=买经验  D=自动部署"
                 : "战斗中：点击技能按钮 → 点击战场任意位置释放。\n战后按双方存活单位的杀戮值差值对敌方城邦造成伤害。";
 
             RefreshRelicPanel();

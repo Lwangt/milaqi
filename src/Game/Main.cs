@@ -34,6 +34,7 @@ namespace Milaqi.Game
         const float FixedStep = 1f / 30f;
         public int seed = 20260101;
         int _lastRound = -1;
+        int _aiFlip;
 
         public override void _Ready()
         {
@@ -70,6 +71,21 @@ namespace Milaqi.Game
             foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--demo") demoMode = true;
             if (demoMode && ai == null && match != null) ai = new AiController(match, match.players[1]);
             if (demoMode) { ai0 = null; EnsureDemoAi(); }
+            // 联机测试用命令行入口
+            string hostArg = null, joinArg = null, portArg = null;
+            var allArgs = new System.Collections.Generic.List<string>();
+            foreach (var a in OS.GetCmdlineArgs()) allArgs.Add(a);
+            foreach (var a in OS.GetCmdlineUserArgs()) allArgs.Add(a);
+            foreach (var a in allArgs)
+            {
+                if (a == "--host") hostArg = "host";
+                else if (a.StartsWith("--join=")) joinArg = a.Substring(7);
+                else if (a.StartsWith("--port=")) portArg = a.Substring(7);
+            }
+            int netPort = 27015;
+            if (portArg != null) int.TryParse(portArg, out netPort);
+            if (hostArg != null) { GD.Print("NET: starting host on " + netPort); StartHostGame(netPort); }
+            else if (joinArg != null) { GD.Print("NET: joining " + joinArg + ":" + netPort); JoinGame(joinArg, netPort); }
             InitShotMode();
             GetTree().Root.SizeChanged += OnResize;
         }
@@ -254,8 +270,17 @@ namespace Milaqi.Game
                 int guard = 0;
                 while (_accum >= FixedStep && guard++ < 8)
                 {
-                    if (ai != null) ai.Update(FixedStep);
-                    if (demoMode && ai0 != null) ai0.Update(FixedStep);
+                    // 双方 AI 同时存在时随机化顺序，避免固定的行动先后造成隐性不平衡
+                    if (demoMode && ai0 != null && ai != null)
+                    {
+                        if (((_aiFlip++) & 1) == 0) { ai.Update(FixedStep); ai0.Update(FixedStep); }
+                        else { ai0.Update(FixedStep); ai.Update(FixedStep); }
+                    }
+                    else
+                    {
+                        if (ai != null) ai.Update(FixedStep);
+                        if (demoMode && ai0 != null) ai0.Update(FixedStep);
+                    }
                     match.Tick(FixedStep);
                     _accum -= FixedStep;
                 }
@@ -267,11 +292,14 @@ namespace Milaqi.Game
             view.QueueRedraw();
         }
 
+        int _snapshots;
         public void OnSnapshot(byte[] data)
         {
-            if (match == null) data = data;
             Snapshot.Apply(match, data, db);
             matchStarted = true;
+            _snapshots++;
+            if (_snapshots == 1 || _snapshots % 100 == 0)
+                GD.Print("NET: snapshot #" + _snapshots + " size=" + data.Length + " round=" + match.round + " phase=" + match.phase + " units=" + match.sim.Units.Count);
         }
 
         public void OnRemoteCommand(byte[] data) { ApplyCommand(1, data); }
