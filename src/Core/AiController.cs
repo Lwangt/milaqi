@@ -32,6 +32,7 @@ namespace Milaqi.Core
             difficulty = diff ?? db.DifficultyOr(1);
             player.isAI = true;
             player.archetypeId = archetype.id;
+            player.difficultyId = difficulty.id;
             if (arch != null) player.name = arch.name + "（AI）";
         }
 
@@ -212,7 +213,7 @@ namespace Milaqi.Core
                 var o = player.shop[i];
                 if (o == null || o.sold) continue;
                 var d = db.Unit(o.unitId);
-                if (d == null) continue;
+                if (d == null || d.unlockLevel > player.level) continue;
                 scored.Add(new KeyValuePair<int, float>(i, UnitScore(d, foe)));
             }
             scored.Sort((a, b) => b.Value.CompareTo(a.Value));
@@ -354,7 +355,7 @@ namespace Milaqi.Core
                     : sim.fieldWidth * (1f - depth) - (deployIndex / 5) * 24f;
                 float y = sim.fieldHeight * lane;
                 target.placed = true; target.x = x; target.y = y;
-                deployIndex++;
+                deployIndex++;   // AI 保留自己的战术布阵（走侧翼/前后排差异）
             }
         }
 

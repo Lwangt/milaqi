@@ -327,12 +327,12 @@ namespace Milaqi.Tests
                     var m = new Match(db, 90000 + i * 37);
                     m.Start();
                     m.sim.ClearUnits();
-                    m.players[0].pendingDeploy.Clear();
-                    m.players[1].pendingDeploy.Clear();
+                    m.players[0].roster.Clear();
+                    m.players[1].roster.Clear();
                     for (int k = 0; k < unitCount; k++)
                     {
-                        m.players[0].pendingDeploy.Add(comp);
-                        m.players[1].pendingDeploy.Add(comp);
+                        m.players[0].roster.Add(new OwnedUnit { id = comp });
+                        m.players[1].roster.Add(new OwnedUnit { id = comp });
                     }
                     m.BeginBattle();
                     float t = 0f;

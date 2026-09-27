@@ -14,6 +14,7 @@ namespace Milaqi.Core
         public int price;
         public int pop;
         public int unlockRound;
+        public int unlockLevel;   // 玩家等级达到该值后商店才会出现（主解锁条件）
         public string[] tags = Array.Empty<string>();
         public float hp;
         public float atk;

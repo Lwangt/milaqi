@@ -14,10 +14,12 @@
       "deployQuality": 0.25,
       "useSkills": false,
       "saveBuffer": 2,
-      "reserveGold": 0,
+      "reserveGold": 2,
       "allowUpgrade": false,
       "maxRerolls": 0,
-      "buyRandomness": 0.75
+      "buyRandomness": 0.8,
+      "bonusGold": -1,
+      "bonusXp": 0
     },
     {
       "id": "normal",
@@ -34,7 +36,9 @@
       "reserveGold": 4,
       "allowUpgrade": true,
       "maxRerolls": 1,
-      "buyRandomness": 0.3
+      "buyRandomness": 0.35,
+      "bonusGold": 0,
+      "bonusXp": 0
     },
     {
       "id": "hard",
@@ -42,7 +46,7 @@
       "desc": "高效运营，针对性选兵，技能释放更准",
       "thinkInterval": 0.25,
       "relicPickQuality": 0.85,
-      "counterPick": 0.7,
+      "counterPick": 0.35,
       "rerollBias": 1,
       "xpBias": 1,
       "deployQuality": 0.85,
@@ -51,7 +55,9 @@
       "reserveGold": 5,
       "allowUpgrade": true,
       "maxRerolls": 2,
-      "buyRandomness": 0.08
+      "buyRandomness": 0.05,
+      "bonusGold": 1,
+      "bonusXp": 1
     },
     {
       "id": "nightmare",
@@ -59,16 +65,19 @@
       "desc": "极限运营 + 完全针对，几乎不浪费经济",
       "thinkInterval": 0.15,
       "relicPickQuality": 1,
-      "counterPick": 0.8,
+      "counterPick": 0.45,
       "rerollBias": 1.25,
       "xpBias": 1.15,
       "deployQuality": 1,
       "useSkills": true,
       "saveBuffer": 6,
-      "reserveGold": 2,
+      "reserveGold": 3,
       "allowUpgrade": true,
-      "maxRerolls": 4,
-      "buyRandomness": 0
+      "maxRerolls": 3,
+      "buyRandomness": 0,
+      "maxReserveBias": 0,
+      "bonusGold": 2,
+      "bonusXp": 2
     }
   ],
   "archetypes": [
@@ -120,28 +129,28 @@
             "target": "undead",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.34
+            "value": 0.4
           },
           {
             "type": "stat",
             "target": "undead",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.2
+            "value": 0.24
           },
           {
             "type": "stat",
             "target": "pop1",
             "stat": "atk",
             "mode": "flat",
-            "value": 12
+            "value": 14
           },
           {
             "type": "stat",
             "target": "pop1",
             "stat": "hp",
             "mode": "flat",
-            "value": 24
+            "value": 30
           }
         ]
       }
@@ -198,42 +207,35 @@
             "target": "shield",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.4
+            "value": 0.36
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "pdef",
             "mode": "pct",
-            "value": 0.35
+            "value": 0.32
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "mdef",
             "mode": "pct",
-            "value": 0.35
+            "value": 0.32
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.3
+            "value": 0.22
           },
           {
             "type": "stat",
             "target": "giant",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.18
-          },
-          {
-            "type": "stat",
-            "target": "ranged",
-            "stat": "atk",
-            "mode": "flat",
-            "value": 6
+            "value": 0.2
           }
         ]
       }
@@ -496,17 +498,17 @@
       "relicPriority": [
         "merchant_caravan",
         "war_banner",
-        "interest_bank",
         "iron_wall",
-        "compound_interest",
+        "interest_bank",
         "giant_blood",
+        "compound_interest",
         "philosopher_stone",
-        "golden_era",
-        "tome_of_wisdom",
-        "warlord_crown"
+        "hunters_mark",
+        "swift_boots",
+        "tome_of_wisdom"
       ],
       "style": {
-        "xpBias": 0.95,
+        "xpBias": 0.7,
         "rerollBias": 0.6,
         "saveBuffer": 4,
         "pricePenalty": 0,

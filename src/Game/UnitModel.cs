@@ -12,7 +12,7 @@ namespace Milaqi.Game
     /// </summary>
     public static class UnitModel
     {
-        public enum Plan { Humanoid, Bulky, Robed, Beast, Machine, Giant, Flyer }
+        public enum Plan { Humanoid, Bulky, Robed, Beast, Machine, Giant, Flyer, Dragon, Elemental, Treant, Spider, Demon }
 
         public struct Palette
         {
@@ -22,6 +22,11 @@ namespace Milaqi.Game
         public static Plan PlanOf(UnitDef d)
         {
             if (d.id == "gargoyle") return Plan.Flyer;
+            if (d.HasTag("demon")) return Plan.Demon;
+            if (d.HasTag("dragon")) return Plan.Dragon;
+            if (d.HasTag("elemental")) return Plan.Elemental;
+            if (d.HasTag("plant")) return Plan.Treant;
+            if (d.id == "spider_queen") return Plan.Spider;
             if (d.HasTag("machine")) return Plan.Machine;
             if (d.HasTag("giant")) return Plan.Giant;
             if (d.HasTag("beast")) return Plan.Beast;
@@ -75,6 +80,33 @@ namespace Milaqi.Game
                 p.Accent = new Color(0.60f, 0.48f, 0.28f); p.Cloth = new Color(0.26f, 0.22f, 0.16f);
                 p.Glow = new Color(1f, 0.72f, 0.30f);
             }
+            else if (d.HasTag("dragon"))
+            {
+                bool fire = d.id == "phoenix";
+                p.Main = fire ? new Color(0.78f, 0.32f, 0.16f) : new Color(0.42f, 0.16f, 0.22f);
+                p.Metal = new Color(0.86f, 0.70f, 0.36f);
+                p.Accent = fire ? new Color(1f, 0.62f, 0.20f) : new Color(0.66f, 0.24f, 0.30f);
+                p.Cloth = fire ? new Color(0.60f, 0.24f, 0.10f) : new Color(0.28f, 0.10f, 0.16f);
+                p.Glow = fire ? new Color(1f, 0.78f, 0.30f) : new Color(1f, 0.55f, 0.35f);
+            }
+            else if (d.HasTag("demon"))
+            {
+                p.Main = new Color(0.30f, 0.12f, 0.16f); p.Metal = new Color(0.52f, 0.20f, 0.18f);
+                p.Accent = new Color(0.72f, 0.22f, 0.18f); p.Cloth = new Color(0.20f, 0.08f, 0.10f);
+                p.Glow = new Color(1f, 0.42f, 0.18f);
+            }
+            else if (d.HasTag("elemental"))
+            {
+                p.Main = new Color(0.86f, 0.42f, 0.14f); p.Metal = new Color(0.95f, 0.72f, 0.32f);
+                p.Accent = new Color(1f, 0.62f, 0.22f); p.Cloth = new Color(0.60f, 0.24f, 0.08f);
+                p.Glow = new Color(1f, 0.80f, 0.38f);
+            }
+            else if (d.HasTag("plant"))
+            {
+                p.Main = new Color(0.34f, 0.28f, 0.18f); p.Metal = new Color(0.46f, 0.38f, 0.24f);
+                p.Accent = new Color(0.30f, 0.52f, 0.26f); p.Cloth = new Color(0.22f, 0.18f, 0.12f);
+                p.Glow = new Color(0.62f, 1f, 0.42f);
+            }
             else
             {
                 p.Main = new Color(0.40f, 0.44f, 0.52f); p.Metal = new Color(0.74f, 0.78f, 0.84f);
@@ -97,6 +129,11 @@ namespace Milaqi.Game
                 case Plan.Machine: return 1.5f * s;
                 case Plan.Beast: return 1.5f * s;
                 case Plan.Flyer: return 1.7f * s;
+                case Plan.Dragon: return 1.9f * s;
+                case Plan.Elemental: return 1.8f * s;
+                case Plan.Treant: return 2.4f * s;
+                case Plan.Spider: return 1.5f * s;
+                case Plan.Demon: return 2.1f * s;
                 case Plan.Robed: return 2.3f * s;
                 default: return 1.8f * s;
             }
@@ -171,6 +208,11 @@ namespace Milaqi.Game
                 case Plan.Beast: Beast(root, d, s, mMain, mAccent, mCloth, mGlow, mDark); break;
                 case Plan.Machine: Machine(root, d, s, mMetal, mAccent, mDark, mGlow); break;
                 case Plan.Flyer: Flyer(root, d, s, mMetal, mAccent, mCloth, mGlow, mDark); break;
+                case Plan.Dragon: Dragon(root, d, s, mMain, mMetal, mAccent, mCloth, mGlow, mDark); break;
+                case Plan.Elemental: Elemental(root, d, s, mMain, mAccent, mGlow); break;
+                case Plan.Treant: Treant(root, d, s, mMain, mAccent, mCloth, mGlow, mDark); break;
+                case Plan.Spider: Spider(root, d, s, mMain, mAccent, mGlow, mDark); break;
+                case Plan.Demon: Demon(root, d, s, mMain, mMetal, mAccent, mCloth, mGlow, mDark); break;
             }
             return root;
         }
@@ -342,6 +384,174 @@ namespace Milaqi.Game
                 root.AddChild(P(Box(0.12f, 0.14f, 0.12f), metal, new Vector3(x * 1.25f, 0.48f, 0.06f), Vector3.Zero, Vector3.One * s));
             }
             root.AddChild(P(Cyl(0.05f, 0.02f, 0.55f), metal, new Vector3(0, 0.66f, -0.28f), new Vector3(-35, 0, 0), Vector3.One * s));
+        }
+
+        // ================================================================ 巨龙
+        static void Dragon(Node3D root, UnitDef d, float s, Material main, Material metal, Material accent, Material cloth, Material glow, Material dark)
+        {
+            // 躯干
+            root.AddChild(P(Cap(0.34f, 1.30f), main, new Vector3(0, 1.10f, -0.05f), new Vector3(92, 0, 0), new Vector3(1f, 1f, 0.86f) * s));
+            root.AddChild(P(Box(0.52f, 0.10f, 0.90f), accent, new Vector3(0, 1.34f, -0.05f), Vector3.Zero, Vector3.One * s));
+            for (int i = 0; i < 5; i++)
+                root.AddChild(P(Prism(0.10f, 0.20f, 0.08f), accent, new Vector3(0, 1.44f, 0.35f - i * 0.22f), new Vector3(-18, 0, 0), Vector3.One * s));
+            // 颈 + 头
+            var neck = new Node3D();
+            neck.Position = new Vector3(0, 1.28f, 0.50f);
+            neck.RotationDegrees = new Vector3(-34, 0, 0);
+            neck.AddChild(P(Cyl(0.16f, 0.24f, 0.72f), main, new Vector3(0, 0.36f, 0), Vector3.Zero, Vector3.One * s));
+            root.AddChild(neck);
+            var head = new Node3D();
+            head.Position = new Vector3(0, 1.92f, 0.82f);
+            head.RotationDegrees = new Vector3(24, 0, 0);
+            head.AddChild(P(Box(0.30f, 0.26f, 0.46f), main, Vector3.Zero, Vector3.Zero, Vector3.One * s));
+            head.AddChild(P(Box(0.16f, 0.14f, 0.30f), accent, new Vector3(0, -0.04f, 0.34f), Vector3.Zero, Vector3.One * s));
+            head.AddChild(P(Ball(0.045f), glow, new Vector3(-0.11f, 0.08f, 0.14f), Vector3.Zero, Vector3.One));
+            head.AddChild(P(Ball(0.045f), glow, new Vector3(0.11f, 0.08f, 0.14f), Vector3.Zero, Vector3.One));
+            head.AddChild(P(Prism(0.07f, 0.22f, 0.07f), metal, new Vector3(-0.12f, 0.22f, -0.06f), new Vector3(-12, 0, -22), Vector3.One * s));
+            head.AddChild(P(Prism(0.07f, 0.22f, 0.07f), metal, new Vector3(0.12f, 0.22f, -0.06f), new Vector3(-12, 0, 22), Vector3.One * s));
+            root.AddChild(head);
+            // 翼
+            for (int i = 0; i < 2; i++)
+            {
+                float dir = i == 0 ? -1f : 1f;
+                var wing = new Node3D();
+                wing.Position = new Vector3(dir * 0.20f, 1.42f, -0.02f);
+                wing.RotationDegrees = new Vector3(0, dir * -20f, dir * 16f);
+                wing.AddChild(P(Box(1.35f, 0.06f, 0.52f), cloth, new Vector3(dir * 0.70f, 0, 0), Vector3.Zero, Vector3.One * s));
+                wing.AddChild(P(Box(0.95f, 0.05f, 0.34f), accent, new Vector3(dir * 0.52f, 0.03f, 0.24f), Vector3.Zero, Vector3.One * s));
+                wing.AddChild(P(Prism(0.14f, 0.34f, 0.14f), dark, new Vector3(dir * 0.16f, 0.08f, -0.10f), new Vector3(0, 0, dir * -34f), Vector3.One * s));
+                root.AddChild(wing);
+            }
+            // 四足
+            for (int i = 0; i < 2; i++) for (int j = 0; j < 2; j++)
+                root.AddChild(P(Cap(0.105f, 0.85f), dark, new Vector3(i == 0 ? -0.32f : 0.32f, 0.48f, j == 0 ? 0.42f : -0.38f), Vector3.Zero, Vector3.One * s));
+            // 尾
+            var tail = new Node3D();
+            tail.Position = new Vector3(0, 1.05f, -0.72f);
+            tail.RotationDegrees = new Vector3(-46, 0, 0);
+            tail.AddChild(P(Cap(0.10f, 0.95f), main, new Vector3(0, -0.48f, 0), Vector3.Zero, Vector3.One * s));
+            tail.AddChild(P(Prism(0.24f, 0.36f, 0.10f), accent, new Vector3(0, -1.06f, 0), new Vector3(90, 0, 0), Vector3.One * s));
+            root.AddChild(tail);
+        }
+
+        // ================================================================ 元素生物
+        static void Elemental(Node3D root, UnitDef d, float s, Material main, Material accent, Material glow)
+        {
+            root.AddChild(P(Ball(0.34f), glow, new Vector3(0, 1.05f, 0), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Ball(0.46f), main, new Vector3(0, 1.05f, 0), Vector3.Zero, new Vector3(1f, 1.1f, 1f) * s));
+            var inner = new Node3D();
+            inner.Position = new Vector3(0, 1.05f, 0);
+            root.AddChild(inner);
+            for (int i = 0; i < 6; i++)
+            {
+                float a = i * Mathf.Tau / 6f;
+                inner.AddChild(P(Prism(0.13f, 0.30f, 0.13f), accent,
+                    new Vector3(Mathf.Cos(a) * 0.62f, Mathf.Sin(a * 1.7f) * 0.18f, Mathf.Sin(a) * 0.62f),
+                    new Vector3(0, -a * 57f, 0), Vector3.One * s));
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                float a = i * Mathf.Tau / 3f + 0.5f;
+                root.AddChild(P(Cyl(0.0f, 0.10f, 0.55f), accent,
+                    new Vector3(Mathf.Cos(a) * 0.30f, 0.48f, Mathf.Sin(a) * 0.30f), new Vector3(0, 0, 12), Vector3.One * s));
+            }
+            root.AddChild(P(Ball(0.09f), glow, new Vector3(-0.13f, 1.16f, 0.28f), Vector3.Zero, Vector3.One));
+            root.AddChild(P(Ball(0.09f), glow, new Vector3(0.13f, 1.16f, 0.28f), Vector3.Zero, Vector3.One));
+        }
+
+        // ================================================================ 树人
+        static void Treant(Node3D root, UnitDef d, float s, Material main, Material accent, Material cloth, Material glow, Material dark)
+        {
+            root.AddChild(P(Cyl(0.26f, 0.44f, 1.35f), main, new Vector3(0, 0.68f, 0), Vector3.Zero, Vector3.One * s));
+            for (int i = 0; i < 5; i++)
+                root.AddChild(P(Cap(0.05f, 0.9f), dark, new Vector3(0, 0.45f, 0), new Vector3(0, i * 72f, 6), Vector3.One * s));
+            root.AddChild(P(Ball(0.42f), accent, new Vector3(0, 1.66f, 0), Vector3.Zero, new Vector3(1.25f, 0.85f, 1.25f) * s));
+            root.AddChild(P(Ball(0.30f), accent, new Vector3(-0.34f, 1.52f, 0.10f), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Ball(0.28f), accent, new Vector3(0.32f, 1.56f, -0.12f), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Ball(0.05f), glow, new Vector3(-0.10f, 1.12f, 0.26f), Vector3.Zero, Vector3.One));
+            root.AddChild(P(Ball(0.05f), glow, new Vector3(0.10f, 1.12f, 0.26f), Vector3.Zero, Vector3.One));
+            for (int i = 0; i < 2; i++)
+            {
+                float dir = i == 0 ? -1f : 1f;
+                root.AddChild(P(Cyl(0.07f, 0.10f, 1.05f), main, new Vector3(dir * 0.48f, 1.05f, 0.02f), new Vector3(0, 0, dir * -20f), Vector3.One * s));
+                root.AddChild(P(Prism(0.20f, 0.30f, 0.20f), accent, new Vector3(dir * 0.72f, 0.52f, 0.10f), new Vector3(0, 0, dir * -10f), Vector3.One * s));
+            }
+            root.AddChild(P(Cyl(0.10f, 0.16f, 0.75f), main, new Vector3(-0.20f, 0.32f, 0), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Cyl(0.10f, 0.16f, 0.75f), main, new Vector3(0.20f, 0.32f, 0), Vector3.Zero, Vector3.One * s));
+        }
+
+        // ================================================================ 蛛魔
+        static void Spider(Node3D root, UnitDef d, float s, Material main, Material accent, Material glow, Material dark)
+        {
+            root.AddChild(P(Ball(0.34f), main, new Vector3(0, 0.85f, -0.28f), Vector3.Zero, new Vector3(1.15f, 0.95f, 1.35f) * s));
+            root.AddChild(P(Ball(0.22f), accent, new Vector3(0, 0.80f, 0.30f), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Box(0.24f, 0.18f, 0.24f), dark, new Vector3(0, 0.72f, 0.48f), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Ball(0.05f), glow, new Vector3(-0.09f, 0.80f, 0.52f), Vector3.Zero, Vector3.One));
+            root.AddChild(P(Ball(0.05f), glow, new Vector3(0.09f, 0.80f, 0.52f), Vector3.Zero, Vector3.One));
+            for (int i = 0; i < 3; i++)
+            {
+                float ang = -40f + i * 40f;
+                root.AddChild(P(Cyl(0.0f, 0.045f, 0.28f), accent, new Vector3(-0.10f + i * 0.10f, 0.62f, 0.60f), new Vector3(160, 0, 0), Vector3.One * s));
+            }
+            for (int side = 0; side < 2; side++)
+            {
+                float dir = side == 0 ? -1f : 1f;
+                for (int i = 0; i < 4; i++)
+                {
+                    float z = 0.28f - i * 0.26f;
+                    var leg = new Node3D();
+                    leg.Position = new Vector3(dir * 0.26f, 0.86f, z);
+                    leg.RotationDegrees = new Vector3(0, 0, dir * (26f + i * 8f));
+                    leg.AddChild(P(Cyl(0.045f, 0.035f, 0.72f), dark, new Vector3(dir * 0.34f, -0.18f, 0), new Vector3(0, 0, dir * -30f), Vector3.One * s));
+                    leg.AddChild(P(Cyl(0.035f, 0.030f, 0.58f), dark, new Vector3(dir * 0.62f, -0.56f, 0), new Vector3(0, 0, dir * -6f), Vector3.One * s));
+                    root.AddChild(leg);
+                }
+            }
+        }
+
+        // ================================================================ 恶魔
+        static void Demon(Node3D root, UnitDef d, float s, Material main, Material metal, Material accent, Material cloth, Material glow, Material dark)
+        {
+            float hipY = 0.78f, shoulderY = 1.46f, headY = 1.82f;
+            for (int i = 0; i < 2; i++)
+            {
+                float x = i == 0 ? -0.15f : 0.15f;
+                root.AddChild(P(Cyl(0.10f, 0.085f, 0.80f), dark, new Vector3(x, 0.40f, 0), Vector3.Zero, Vector3.One * s));
+                root.AddChild(P(Cyl(0.0f, 0.06f, 0.16f), metal, new Vector3(x, 0.62f, 0.10f), new Vector3(-90, 0, 0), Vector3.One * s));
+                root.AddChild(P(Cyl(0.10f, 0.09f, 0.36f), metal, new Vector3(x, 0.18f, 0.03f), Vector3.Zero, Vector3.One * s));
+            }
+            root.AddChild(P(Box(0.44f, 0.22f, 0.32f), dark, new Vector3(0, hipY + 0.06f, 0), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Box(0.56f, 0.62f, 0.40f), main, new Vector3(0, hipY + 0.42f, 0), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Box(0.60f, 0.40f, 0.44f), metal, new Vector3(0, hipY + 0.50f, 0.01f), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Ball(0.15f), metal, new Vector3(-0.34f, shoulderY, 0), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Ball(0.15f), metal, new Vector3(0.34f, shoulderY, 0), Vector3.Zero, Vector3.One * s));
+            for (int i = 0; i < 2; i++) for (int k = 0; k < 2; k++)
+                root.AddChild(P(Prism(0.10f, 0.24f, 0.10f), accent, new Vector3((i == 0 ? -0.34f : 0.34f) + (k - 0.5f) * 0.12f, shoulderY + 0.16f, -0.06f), new Vector3(-20, 0, (i == 0 ? -1 : 1) * 28f), Vector3.One * s));
+            for (int i = 0; i < 2; i++)
+            {
+                float x = i == 0 ? -0.38f : 0.38f;
+                root.AddChild(P(Cyl(0.075f, 0.065f, 0.56f), dark, new Vector3(x, shoulderY - 0.34f, 0.02f), new Vector3(0, 0, i == 0 ? -9 : 9), Vector3.One * s));
+                root.AddChild(P(Ball(0.10f), metal, new Vector3(x * 1.06f, shoulderY - 0.64f, 0.04f), Vector3.Zero, Vector3.One * s));
+            }
+            root.AddChild(P(Ball(0.16f), main, new Vector3(0, headY, 0.02f), Vector3.Zero, new Vector3(1f, 1.1f, 0.98f) * s));
+            root.AddChild(P(Box(0.24f, 0.12f, 0.20f), dark, new Vector3(0, headY - 0.10f, 0.10f), Vector3.Zero, Vector3.One * s));
+            root.AddChild(P(Ball(0.04f), glow, new Vector3(-0.065f, headY + 0.02f, 0.14f), Vector3.Zero, Vector3.One));
+            root.AddChild(P(Ball(0.04f), glow, new Vector3(0.065f, headY + 0.02f, 0.14f), Vector3.Zero, Vector3.One));
+            root.AddChild(P(Cyl(0.0f, 0.06f, 0.34f), metal, new Vector3(-0.14f, headY + 0.20f, 0), new Vector3(0, 0, -34f), Vector3.One * s));
+            root.AddChild(P(Cyl(0.0f, 0.06f, 0.34f), metal, new Vector3(0.14f, headY + 0.20f, 0), new Vector3(0, 0, 34f), Vector3.One * s));
+            for (int i = 0; i < 2; i++)
+            {
+                float dir = i == 0 ? -1f : 1f;
+                var wing = new Node3D();
+                wing.Position = new Vector3(dir * 0.24f, shoulderY - 0.10f, -0.16f);
+                wing.RotationDegrees = new Vector3(0, dir * -26f, dir * 22f);
+                wing.AddChild(P(Box(0.95f, 0.05f, 0.40f), cloth, new Vector3(dir * 0.50f, 0, 0), Vector3.Zero, Vector3.One * s));
+                wing.AddChild(P(Prism(0.12f, 0.28f, 0.12f), dark, new Vector3(dir * 0.12f, 0.06f, -0.08f), new Vector3(0, 0, dir * -30f), Vector3.One * s));
+                root.AddChild(wing);
+            }
+            root.AddChild(P(Cyl(0.05f, 0.02f, 0.60f), dark, new Vector3(0, hipY - 0.10f, -0.26f), new Vector3(-52, 0, 0), Vector3.One * s));
+            root.AddChild(P(Prism(0.16f, 0.22f, 0.06f), accent, new Vector3(0, hipY - 0.36f, -0.48f), new Vector3(-90, 0, 0), Vector3.One * s));
+            Weapon(root, d, s, metal, accent, cloth, glow, 0.42f * 1.0f, shoulderY - 0.58f);
         }
 
         // ================================================================ 武器

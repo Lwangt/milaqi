@@ -132,7 +132,7 @@
   "combat": {
     "tickRate": 30,
     "laneCount": 1,
-    "fieldWidth": 1400,
+    "fieldWidth": 1100,
     "fieldHeight": 420,
     "spawnOffset": 90,
     "defConstant": 75,

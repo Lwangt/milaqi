@@ -64,6 +64,8 @@ namespace Milaqi.Core
         public bool allowUpgrade = true;    // 是否会「卖弱兵换强兵」
         public int maxRerolls = 2;          // 已废弃（商店不再刷新），保留字段兼容
         public float buyRandomness = 0.1f;  // 买兵时的随机程度（越高越差）
+        public float bonusGold = 0f;        // 每回合额外金币（难度档的经济差异）
+        public float bonusXp = 0f;          // 每回合额外经验
     }
 
     public sealed class ArchetypeRoot

@@ -37,16 +37,15 @@ namespace Milaqi.Game
         public void Layout()
         {
             var sz = Size;
-            float margin = 90f;
-            float top = 150f;
-            float bottom = 270f;
-            float availW = Math.Max(200f, sz.X - margin * 2f);
+            // 左右两侧留给资源面板，上方留给顶栏，下方留给商店区
+            float sideL = 320f, sideR = 320f, top = 112f, bottom = 266f;
+            float availW = Math.Max(200f, sz.X - sideL - sideR);
             float availH = Math.Max(120f, sz.Y - top - bottom);
             float s = Math.Min(availW / match.sim.fieldWidth, availH / match.sim.fieldHeight);
             _scale = s;
             float w = match.sim.fieldWidth * s;
             float h = match.sim.fieldHeight * s;
-            float x = (sz.X - w) * 0.5f;
+            float x = sideL + (availW - w) * 0.5f;
             float y = top + (availH - h) * 0.5f;
             _field = new Rect2(x, y, w, h);
         }
@@ -167,7 +166,11 @@ namespace Milaqi.Game
                 var u = sim.Units[i];
                 if (!u.alive) continue;
                 var p = ToScreen(u.x, u.y);
-                DrawCircle(new Vector2(p.X, p.Y + u.radius * _scale * 0.55f), u.radius * _scale * 0.85f, new Color(0, 0, 0, 0.25f));
+                bool lft = u.team == Team.Left;
+                // 阵营光环 + 投影，让单位在大场面里更容易分辨敌我
+                DrawCircle(new Vector2(p.X, p.Y + u.radius * _scale * 0.5f), u.radius * _scale * 1.15f,
+                    lft ? new Color(0.35f, 0.62f, 1f, 0.18f) : new Color(1f, 0.42f, 0.42f, 0.18f));
+                DrawCircle(new Vector2(p.X, p.Y + u.radius * _scale * 0.55f), u.radius * _scale * 0.8f, new Color(0, 0, 0, 0.28f));
             }
             for (int i = 0; i < sim.Units.Count; i++)
             {
@@ -215,44 +218,104 @@ namespace Milaqi.Game
 
         void DrawGround()
         {
-            DrawRect(_field, new Color(0.13f, 0.15f, 0.20f));
-            var inner = new Rect2(_field.Position + new Vector2(2, 2), _field.Size - new Vector2(4, 4));
-            DrawRect(inner, new Color(0.095f, 0.11f, 0.145f));
-            int lanes = 5;
-            for (int i = 1; i < lanes; i++)
+            // 外框：暗色魔法石
+            var outer = new Rect2(_field.Position - new Vector2(8, 8), _field.Size + new Vector2(16, 16));
+            DrawRect(outer, new Color(0.16f, 0.13f, 0.12f));
+            DrawRect(new Rect2(outer.Position + new Vector2(3, 3), outer.Size - new Vector2(6, 6)), new Color(0.42f, 0.34f, 0.22f));
+            DrawRect(_field, new Color(0.11f, 0.10f, 0.13f));
+
+            // 石板纹理
+            float tile = _field.Size.Y / 5f;
+            int cols = Mathf.CeilToInt(_field.Size.X / tile);
+            for (int r = 0; r < 5; r++)
             {
-                float y = _field.Position.Y + _field.Size.Y * i / lanes;
-                DrawLine(new Vector2(_field.Position.X, y), new Vector2(_field.Position.X + _field.Size.X, y), new Color(1, 1, 1, 0.035f), 1f);
+                for (int c = 0; c < cols; c++)
+                {
+                    float x = _field.Position.X + c * tile;
+                    float y = _field.Position.Y + r * tile;
+                    var shade = ((r * 31 + c * 17) & 3) == 0 ? 0.185f : 0.150f;
+                    DrawRect(new Rect2(x + 1, y + 1, tile - 2, tile - 2), new Color(shade, shade * 0.94f, shade * 1.18f));
+                }
             }
-            DrawRect(new Rect2(_field.Position, _field.Size), new Color(0, 0, 0, 0));
-            DrawLine(new Vector2(_field.Position.X, _field.Position.Y), new Vector2(_field.Position.X + _field.Size.X, _field.Position.Y), new Color(0.4f, 0.5f, 0.7f, 0.35f), 2f);
-            DrawLine(new Vector2(_field.Position.X, _field.Position.Y + _field.Size.Y), new Vector2(_field.Position.X + _field.Size.X, _field.Position.Y + _field.Size.Y), new Color(0.4f, 0.5f, 0.7f, 0.35f), 2f);
+            // 中央大道
+            float midY = _field.Position.Y + _field.Size.Y * 0.5f;
+            DrawRect(new Rect2(_field.Position.X, midY - _field.Size.Y * 0.16f, _field.Size.X, _field.Size.Y * 0.32f), new Color(0.16f, 0.15f, 0.20f, 0.75f));
+            for (int i = 0; i < 5; i++)
+            {
+                float y = _field.Position.Y + _field.Size.Y * (i + 1) / 6f;
+                DrawLine(new Vector2(_field.Position.X, y), new Vector2(_field.Position.X + _field.Size.X, y), new Color(1, 1, 1, 0.03f), 1f);
+            }
+            DrawLine(new Vector2(_field.Position.X, _field.Position.Y), new Vector2(_field.Position.X + _field.Size.X, _field.Position.Y), new Color(0.55f, 0.44f, 0.26f, 0.55f), 2f);
+            DrawLine(new Vector2(_field.Position.X, _field.Position.Y + _field.Size.Y), new Vector2(_field.Position.X + _field.Size.X, _field.Position.Y + _field.Size.Y), new Color(0.55f, 0.44f, 0.26f, 0.55f), 2f);
+
+            // 中央符文法阵
+            float cx = _field.Position.X + _field.Size.X * 0.5f;
+            var arc = UiTheme.Arcane;
+            float pulse = 0.5f + 0.5f * Mathf.Sin(_vtime * 1.2f);
+            DrawCircle(new Vector2(cx, midY), _field.Size.Y * 0.40f, new Color(arc.R, arc.G, arc.B, 0.05f + 0.03f * pulse));
+            DrawArc(new Vector2(cx, midY), _field.Size.Y * 0.40f, 0, Mathf.Tau, 64, new Color(arc.R, arc.G, arc.B, 0.30f + 0.15f * pulse), 2f);
+            DrawArc(new Vector2(cx, midY), _field.Size.Y * 0.30f, _vtime * 0.4f, _vtime * 0.4f + 2.2f, 40, new Color(arc.R, arc.G, arc.B, 0.22f), 2f);
+            DrawArc(new Vector2(cx, midY), _field.Size.Y * 0.30f, _vtime * 0.4f + 3.14f, _vtime * 0.4f + 5.34f, 40, new Color(arc.R, arc.G, arc.B, 0.22f), 2f);
+            for (int i = 0; i < 8; i++)
+            {
+                float a = _vtime * 0.25f + i * Mathf.Pi / 4f;
+                var p = new Vector2(cx + Mathf.Cos(a) * _field.Size.Y * 0.40f, midY + Mathf.Sin(a) * _field.Size.Y * 0.40f);
+                DrawCircle(p, 2.5f, new Color(UiTheme.Gold.R, UiTheme.Gold.G, UiTheme.Gold.B, 0.55f));
+            }
         }
 
         void DrawBase(bool left, float hpRatio)
         {
-            var color = left ? LeftColor : RightColor;
-            float w = 30f;
-            float x = left ? _field.Position.X - w : _field.Position.X + _field.Size.X;
-            var rect = new Rect2(x, _field.Position.Y, w, _field.Size.Y);
+            var color = left ? UiTheme.TeamLeft : UiTheme.TeamRight;
+            float w = 46f;
+            // 城堡画在战场框内（之前画在框外，被左右资源面板挡住看不见）
+            float x = left ? _field.Position.X + 4 : _field.Position.X + _field.Size.X - w - 4;
+            float y = _field.Position.Y - 14;
+            float h = _field.Size.Y + 28;
+            var tower = new Rect2(x, y, w, h);
 
-            DrawRect(rect, new Color(0.16f, 0.17f, 0.22f));
-            float h = rect.Size.Y * Mathf.Clamp(hpRatio, 0f, 1f);
-            DrawRect(new Rect2(rect.Position.X, rect.Position.Y + rect.Size.Y - h, rect.Size.X, h), color.Darkened(0.25f));
-
-            int blocks = 5;
-            for (int i = 0; i < blocks; i++)
+            // 塔身
+            DrawRect(tower, new Color(0.22f, 0.20f, 0.22f));
+            DrawRect(new Rect2(tower.Position + new Vector2(3, 3), tower.Size - new Vector2(6, 6)), new Color(0.15f, 0.14f, 0.17f));
+            // 石缝
+            for (int i = 1; i < 6; i++)
             {
-                float by = rect.Position.Y + rect.Size.Y * i / blocks;
-                float bh = rect.Size.Y / blocks - 4f;
-                float fill = Mathf.Clamp(hpRatio * blocks - i, 0f, 1f);
-                DrawRect(new Rect2(rect.Position.X + 3, by + 2, rect.Size.X - 6, bh), new Color(0, 0, 0, 0.45f));
-                DrawRect(new Rect2(rect.Position.X + 3, by + 2, (rect.Size.X - 6) * fill, bh), hpRatio > 0.5f ? color : (hpRatio > 0.25f ? new Color(1f, 0.78f, 0.3f) : new Color(1f, 0.4f, 0.4f)));
+                float ly = tower.Position.Y + tower.Size.Y * i / 6f;
+                DrawLine(new Vector2(tower.Position.X + 3, ly), new Vector2(tower.Position.X + tower.Size.X - 3, ly), new Color(0, 0, 0, 0.35f), 1f);
             }
+            // 血量填充
+            float fillH = tower.Size.Y * Mathf.Clamp(hpRatio, 0f, 1f);
+            var hpCol = hpRatio > 0.5f ? color : (hpRatio > 0.25f ? new Color(1f, 0.78f, 0.3f) : new Color(1f, 0.4f, 0.4f));
+            DrawRect(new Rect2(tower.Position.X + 3, tower.Position.Y + tower.Size.Y - fillH - 3, tower.Size.X - 6, fillH), new Color(hpCol.R, hpCol.G, hpCol.B, 0.55f));
+            DrawRect(tower, new Color(0, 0, 0, 0));
+            DrawLine(new Vector2(tower.Position.X, tower.Position.Y), new Vector2(tower.Position.X, tower.Position.Y + tower.Size.Y), new Color(0.55f, 0.44f, 0.26f), 2f);
+            DrawLine(new Vector2(tower.Position.X + tower.Size.X, tower.Position.Y), new Vector2(tower.Position.X + tower.Size.X, tower.Position.Y + tower.Size.Y), new Color(0.55f, 0.44f, 0.26f), 2f);
+
             // 城垛
-            DrawRect(new Rect2(rect.Position.X - 4, _field.Position.Y - 12, rect.Size.X + 8, 12), color.Darkened(0.4f));
-            for (int i = 0; i < 3; i++)
-                DrawRect(new Rect2(rect.Position.X - 2 + i * (rect.Size.X + 4) / 3f, _field.Position.Y - 20, 10, 9), color.Darkened(0.3f));
+            DrawRect(new Rect2(tower.Position.X - 5, tower.Position.Y - 12, tower.Size.X + 10, 14), new Color(0.26f, 0.23f, 0.25f));
+            for (int i = 0; i < 4; i++)
+                DrawRect(new Rect2(tower.Position.X - 3 + i * (tower.Size.X + 6) / 4f, tower.Position.Y - 22, 11, 11), color.Darkened(0.35f));
+
+            // 城门
+            float gateW = tower.Size.X * 0.6f;
+            var gate = new Rect2(tower.Position.X + (tower.Size.X - gateW) * 0.5f, tower.Position.Y + tower.Size.Y - 46, gateW, 46);
+            DrawRect(gate, new Color(0.30f, 0.20f, 0.12f));
+            DrawArc(new Vector2(gate.Position.X + gate.Size.X * 0.5f, gate.Position.Y + 8), gate.Size.X * 0.5f, Mathf.Pi, Mathf.Tau, 20, new Color(0.30f, 0.20f, 0.12f), 16f);
+            DrawRect(new Rect2(gate.Position.X + gate.Size.X * 0.5f - 1.5f, gate.Position.Y, 3, gate.Size.Y), new Color(0, 0, 0, 0.5f));
+
+            // 旗帜（血量越低越下垂）
+            float bx = tower.Position.X + tower.Size.X * 0.5f;
+            float by = tower.Position.Y - 22;
+            float fh = 30f + 18f * Mathf.Clamp(hpRatio, 0f, 1f);
+            float wave = Mathf.Sin(_vtime * 2.2f) * 3f;
+            DrawLine(new Vector2(bx, by), new Vector2(bx, by - fh), new Color(0.5f, 0.42f, 0.3f), 2.5f);
+            var flag = new Vector2[] {
+                new Vector2(bx, by - fh),
+                new Vector2(bx + (left ? 26 : -26), by - fh + 6 + wave),
+                new Vector2(bx + (left ? 24 : -24), by - fh + 20 + wave),
+                new Vector2(bx, by - fh + 22),
+            };
+            DrawColoredPolygon(flag, new Color(color.R, color.G, color.B, 0.9f));
         }
 
         static Color ClassTint(UnitDef d)
@@ -285,7 +348,7 @@ namespace Milaqi.Game
             var tex = UnitPortrait.Get(u.def.id);
             if (tex != null)
             {
-                float size = r * 3.4f;
+                float size = r * 4.0f;
                 // 3D 立绘本身已是类别配色，这里只叠加一层阵营色调区分敌我
                 var teamTint = Colors.White.Lerp(left ? new Color(0.62f, 0.82f, 1f) : new Color(1f, 0.66f, 0.68f), 0.55f);
                 DrawSetTransform(p, 0f, new Vector2(left ? 1f : -1f, 1f));

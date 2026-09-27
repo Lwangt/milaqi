@@ -61,6 +61,7 @@ namespace Milaqi.Core
         public readonly Dictionary<string, int> pendingSkillUpgrades = new Dictionary<string, int>();
         public readonly List<string> gemShop = new List<string>();
         public string archetypeId;   // 该玩家使用的流派（决定流派印记）
+        public string difficultyId;  // 该玩家 AI 的难度档
         public readonly Dictionary<string, int> skillCharges = new Dictionary<string, int>();
         public readonly List<string> activeRelicOffers = new List<string>();
         public int lastIncomeGold, lastIncomeGems;
@@ -109,6 +110,7 @@ namespace Milaqi.Core
             rngSeed = seed;
             _rngState = seed == 0 ? 1 : seed;
             sim = new BattleSim(db);
+            sim.Seed(unchecked((uint)seed * 2654435761u + 1013904223u));
             for (int i = 0; i < 2; i++)
             {
                 players[i] = new PlayerState { index = i, name = i == 0 ? "左侧王国" : "右侧王国", baseHp = db.Balance.baseHp };
@@ -269,6 +271,13 @@ namespace Milaqi.Core
                     int bonus;
                     if (rcfg.streakBonus.TryGetValue(streak.ToString(), out bonus)) goldGain += bonus;
                 }
+                // AI 难度档的经济差异（只影响 AI，不影响人类玩家）
+                var diff = db.Difficulty(p.difficultyId);
+                if (diff != null)
+                {
+                    goldGain += diff.bonusGold;
+                    if (diff.bonusXp > 0f) xpGain += diff.bonusXp;
+                }
                 p.gold += goldGain;
                 p.gems += gemGain;
                 p.lastIncomeGold = (int)goldGain;
@@ -371,7 +380,8 @@ namespace Milaqi.Core
             {
                 var u = db.Units[i];
                 if (u == null || u.tier < 1 || u.tier > 5) continue;
-                if (u.unlockRound > round) continue;
+                // 解锁条件改为「等级」（云顶式）：等级不够就不会出现在商店里
+                if (u.unlockLevel > p.level) continue;
                 list.Add(u);
             }
             list.Sort((a, b) => a.tier != b.tier ? a.tier.CompareTo(b.tier) : (a.price != b.price ? a.price.CompareTo(b.price) : string.CompareOrdinal(a.id, b.id)));
@@ -527,8 +537,14 @@ namespace Milaqi.Core
             sim.RemoveTeam(p.Team);
         }
 
+        /// <summary>
+        /// 默认布阵：用「双方镜像的确定性阵型」，不消耗随机数。
+        /// 之前左右方各自抽随机位置，导致两队初始站位分布不同（实测给近战阵容带来 ~9% 的阵营优势）。
+        /// </summary>
         public void AutoDeployAll(PlayerState p)
         {
+            int k = 0;
+            for (int i = 0; i < p.roster.Count; i++) if (p.roster[i].placed) k++;
             int guard = 0;
             while (guard++ < 128)
             {
@@ -537,13 +553,25 @@ namespace Milaqi.Core
                 if (target == null) break;
                 var def = db.Unit(target.id);
                 if (def == null) { target.placed = true; continue; }
-                float lane = (float)(Rand(1000) / 1000.0) * 2f - 1f;
-                float y = sim.fieldHeight * 0.5f + lane * sim.fieldHeight * 0.32f;
-                float x = p.Team == Team.Left
-                    ? db.Balance.combat.spawnOffset + Rand(90)
-                    : sim.fieldWidth - db.Balance.combat.spawnOffset - Rand(90);
-                target.placed = true; target.x = x; target.y = y;
+                SetFormation(p, target, k);
+                k++;
             }
+        }
+
+        /// <summary>把第 k 个单位放到镜像对称的阵位上（左方第 k 个与右方第 k 个严格镜像）。</summary>
+        public void SetFormation(PlayerState p, OwnedUnit o, int k)
+        {
+            var sim2 = sim;
+            bool ranged = false;
+            var def = db.Unit(o.id);
+            if (def != null) ranged = def.range > 60f;
+            float lane = 0.5f + ((k % 5) - 2) * 0.16f;
+            lane = Math.Max(0.08f, Math.Min(0.92f, lane));
+            float depth = db.Balance.combat.spawnOffset + (k % 3) * 30f + (ranged ? -40f : 0f) + (k / 5) * 22f;
+            depth = Math.Max(30f, Math.Min(sim2.fieldWidth * 0.30f, depth));
+            o.placed = true;
+            o.x = p.Team == Team.Left ? depth : sim2.fieldWidth - depth;
+            o.y = sim2.fieldHeight * lane;
         }
 
         /// <summary>每回合开始时把整支部队满血重新部署（云顶之弈模型）。</summary>
