@@ -36,8 +36,28 @@ namespace Milaqi.Game
         int _lastRound = -1;
         int _aiFlip;
 
+        /// <summary>
+        /// 强制启用 1600x900 画布缩放：不同 DPI / 分辨率下窗口可能拿不到 1600x900，
+        /// 没有缩放的话界面右侧与底部会被直接裁掉。
+        /// </summary>
+        void SetupWindow()
+        {
+            var win = GetWindow();
+            win.ContentScaleSize = new Vector2I(1600, 900);
+            win.ContentScaleMode = Window.ContentScaleModeEnum.CanvasItems;
+            win.ContentScaleAspect = Window.ContentScaleAspectEnum.Expand;
+            // 屏幕装不下 1600x900 时才缩小窗口（画布会自动等比缩放）
+            var usable = DisplayServer.ScreenGetUsableRect();
+            if (usable.Size.X < 800 || usable.Size.Y < 600) return;
+            if (usable.Size.X >= 1600 && usable.Size.Y >= 900) return;
+            int w = Math.Max(960, (int)(usable.Size.X * 0.96f));
+            int h = Math.Max(600, (int)(usable.Size.Y * 0.96f));
+            win.Size = new Vector2I(w, h);
+        }
+
         public override void _Ready()
         {
+            SetupWindow();
             db = LoadDatabase();
 
             bool selfTest = false;
