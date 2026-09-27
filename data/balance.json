@@ -6,7 +6,7 @@
   "round": {
     "startGold": 10,
     "startLevel": 3,
-    "baseIncome": 5,
+    "baseIncome": 4,
     "interestPer": 10,
     "interestCap": 5,
     "streakBonus": {
@@ -127,7 +127,10 @@
     },
     "unitsPerShopSlot": 1,
     "sellRefundRatio": 0.6,
-    "battleBonusGoldWin": 1
+    "battleBonusGoldWin": 1,
+    "incomePerPop": 2.4,
+    "xpPerRound": 6,
+    "xpPerRoundGrowth": 1
   },
   "combat": {
     "tickRate": 30,
@@ -142,5 +145,6 @@
   },
   "startingUnits": {
     "militia": 2
-  }
+  },
+  "note": "新规则：每回合结束存活部队与待出战队列全部清空；金币跨回合保留并叠加当回合系统发放的收入；经验由系统每回合发放。收入 = baseIncome + 人口上限 * incomePerPop。"
 }

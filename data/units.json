@@ -77,8 +77,8 @@
         "human",
         "ranged"
       ],
-      "hp": 164,
-      "atk": 30,
+      "hp": 176,
+      "atk": 32,
       "matk": 0,
       "pdef": 3,
       "mdef": 2,
@@ -166,7 +166,7 @@
         "human",
         "shield"
       ],
-      "hp": 667,
+      "hp": 665,
       "atk": 44,
       "matk": 0,
       "pdef": 27,
@@ -188,7 +188,7 @@
       "tags": [
         "human"
       ],
-      "hp": 435,
+      "hp": 437,
       "atk": 71,
       "matk": 0,
       "pdef": 10,
@@ -215,9 +215,9 @@
         "magic",
         "ranged"
       ],
-      "hp": 308,
+      "hp": 327,
       "atk": 0,
-      "matk": 97,
+      "matk": 103,
       "pdef": 3,
       "mdef": 10,
       "speed": 58,
@@ -261,8 +261,8 @@
         "human",
         "ranged"
       ],
-      "hp": 311,
-      "atk": 78,
+      "hp": 331,
+      "atk": 83,
       "matk": 0,
       "pdef": 4,
       "mdef": 3,
@@ -307,7 +307,7 @@
         "human",
         "shield"
       ],
-      "hp": 1161,
+      "hp": 1159,
       "atk": 66,
       "matk": 0,
       "pdef": 45,
@@ -330,8 +330,8 @@
         "human",
         "ranged"
       ],
-      "hp": 498,
-      "atk": 84,
+      "hp": 537,
+      "atk": 91,
       "matk": 0,
       "pdef": 6,
       "mdef": 5,
@@ -378,8 +378,8 @@
         "machine",
         "ranged"
       ],
-      "hp": 601,
-      "atk": 175,
+      "hp": 655,
+      "atk": 191,
       "matk": 0,
       "pdef": 8,
       "mdef": 4,
@@ -400,7 +400,7 @@
       "tags": [
         "human"
       ],
-      "hp": 583,
+      "hp": 582,
       "atk": 80,
       "matk": 0,
       "pdef": 9,
@@ -424,9 +424,9 @@
         "magic",
         "ranged"
       ],
-      "hp": 496,
+      "hp": 532,
       "atk": 0,
-      "matk": 153,
+      "matk": 164,
       "pdef": 4,
       "mdef": 12,
       "speed": 58,
@@ -452,8 +452,8 @@
         "shield",
         "cavalry"
       ],
-      "hp": 998,
-      "atk": 124,
+      "hp": 994,
+      "atk": 123,
       "matk": 0,
       "pdef": 35,
       "mdef": 29,
@@ -475,8 +475,8 @@
         "human",
         "ranged"
       ],
-      "hp": 620,
-      "atk": 312,
+      "hp": 676,
+      "atk": 341,
       "matk": 0,
       "pdef": 5,
       "mdef": 5,
@@ -498,8 +498,8 @@
         "machine",
         "ranged"
       ],
-      "hp": 859,
-      "atk": 218,
+      "hp": 930,
+      "atk": 236,
       "matk": 0,
       "pdef": 10,
       "mdef": 6,
@@ -523,8 +523,8 @@
       "tags": [
         "giant"
       ],
-      "hp": 1502,
-      "atk": 98,
+      "hp": 1494,
+      "atk": 97,
       "matk": 0,
       "pdef": 52,
       "mdef": 42,
@@ -547,9 +547,9 @@
         "magic",
         "ranged"
       ],
-      "hp": 704,
+      "hp": 754,
       "atk": 0,
-      "matk": 205,
+      "matk": 219,
       "pdef": 6,
       "mdef": 16,
       "speed": 56,
@@ -573,8 +573,8 @@
         "human",
         "assassin"
       ],
-      "hp": 953,
-      "atk": 168,
+      "hp": 948,
+      "atk": 167,
       "matk": 0,
       "pdef": 10,
       "mdef": 8,
@@ -599,7 +599,7 @@
         "human",
         "hero"
       ],
-      "hp": 1346,
+      "hp": 1350,
       "atk": 164,
       "matk": 0,
       "pdef": 46,
@@ -652,7 +652,7 @@
       "tags": [
         "giant"
       ],
-      "hp": 1737,
+      "hp": 1740,
       "atk": 154,
       "matk": 0,
       "pdef": 62,
@@ -679,7 +679,7 @@
         "human",
         "assassin"
       ],
-      "hp": 1409,
+      "hp": 1407,
       "atk": 84,
       "matk": 0,
       "pdef": 20,
@@ -704,9 +704,9 @@
         "ranged",
         "hero"
       ],
-      "hp": 746,
+      "hp": 804,
       "atk": 0,
-      "matk": 311,
+      "matk": 335,
       "pdef": 8,
       "mdef": 24,
       "speed": 52,
@@ -730,7 +730,7 @@
         "human",
         "cavalry"
       ],
-      "hp": 1620,
+      "hp": 1621,
       "atk": 133,
       "matk": 0,
       "pdef": 52,
@@ -753,7 +753,7 @@
         "beast",
         "giant"
       ],
-      "hp": 1663,
+      "hp": 1664,
       "atk": 136,
       "matk": 0,
       "pdef": 34,
@@ -777,9 +777,9 @@
         "magic",
         "ranged"
       ],
-      "hp": 940,
+      "hp": 1010,
       "atk": 0,
-      "matk": 256,
+      "matk": 275,
       "pdef": 10,
       "mdef": 28,
       "speed": 54,
@@ -852,8 +852,8 @@
         "beast",
         "cavalry"
       ],
-      "hp": 463,
-      "atk": 55,
+      "hp": 472,
+      "atk": 56,
       "matk": 0,
       "pdef": 10,
       "mdef": 6,
@@ -875,7 +875,7 @@
         "human",
         "shield"
       ],
-      "hp": 686,
+      "hp": 695,
       "atk": 35,
       "matk": 0,
       "pdef": 32,
@@ -898,8 +898,8 @@
         "beast",
         "human"
       ],
-      "hp": 676,
-      "atk": 88,
+      "hp": 690,
+      "atk": 90,
       "matk": 0,
       "pdef": 12,
       "mdef": 6,
@@ -924,8 +924,8 @@
         "human",
         "ranged"
       ],
-      "hp": 464,
-      "atk": 67,
+      "hp": 509,
+      "atk": 73,
       "matk": 0,
       "pdef": 6,
       "mdef": 12,
@@ -948,9 +948,9 @@
         "magic",
         "ranged"
       ],
-      "hp": 595,
+      "hp": 651,
       "atk": 0,
-      "matk": 99,
+      "matk": 108,
       "pdef": 6,
       "mdef": 20,
       "speed": 64,
@@ -975,8 +975,8 @@
         "giant",
         "beast"
       ],
-      "hp": 1260,
-      "atk": 65,
+      "hp": 1272,
+      "atk": 66,
       "matk": 0,
       "pdef": 26,
       "mdef": 10,
@@ -1002,8 +1002,8 @@
         "beast",
         "cavalry"
       ],
-      "hp": 1090,
-      "atk": 117,
+      "hp": 1100,
+      "atk": 118,
       "matk": 0,
       "pdef": 22,
       "mdef": 18,
@@ -1028,8 +1028,8 @@
         "plant",
         "giant"
       ],
-      "hp": 2598,
-      "atk": 68,
+      "hp": 2628,
+      "atk": 69,
       "matk": 0,
       "pdef": 44,
       "mdef": 32,
@@ -1055,8 +1055,8 @@
         "beast",
         "assassin"
       ],
-      "hp": 984,
-      "atk": 115,
+      "hp": 996,
+      "atk": 116,
       "matk": 0,
       "pdef": 14,
       "mdef": 20,
@@ -1083,9 +1083,9 @@
         "giant",
         "ranged"
       ],
-      "hp": 1215,
+      "hp": 1307,
       "atk": 0,
-      "matk": 92,
+      "matk": 99,
       "pdef": 26,
       "mdef": 26,
       "speed": 60,
@@ -1108,7 +1108,7 @@
       "tags": [
         "giant"
       ],
-      "hp": 1669,
+      "hp": 1673,
       "atk": 92,
       "matk": 0,
       "pdef": 40,
@@ -1137,8 +1137,8 @@
         "undead",
         "assassin"
       ],
-      "hp": 1260,
-      "atk": 162,
+      "hp": 1268,
+      "atk": 163,
       "matk": 0,
       "pdef": 24,
       "mdef": 28,
@@ -1164,9 +1164,9 @@
         "magic",
         "ranged"
       ],
-      "hp": 997,
+      "hp": 1080,
       "atk": 0,
-      "matk": 193,
+      "matk": 209,
       "pdef": 12,
       "mdef": 34,
       "speed": 66,
@@ -1192,7 +1192,7 @@
         "dragon",
         "giant"
       ],
-      "hp": 1592,
+      "hp": 1598,
       "atk": 127,
       "matk": 0,
       "pdef": 52,
@@ -1220,7 +1220,7 @@
         "demon",
         "giant"
       ],
-      "hp": 1664,
+      "hp": 1669,
       "atk": 134,
       "matk": 0,
       "pdef": 46,
@@ -1249,9 +1249,9 @@
         "dragon",
         "ranged"
       ],
-      "hp": 1061,
+      "hp": 1140,
       "atk": 0,
-      "matk": 160,
+      "matk": 172,
       "pdef": 18,
       "mdef": 32,
       "speed": 104,
@@ -1276,7 +1276,7 @@
         "plant",
         "giant"
       ],
-      "hp": 2741,
+      "hp": 2758,
       "atk": 110,
       "matk": 0,
       "pdef": 60,

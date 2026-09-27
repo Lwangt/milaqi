@@ -231,9 +231,12 @@ namespace Milaqi.Core
             {
                 var p = players[(firstIdx + pi) & 1];
                 ApplyPendingPurchases(p, first);
-                float goldGain = rcfg.baseIncome;
+                // 金币收入随人口上限成长：由于部队每回合清空、需要重新购买，
+                // 收入必须大致覆盖「按当前人口买满一支军队」的开销，否则场上永远是残阵。
+                float goldGain = rcfg.baseIncome + PopCap(p) * rcfg.incomePerPop;
                 float gemGain = 0f;
-                float xpGain = 0f;
+                // 经验由系统每回合发放（金币要用来买兵，不该再和买经验抢预算）
+                float xpGain = rcfg.xpPerRound + round * rcfg.xpPerRoundGrowth;
                 var relics = EffectiveRelics(p);
                 int capAdd = 0; float addPct = 0f;
                 for (int i = 0; i < relics.Count; i++)
@@ -653,9 +656,11 @@ namespace Milaqi.Core
                 Say("游戏结束！" + (winnerIndex >= 0 ? players[winnerIndex].name + " 获胜！" : "双方同归于尽。"));
                 return;
             }
-            // 结算完毕：清空战场，部队不跨回合残留（下回合准备阶段再按阵容重新摆出）
+            // 结算完毕：清空战场；按新规则，存活部队与待出战队列也一并清空
+            // （部队是本回合的消耗品，跨回合保留的只有金币、等级、遗物与宝石）
             sim.ClearUnits();
             sim.ClearEvents();
+            for (int i = 0; i < 2; i++) players[i].roster.Clear();
 
             phase = MatchPhase.Settle;
             phaseTimer = 3.5f;

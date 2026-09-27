@@ -134,6 +134,9 @@ namespace Milaqi.Core
         public int rerollCost = 2;
         public int relicEveryRounds = 2;
         public int relicChoices = 3;
+        public float incomePerPop = 2.4f;      // 每点人口上限带来的金币收入
+        public float xpPerRound = 6f;          // 每回合系统发放的基础经验
+        public float xpPerRoundGrowth = 1f;    // 每回合递增的经验
         public Dictionary<string, int[]> shopOdds = new Dictionary<string, int[]>();
         public int unitsPerShopSlot = 1;
         public float sellRefundRatio = 0.6f;

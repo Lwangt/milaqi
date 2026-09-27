@@ -19,14 +19,54 @@ namespace Milaqi.Game
         Rect2 _field = new Rect2(100, 185, 1400, 420);
         float _scale = 1f;
         float _vtime;
+        int _vfxJitter;
 
         sealed class FloatText { public Vector2 pos; public string text; public float life, max; public Color color; public float size; }
-        sealed class Shot { public Vector2 from, to, cur; public float t, dur; public Color color; public bool magic; }
-        sealed class Puff { public Vector2 pos; public float life, max; public Color color; public float radius; }
+        sealed class Shot { public Vector2 from, to, cur; public float t, dur; public Color color; public Color core; public int kind; public float size; }
+        sealed class Slash { public Vector2 from, to; public float life, max; public Color color; public int kind; public float width; }
+        sealed class Puff { public Vector2 pos; public float life, max; public Color color; public float radius; public int kind; }
 
         readonly List<FloatText> _floats = new List<FloatText>();
         readonly List<Shot> _shots = new List<Shot>();
+        readonly List<Slash> _slashes = new List<Slash>();
         readonly List<Puff> _puffs = new List<Puff>();
+
+        // ---------------------------------------------------------------- 攻击特效分类
+        // 0 挥砍 1 箭矢 2 奥术 3 龙息 4 炮击 5 暗影 6 冲击波 7 亡灵 8 自然
+        static int VfxKind(UnitDef d)
+        {
+            if (d == null) return 0;
+            if (d.HasTag("dragon")) return 3;
+            if (d.HasTag("demon")) return 5;
+            if (d.HasTag("elemental")) return 2;
+            if (d.HasTag("plant")) return 8;
+            if (d.HasTag("undead")) return 7;
+            if (d.HasTag("machine")) return 4;
+            if (d.HasTag("assassin")) return 5;
+            if (d.HasTag("giant")) return 6;
+            if (d.range > 60f) return 1;
+            return 0;
+        }
+
+        static readonly Color[] VfxCore = {
+            new Color(0.96f, 0.96f, 1.00f),   // 挥砍
+            new Color(0.86f, 0.92f, 1.00f),   // 箭矢
+            new Color(0.74f, 0.56f, 1.00f),   // 奥术
+            new Color(1.00f, 0.52f, 0.20f),   // 龙息
+            new Color(0.92f, 0.48f, 0.22f),   // 炮击
+            new Color(0.58f, 0.32f, 0.86f),   // 暗影
+            new Color(1.00f, 0.86f, 0.42f),   // 冲击波
+            new Color(0.52f, 1.00f, 0.58f),   // 亡灵
+            new Color(0.46f, 0.88f, 0.36f),   // 自然
+        };
+
+        static Color VfxOf(int kind, Team team)
+        {
+            var c = VfxCore[kind < 0 || kind >= VfxCore.Length ? 0 : kind];
+            // 轻微混入阵营色，方便在混战里分辨是谁打的
+            var t = team == Team.Left ? new Color(0.40f, 0.72f, 1f) : new Color(1f, 0.46f, 0.44f);
+            return c.Lerp(t, 0.22f);
+        }
 
         public override void _Ready()
         {
@@ -80,23 +120,74 @@ namespace Milaqi.Game
                 switch (e.kind)
                 {
                     case SimEventKind.Hit:
-                        if (e.value >= 1f && _floats.Count < 80)
-                            _floats.Add(new FloatText { pos = ToScreen(e.x2, e.y2 - 12f), text = ((int)e.value).ToString(), life = 0.7f, max = 0.7f, color = new Color(1f, 0.92f, 0.55f), size = 12f });
-                        _puffs.Add(new Puff { pos = ToScreen(e.x2, e.y2), life = 0.18f, max = 0.18f, color = new Color(1f, 0.95f, 0.7f, 0.7f), radius = 7f });
-                        break;
                     case SimEventKind.Shot:
-                        _shots.Add(new Shot
                         {
-                            from = ToScreen(e.x, e.y), to = ToScreen(e.x2, e.y2), cur = ToScreen(e.x, e.y),
-                            t = 0f, dur = 0.16f,
-                            color = e.team == Team.Left ? new Color(0.75f, 0.9f, 1f) : new Color(1f, 0.8f, 0.8f),
-                            magic = e.value > 0f && e.value < 0f
-                        });
-                        if (e.value >= 1f && _floats.Count < 80)
-                            _floats.Add(new FloatText { pos = ToScreen(e.x2, e.y2 - 12f), text = ((int)e.value).ToString(), life = 0.7f, max = 0.7f, color = new Color(1f, 0.85f, 0.5f), size = 12f });
+                            var ad = match.db.Unit(e.label);
+                            int kind = VfxKind(ad);
+                            var col = VfxOf(kind, e.team);
+                            var pFrom = ToScreen(e.x, e.y);
+                            var pTo = ToScreen(e.x2, e.y2);
+                            float dist = pFrom.DistanceTo(pTo);
+                            float size = ad != null ? Mathf.Clamp(9f + ad.pop * 1.5f + (ad.tier - 1) * 1.6f, 9f, 26f) : 12f;
+
+                            if (e.kind == SimEventKind.Hit)
+                            {
+                                // 近战：挥砍弧线（重击/巨型单位更宽更慢）
+                                if (_slashes.Count < 70)
+                                    _slashes.Add(new Slash
+                                    {
+                                        from = pFrom, to = pTo, life = 0.26f + (kind == 6 ? 0.14f : 0f), max = 0.26f + (kind == 6 ? 0.14f : 0f),
+                                        color = col, kind = kind, width = size * (kind == 6 ? 0.75f : 0.46f)
+                                    });
+                            }
+                            else
+                            {
+                                // 远程：按兵种播放不同弹道
+                                if (_shots.Count < 140)
+                                    _shots.Add(new Shot
+                                    {
+                                        from = pFrom, to = pTo, cur = pFrom, t = 0f,
+                                        dur = Mathf.Clamp(dist / (kind == 4 ? 900f : kind == 3 ? 1300f : 1500f), 0.06f, 0.30f),
+                                        color = col, core = col.Lightened(0.35f), kind = kind, size = size
+                                    });
+                            }
+
+                            // 命中特效
+                            if (_puffs.Count < 180)
+                                _puffs.Add(new Puff
+                                {
+                                    pos = pTo, life = kind == 6 ? 0.36f : 0.20f, max = kind == 6 ? 0.36f : 0.20f,
+                                    color = new Color(col.R, col.G, col.B, 0.85f),
+                                    radius = kind == 6 ? 36f : (kind == 3 ? 26f : 14f), kind = kind
+                                });
+                            if ((kind == 2 || kind == 3 || kind == 7 || kind == 8) && _puffs.Count < 180)
+                                _puffs.Add(new Puff
+                                {
+                                    pos = pTo, life = 0.42f, max = 0.42f,
+                                    color = new Color(col.R, col.G, col.B, 0.4f),
+                                    radius = kind == 3 ? 34f : 18f, kind = kind
+                                });
+
+                            if (e.value >= 1f && _floats.Count < 80)
+                                _floats.Add(new FloatText
+                                {
+                                    pos = new Vector2(pTo.X + (float)(_vfxJitter++ % 3 - 1) * 7f, pTo.Y - 12f),
+                                    text = ((int)e.value).ToString(),
+                                    life = 0.7f, max = 0.7f,
+                                    color = kind == 2 || kind == 7 ? new Color(0.88f, 0.78f, 1f) : new Color(1f, 0.90f, 0.55f),
+                                    size = 12f
+                                });
+                        }
                         break;
                     case SimEventKind.Death:
-                        _puffs.Add(new Puff { pos = ToScreen(e.x, e.y), life = 0.5f, max = 0.5f, color = e.team == Team.Left ? new Color(0.5f, 0.7f, 1f, 0.6f) : new Color(1f, 0.55f, 0.55f, 0.6f), radius = 26f });
+                        _puffs.Add(new Puff { pos = ToScreen(e.x, e.y), life = 0.5f, max = 0.5f, color = e.team == Team.Left ? new Color(0.5f, 0.7f, 1f, 0.6f) : new Color(1f, 0.55f, 0.55f, 0.6f), radius = 26f, kind = -1 });
+                        for (int s = 0; s < 5; s++)
+                        {
+                            float ang = (s / 5f) * Mathf.Tau + (float)(_vfxJitter % 7) * 0.31f;
+                            var pp = ToScreen(e.x, e.y) + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * 10f;
+                            _puffs.Add(new Puff { pos = pp, life = 0.35f, max = 0.35f, color = e.team == Team.Left ? new Color(0.6f, 0.8f, 1f, 0.5f) : new Color(1f, 0.6f, 0.6f, 0.5f), radius = 7f, kind = -1 });
+                        }
+                        _vfxJitter++;
                         break;
                     case SimEventKind.Heal:
                         if (_floats.Count < 80)
@@ -123,6 +214,12 @@ namespace Milaqi.Game
                 float k = Math.Min(1f, s.t / s.dur);
                 s.cur = s.from.Lerp(s.to, k);
                 if (k >= 1f) _shots.RemoveAt(i);
+            }
+            for (int i = _slashes.Count - 1; i >= 0; i--)
+            {
+                var s = _slashes[i];
+                s.life -= dt;
+                if (s.life <= 0f) _slashes.RemoveAt(i);
             }
             for (int i = _puffs.Count - 1; i >= 0; i--)
             {
@@ -179,20 +276,118 @@ namespace Milaqi.Game
                 DrawUnit(u);
             }
 
-            // 弹道
+            // 近战挥砍
+            for (int i = 0; i < _slashes.Count; i++)
+            {
+                var s = _slashes[i];
+                float k = 1f - s.life / s.max;          // 0..1 播放进度
+                float a = (1f - k) * 0.95f;
+                var dir = (s.to - s.from);
+                float len = dir.Length();
+                if (len < 0.01f) continue;
+                dir /= len;
+                var nrm = new Vector2(-dir.Y, dir.X);
+                // 弧线：起点沿法线偏移，终点收到目标上，形成挥砍轨迹
+                float sweep = (1f - k) * len * 0.55f;
+                var p0 = s.from + dir * (len * 0.25f) + nrm * sweep;
+                var pm = s.from + dir * (len * 0.7f) + nrm * (sweep * 0.45f);
+                var p1 = s.to;
+                var outer = new Color(s.color.R, s.color.G, s.color.B, a * 0.55f);
+                var inner = new Color(1f, 1f, 1f, a * 0.85f);
+                DrawLine(p0, pm, outer, s.width * (1.15f - k * 0.35f));
+                DrawLine(pm, p1, outer, s.width * (1.0f - k * 0.4f));
+                DrawLine(p0.Lerp(pm, 0.35f), pm.Lerp(p1, 0.25f), inner, Math.Max(1.4f, s.width * 0.3f));
+                if (s.kind == 6) // 巨兽/冲击波：额外震地圆环
+                    DrawArc(s.to, s.width * (1.4f + k * 2.2f), 0, Mathf.Tau, 26, new Color(s.color.R, s.color.G, s.color.B, a * 0.5f), 2f);
+            }
+
+            // 远程弹道
             for (int i = 0; i < _shots.Count; i++)
             {
                 var s = _shots[i];
-                DrawLine(s.cur, s.to, new Color(s.color.R, s.color.G, s.color.B, 0.35f), 1.4f);
-                DrawCircle(s.cur, 3.2f, s.color);
+                float k = Mathf.Clamp(s.t / s.dur, 0f, 1f);
+                var dir = (s.to - s.from);
+                float len = dir.Length();
+                if (len < 0.01f) continue;
+                dir /= len;
+                var tail = s.cur - dir * Mathf.Min(len * 0.55f, s.size * (s.kind == 3 ? 4.5f : s.kind == 2 ? 3.0f : 2.0f));
+                var body = new Color(s.color.R, s.color.G, s.color.B, 0.9f);
+                var glow = new Color(s.color.R, s.color.G, s.color.B, 0.30f);
+
+                switch (s.kind)
+                {
+                    case 3: // 龙息：锥形吐息
+                        {
+                            float w0 = s.size * 0.5f, w1 = s.size * 1.6f;
+                            var n = new Vector2(-dir.Y, dir.X);
+                            var poly = new Vector2[] {
+                                s.cur - n * w0 - dir * s.size * 2.6f,
+                                s.cur + n * w0 - dir * s.size * 2.6f,
+                                s.cur + n * w1, s.cur - n * w1
+                            };
+                            DrawColoredPolygon(poly, new Color(s.color.R, s.color.G, s.color.B, 0.45f));
+                            DrawCircle(s.cur, w1 * 0.85f, new Color(1f, 0.72f, 0.30f, 0.55f));
+                            DrawCircle(s.cur, w0 * 0.7f, new Color(1f, 0.95f, 0.7f, 0.85f));
+                        }
+                        break;
+                    case 2: case 7: case 8: // 奥术 / 亡灵 / 自然：发光法球 + 拖尾
+                        DrawLine(tail, s.cur, glow, s.size * 0.75f);
+                        DrawCircle(s.cur, s.size * 0.42f, body);
+                        DrawCircle(s.cur, s.size * 0.22f, new Color(1f, 1f, 1f, 0.9f));
+                        break;
+                    case 4: // 炮击：实心弹 + 烟迹
+                        DrawLine(tail, s.cur, new Color(0.35f, 0.30f, 0.28f, 0.45f), s.size * 0.55f);
+                        DrawCircle(s.cur, s.size * 0.36f, new Color(0.30f, 0.26f, 0.24f, 0.95f));
+                        DrawCircle(s.cur - dir * s.size * 0.4f, s.size * 0.30f, new Color(1f, 0.62f, 0.24f, 0.85f));
+                        break;
+                    case 5: // 暗影：断续残影
+                        for (int g = 1; g <= 4; g++)
+                            DrawCircle(s.cur - dir * s.size * 0.42f * g, s.size * (0.30f - g * 0.045f), new Color(s.color.R, s.color.G, s.color.B, 0.42f - g * 0.08f));
+                        DrawCircle(s.cur, s.size * 0.26f, new Color(0.95f, 0.85f, 1f, 0.9f));
+                        break;
+                    case 6: // 冲击波：环状推进
+                        DrawArc(s.cur, s.size * (0.7f + k * 0.8f), 0, Mathf.Tau, 22, body, 2.5f);
+                        DrawCircle(s.cur, s.size * 0.30f, new Color(1f, 0.95f, 0.75f, 0.85f));
+                        break;
+                    default: // 箭矢 / 弩矢：细线 + 箭头
+                        DrawLine(tail, s.cur, glow, 2.2f);
+                        {
+                            var n = new Vector2(-dir.Y, dir.X);
+                            var tip = s.cur + dir * s.size * 0.40f;
+                            var poly = new Vector2[] { tip, s.cur - n * s.size * 0.20f, s.cur + n * s.size * 0.20f };
+                            DrawColoredPolygon(poly, new Color(1f, 1f, 1f, 0.92f));
+                        }
+                        break;
+                }
             }
-            // 爆点
+
+            // 命中与死亡特效
             for (int i = 0; i < _puffs.Count; i++)
             {
                 var p = _puffs[i];
                 float k = 1f - p.life / p.max;
                 var c = p.color; c.A *= (1f - k);
-                DrawCircle(p.pos, p.radius * (0.4f + k * 0.9f), c);
+                if (p.kind == 6)
+                {
+                    // 冲击波：扩散圆环
+                    DrawArc(p.pos, p.radius * (0.3f + k * 1.5f), 0, Mathf.Tau, 30, c, 2.5f);
+                    DrawCircle(p.pos, p.radius * (0.3f + k * 0.7f), new Color(c.R, c.G, c.B, c.A * 0.45f));
+                }
+                else if (p.kind >= 0 && p.kind != 4)
+                {
+                    // 命中火花：放射状短线
+                    DrawCircle(p.pos, p.radius * (0.35f + k * 0.85f), c);
+                    int rays = 4 + (p.kind == 3 ? 3 : 0);
+                    for (int r = 0; r < rays; r++)
+                    {
+                        float ang = r * Mathf.Tau / rays + k * 1.1f;
+                        var d = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang));
+                        DrawLine(p.pos + d * p.radius * 0.35f, p.pos + d * p.radius * (0.7f + k * 0.9f),
+                            new Color(c.R, c.G, c.B, c.A * 0.8f), 1.8f);
+                    }
+                }
+                else
+                    DrawCircle(p.pos, p.radius * (0.4f + k * 0.9f), c);
             }
             // 伤害数字
             var font = GetThemeDefaultFont();

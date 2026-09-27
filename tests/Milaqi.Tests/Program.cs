@@ -54,6 +54,12 @@ namespace Milaqi.Tests
                 ArchetypeMatrix(db, n);
             }
             if (mode == "regress") { fails += Regression(db); }
+            if (mode == "power")
+            {
+                // power [n]  全兵种实战战力体检：等人口 / 等金币 两种口径对照民兵
+                int n = args.Length > 1 ? int.Parse(args[1]) : 100;
+                PowerAudit(db, n);
+            }
             if (mode == "cross")
             {
                 // cross <A> <nA> <B> <nB> <局数>  —— 同人口跨兵种对抗，检验单兵强度是否平衡
@@ -107,7 +113,11 @@ namespace Milaqi.Tests
             var m = new Match(db, 7);
             m.Start();
             Check(m.round == 1 && m.phase == MatchPhase.Prep, "开局进入第 1 回合准备阶段", ref fails);
-            Check(m.players[0].gold > 0 && m.players[0].level == 3, "初始经济与等级正确", ref fails);
+            var rcfg0 = db.Balance.round;
+            Check(m.players[0].gold >= rcfg0.startGold && m.players[0].level >= rcfg0.startLevel && m.players[0].level <= rcfg0.startLevel + 3,
+                "初始经济与等级正确（金币 " + (int)m.players[0].gold + "，等级 " + m.players[0].level + "）", ref fails);
+            Check(rcfg0.incomePerPop > 0f && rcfg0.xpPerRound > 0f,
+                "收入按人口成长、" + "经验每回合发放已配置", ref fails);
             Check(m.players[0].roster.Count >= 2, "初始部队已编入名册（" + m.players[0].roster.Count + " 个单位）", ref fails);
             Check(m.PopUsed(m.players[0]) <= m.PopCap(m.players[0]), "初始人口未超上限", ref fails);
 
@@ -258,6 +268,8 @@ namespace Milaqi.Tests
             while (!m.sim.BattleOver && t < 40f) { m.sim.Step(1f / 30f); t += 1f / 30f; }
             m.Tick(0.02f);
             Check(m.sim.Units.Count == 0, "结算后战场清空（剩余 " + m.sim.Units.Count + "）", ref fails);
+            Check(m.players[0].roster.Count == 0 && m.players[1].roster.Count == 0,
+                "结算后名册也清空——部队不跨回合（左 " + m.players[0].roster.Count + " / 右 " + m.players[1].roster.Count + "）", ref fails);
 
             // 3) 每局必须有随机性（不能所有对局完全相同）
             string sig1 = BattleSignature(db, 1001), sig2 = BattleSignature(db, 1002), sig3 = BattleSignature(db, 1003);
@@ -282,7 +294,7 @@ namespace Milaqi.Tests
 
             // 5) 战斗对称性：镜像阵容下左右胜率应接近 50%
             int lw = 0, rw = 0;
-            for (int i = 0; i < 240; i++)
+            for (int i = 0; i < 600; i++)
             {
                 var mm = new Match(db, 50000 + i * 13);
                 mm.Start();
@@ -298,6 +310,73 @@ namespace Milaqi.Tests
             double bias = (lw + rw) > 0 ? 100.0 * Math.Abs(lw - rw) / (lw + rw) : 0;
             Check(bias < 8.0, "镜像阵容左右胜率偏差 < 8%（实测 " + bias.ToString("0.0") + "%）", ref fails);
             return fails;
+        }
+
+        /// <summary>跑一组对抗，返回 (A 胜率, 平均杀戮值差)。</summary>
+        static void Duel(GameDatabase db, string a, int na, string b, int nb, int n, out double winRate, out double avgKv)
+        {
+            int aw = 0, bw = 0; double kv = 0;
+            for (int i = 0; i < n; i++)
+            {
+                var m = new Match(db, 81000 + i * 29);
+                m.Start();
+                m.players[0].roster.Clear(); m.players[1].roster.Clear();
+                m.sim.ClearUnits();
+                for (int k = 0; k < na; k++) m.players[0].roster.Add(new OwnedUnit { id = a });
+                for (int k = 0; k < nb; k++) m.players[1].roster.Add(new OwnedUnit { id = b });
+                m.BeginBattle();
+                float t = 0f;
+                while (!m.sim.BattleOver && t < 60f) { m.sim.Step(1f / 30f); t += 1f / 30f; }
+                float l, r; m.sim.Settle(out l, out r);
+                kv += l - r;
+                if (l > r) aw++; else if (r > l) bw++;
+            }
+            winRate = (aw + bw) > 0 ? 100.0 * aw / (aw + bw) : 50.0;
+            avgKv = kv / n;
+        }
+
+        /// <summary>
+        /// 全兵种实战战力体检。
+        /// 用两种口径对照 1 费民兵：等人口、等金币。用来发现「贵但打不过便宜货」的兵种。
+        /// </summary>
+        static void PowerAudit(GameDatabase db, int n)
+        {
+            const int popBudget = 6;
+            const double goldBudget = 12;
+            var rows = new List<(string name, int tier, int price, int pop, double eqPop, double eqGold, double oneVone, double kvGold)>();
+            foreach (var u in db.Units)
+            {
+                if (u == null || u.tier < 1 || u.tier > 5) continue;
+                if (u.unlockRound > 900) continue;
+                if (u.id == "militia") continue;
+                // 严格对等：先按预算决定「被测单位」的数量，再让民兵一方凑出相同的人口/金币
+                int nPop = Math.Max(1, (int)Math.Floor((double)popBudget / u.pop));
+                int militiaPop = nPop * u.pop;
+                int nGold = Math.Max(1, (int)Math.Floor(goldBudget / Math.Max(1, u.price)));
+                int militiaGold = Math.Max(1, (int)Math.Floor(nGold * (double)u.price / 2.0));
+                double wp, wg, w1, kvg;
+                Duel(db, u.id, nPop, "militia", militiaPop, n, out wp, out _);
+                Duel(db, u.id, nGold, "militia", militiaGold, n, out wg, out kvg);
+                Duel(db, u.id, 1, "militia", 1, n, out w1, out _);
+                rows.Add((u.name, u.tier, u.price, u.pop, wp, wg, w1, kvg));
+            }
+            rows.Sort((a, b) => a.eqGold.CompareTo(b.eqGold));
+            Console.WriteLine();
+            Console.WriteLine("== 全兵种实战战力体检（对照 民兵，每组 " + n + " 局）==");
+            Console.WriteLine("   等人口 = 双方同为整数个（被测方 floor(" + popBudget + "/人口) 个，民兵补足同人口）");
+            Console.WriteLine("   等金币 = 双方同为整数个（被测方 floor(" + (int)goldBudget + "/价格) 个，民兵补足同金币）");
+            Console.WriteLine("   胜率 <50% 说明同等资源下打不过最便宜的 T1 民兵");
+            Console.WriteLine();
+            Console.WriteLine("  兵种            层  价 人口 | 等人口 等金币  1v1 | 等金币杀戮差值");
+            Console.WriteLine("  ------------------------------------------------------------------");
+            foreach (var r in rows)
+                Console.WriteLine("  " + Pad(r.name, 14) + " T" + r.tier + "  " + Pad(r.price.ToString(), 2) + "  " + Pad(r.pop.ToString(), 2)
+                    + "  | " + Pad(r.eqPop.ToString("0") + "%", 6) + " " + Pad(r.eqGold.ToString("0") + "%", 6) + " " + Pad(r.oneVone.ToString("0") + "%", 5)
+                    + " | " + r.kvGold.ToString("0.0"));
+            int bad = 0;
+            foreach (var r in rows) if (r.eqGold < 45.0) bad++;
+            Console.WriteLine();
+            Console.WriteLine("  等金币口径下胜率 <45% 的兵种数：" + bad + " / " + rows.Count);
         }
 
         /// <summary>同人口跨兵种对抗：A 方 na 个 vs B 方 nb 个，看谁赢。用于检验单兵强度。</summary>

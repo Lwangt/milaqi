@@ -434,8 +434,8 @@ namespace Milaqi.Game
             }
 
             hintLabel.Text = match.phase == MatchPhase.Prep
-                ? "① 点上方兵种卡片购买（一次一只，进入待出战队列）\n② 在队列里选中一个，再点战场自己那半边放下\n③ 点「开始战斗」派兵出击    右键点战场上的兵可出售"
-                : "战斗中：点技能 → 点战场释放\n回合结束按双方存活单位的杀戮值差值扣敌方城邦生命，然后清空战场";
+                ? "① 点上方兵种卡片购买（一次一只，进入待出战队列）\n② 队列里选中一个再点战场放下（不点也会自动布阵）  右键点场上的兵可出售\n③ 点「开始战斗」派兵出击\n★ 回合结束部队全部清空 —— 本轮有多少金币就打多少兵，金币与等级跨回合保留"
+                : "战斗中：点技能 → 点战场释放\n回合结束按双方存活单位的杀戮值差值扣敌方城邦生命，然后清空战场与部队";
 
             RefreshRelicPanel();
             RefreshGemPanel();
@@ -477,7 +477,7 @@ namespace Milaqi.Game
                 b.TooltipText = (def != null ? def.name : o.id) + (o.placed ? "（已上场，点击撤回）" : "（待部署，点击选中）");
             }
             queueInfo.Text = "已上场 " + placed + "   待部署 " + pending + "   人口 " + match.PopUsed(p) + "/" + match.PopCap(p)
-                + (pending > 0 ? "\n选中一个，再点战场放下" : "\n点已上场的单位可撤回重新布阵");
+                + (pending > 0 ? "\n选中一个，再点战场放下" : "\n本回合部队 · 战后清空");
         }
 
         void RefreshRelicPanel()

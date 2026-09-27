@@ -211,8 +211,15 @@ namespace Milaqi.Core
                 var target = AcquireTarget(u);
                 if (target != null)
                 {
+                    // 攻击判定必须补偿「体格」。
+                    // 单位互相挤开时保持的最小间距是 radiusA+radiusB，
+                    // 而攻击判定原本只算 range + 目标半径*0.5 —— 体积大的单位被推开的距离
+                    // 反而超过了自己的攻击距离，结果根本够不着小单位：
+                    // 实测 1 个战争巨兽（半径22/射程24）打 4 个民兵，一个都打不死，0% 胜率。
+                    // 这里只对「大于标准体格(12)」的单位补差额，小单位的行为完全不变。
+                    float bulk = Math.Max(0f, u.radius - 12f) + Math.Max(0f, target.radius - 12f);
                     float d = u.Dist(target);
-                    float reach = u.st.range + target.radius * 0.5f;
+                    float reach = u.st.range + target.radius * 0.5f + bulk;
                     if (d <= reach)
                     {
                         FaceAndAttack(u, target);
@@ -340,7 +347,9 @@ namespace Milaqi.Core
             _events.Add(new SimEvent
             {
                 kind = ranged ? SimEventKind.Shot : SimEventKind.Hit,
-                x = a.x, y = a.y, x2 = t.x, y2 = t.y, team = a.team, value = dmg
+                x = a.x, y = a.y, x2 = t.x, y2 = t.y, team = a.team, value = dmg,
+                // 用 label 带上攻击者兵种 id，表现层据此播放该兵种的专属攻击特效
+                label = a.def.id
             });
 
             ApplyDamage(t, dmg, a);
