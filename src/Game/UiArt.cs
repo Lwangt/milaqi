@@ -32,7 +32,10 @@ namespace Milaqi.Game
             if (string.IsNullOrEmpty(name)) return null;
             Texture2D t;
             if (Cache.TryGetValue(name, out t)) return t;
-            t = ResourceLoader.Load<Texture2D>("res://art/ui/" + name + ".svg");
+            // 优先用程序化生成的精美图标（錾金底盘 + 立体符号），缺失时退回旧的扁平 SVG
+            var png = "res://art/ui2/icon_" + name + ".png";
+            t = ResourceLoader.Exists(png) ? ResourceLoader.Load<Texture2D>(png) : null;
+            if (t == null) t = ResourceLoader.Load<Texture2D>("res://art/ui/" + name + ".svg");
             Cache[name] = t;
             return t;
         }

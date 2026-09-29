@@ -122,11 +122,13 @@ namespace Milaqi.Game
         TextureRect Tex(Control parent, Rect2 rect, Texture2D t)
         {
             var r = new TextureRect();
+            // 顺序很重要：先关掉「跟随贴图尺寸」，再赋 Texture，
+            // 否则 Size 会被贴图原始尺寸（图标 96x96）撑开，图标会溢出卡片。
+            r.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+            r.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
             r.Texture = t;
             r.Position = rect.Position;
             r.Size = rect.Size;
-            r.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-            r.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
             r.MouseFilter = MouseFilterEnum.Ignore;
             parent.AddChild(r);
             return r;

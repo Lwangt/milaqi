@@ -136,11 +136,12 @@ namespace Milaqi.Game
         TextureRect Icon(Control parent, Rect2 rect, string icon)
         {
             var t = new TextureRect();
+            // 先关掉「跟随贴图尺寸」：新图标是 96x96，直接赋 Texture 会把 Size 撑到 96 而忽略传入的 rect
+            t.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+            t.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
             if (icon != null) t.Texture = UiArt.Get(icon);
             t.Position = rect.Position;
             t.Size = rect.Size;
-            t.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-            t.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
             t.MouseFilter = Control.MouseFilterEnum.Ignore;
             parent.AddChild(t);
             return t;
