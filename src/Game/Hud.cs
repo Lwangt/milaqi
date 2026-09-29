@@ -91,6 +91,34 @@ namespace Milaqi.Game
             return p;
         }
 
+        /// <summary>使用錾金九宫格贴图的面板；贴图缺失时回退到纯色面板。</summary>
+        Panel PanelTex(Control parent, Rect2 rect, int margin = 30, Color? fallback = null)
+        {
+            var p = new Panel();
+            var sb = UiArt2.Panel(margin);
+            if (sb != null) p.AddThemeStyleboxOverride("panel", sb);
+            else p.AddThemeStyleboxOverride("panel", UiTheme.Panel(fallback ?? new Color(0.12f, 0.11f, 0.16f, 0.96f), UiTheme.GoldDim, 2, 10));
+            p.Position = rect.Position;
+            p.Size = rect.Size;
+            p.MouseFilter = Control.MouseFilterEnum.Ignore;
+            parent.AddChild(p);
+            return p;
+        }
+
+        TextureRect TexRect(Control parent, Rect2 rect, string art)
+        {
+            var t = new TextureRect();
+            // 必须先关掉「跟随贴图尺寸」，否则赋 Texture 时 Size 会被钳到贴图原始大小
+            t.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+            t.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+            t.Texture = UiArt2.Get(art);
+            t.Position = rect.Position;
+            t.Size = rect.Size;
+            t.MouseFilter = Control.MouseFilterEnum.Ignore;
+            parent.AddChild(t);
+            return t;
+        }
+
         Label Lbl(Control parent, Rect2 rect, string text, int size, Color color, HorizontalAlignment align = HorizontalAlignment.Left)
         {
             var l = new Label();
@@ -182,35 +210,39 @@ namespace Milaqi.Game
         // ---------------------------------------------------------------- 顶部
         void BuildTop()
         {
-            var top = PanelAt(root, new Rect2(0, 0, 1600, 104), UiTheme.Panel(new Color(0.10f, 0.09f, 0.14f, 0.97f), UiTheme.GoldDim, 0, 0));
+            var top = PanelTex(root, new Rect2(0, 0, 1600, 104), 34, new Color(0.10f, 0.09f, 0.14f, 0.97f));
             PanelAt(root, new Rect2(0, 102, 1600, 3), UiTheme.Panel(UiTheme.GoldDim, UiTheme.GoldDim, 0, 0));
 
             // 回合徽章
-            var badge = PanelAt(top, new Rect2(14, 12, 104, 80), UiTheme.Panel(new Color(0.20f, 0.16f, 0.24f), UiTheme.Gold, 3, 12), true);
+            var badge = PanelTex(top, new Rect2(14, 12, 104, 80), 30, new Color(0.20f, 0.16f, 0.24f));
             roundLabel = Lbl(badge, new Rect2(0, 6, 104, 46), "1", 38, UiTheme.Gold, HorizontalAlignment.Center);
             roundSuffix = Lbl(badge, new Rect2(0, 50, 104, 22), "回合", 13, UiTheme.ParchDim, HorizontalAlignment.Center);
 
             phaseLabel = Lbl(top, new Rect2(128, 14, 170, 30), "", 19, UiTheme.Arcane);
             timerLabel = Lbl(top, new Rect2(128, 44, 170, 44), "", 34, UiTheme.Parchment);
 
-            // 我方城邦
-            topSideL = Lbl(top, new Rect2(310, 12, 300, 24), "", 15, UiTheme.TeamLeft);
-            PanelAt(top, new Rect2(310, 40, 440, 36), UiTheme.Panel(new Color(0, 0, 0, 0.55f), UiTheme.TeamLeft, 2, 8));
-            leftHpBar = PanelAt(top, new Rect2(310, 40, 440, 36), UiTheme.Panel(UiTheme.TeamLeft, UiTheme.TeamLeft, 0, 8));
-            Icon(top, new Rect2(318, 46, 24, 24), UiArt.Hp);
-            leftHpText = Lbl(top, new Rect2(348, 40, 396, 36), "", 17, Colors.Black, HorizontalAlignment.Left);
+            // 我方城邦：圆形头像框 + 阵营徽记 + 血条
+            TexRect(top, new Rect2(306, 16, 54, 54), "frame_round");
+            TexRect(top, new Rect2(314, 24, 38, 38), "crest_left");
+            topSideL = Lbl(top, new Rect2(370, 12, 300, 24), "", 15, UiTheme.TeamLeft);
+            PanelAt(top, new Rect2(370, 40, 400, 36), UiTheme.Panel(new Color(0, 0, 0, 0.55f), UiTheme.TeamLeft, 2, 8));
+            leftHpBar = PanelAt(top, new Rect2(370, 40, 400, 36), UiTheme.Panel(UiTheme.TeamLeft, UiTheme.TeamLeft, 0, 8));
+            Icon(top, new Rect2(378, 46, 24, 24), UiArt.Hp);
+            leftHpText = Lbl(top, new Rect2(408, 40, 356, 36), "", 17, Colors.Black, HorizontalAlignment.Left);
             leftHpText.VerticalAlignment = VerticalAlignment.Center;
 
             // 敌方城邦
-            topSideR = Lbl(top, new Rect2(860, 12, 300, 24), "", 15, UiTheme.TeamRight);
-            PanelAt(top, new Rect2(860, 40, 440, 36), UiTheme.Panel(new Color(0, 0, 0, 0.55f), UiTheme.TeamRight, 2, 8));
-            rightHpBar = PanelAt(top, new Rect2(860, 40, 440, 36), UiTheme.Panel(UiTheme.TeamRight, UiTheme.TeamRight, 0, 8));
-            Icon(top, new Rect2(868, 46, 24, 24), UiArt.Hp);
-            rightHpText = Lbl(top, new Rect2(898, 40, 396, 36), "", 17, Colors.Black, HorizontalAlignment.Left);
+            TexRect(top, new Rect2(836, 16, 54, 54), "frame_round");
+            TexRect(top, new Rect2(844, 24, 38, 38), "crest_right");
+            topSideR = Lbl(top, new Rect2(900, 12, 300, 24), "", 15, UiTheme.TeamRight);
+            PanelAt(top, new Rect2(900, 40, 400, 36), UiTheme.Panel(new Color(0, 0, 0, 0.55f), UiTheme.TeamRight, 2, 8));
+            rightHpBar = PanelAt(top, new Rect2(900, 40, 400, 36), UiTheme.Panel(UiTheme.TeamRight, UiTheme.TeamRight, 0, 8));
+            Icon(top, new Rect2(908, 46, 24, 24), UiArt.Hp);
+            rightHpText = Lbl(top, new Rect2(938, 40, 356, 36), "", 17, Colors.Black, HorizontalAlignment.Left);
             rightHpText.VerticalAlignment = VerticalAlignment.Center;
 
             // 右上角魔法纹章
-            var crest = PanelAt(top, new Rect2(1320, 16, 264, 72), UiTheme.Panel(new Color(0.16f, 0.14f, 0.22f), UiTheme.Shadow, 2, 10), true);
+            var crest = PanelTex(top, new Rect2(1320, 16, 264, 72), 30, new Color(0.16f, 0.14f, 0.22f));
             Lbl(crest, new Rect2(8, 8, 248, 24), "维斯特兰纪元", 14, UiTheme.Shadow, HorizontalAlignment.Center);
             Lbl(crest, new Rect2(8, 34, 248, 28), "", 12, UiTheme.ParchDim, HorizontalAlignment.Center);
         }
@@ -218,7 +250,7 @@ namespace Milaqi.Game
         // ---------------------------------------------------------------- 侧栏
         void BuildSidePanels()
         {
-            myPanel = PanelAt(root, new Rect2(10, 116, 300, 428), UiTheme.Stone(), true);
+            myPanel = PanelTex(root, new Rect2(10, 116, 300, 428), 30, UiTheme.PanelStone);
             myTitle = Lbl(myPanel, new Rect2(14, 8, 272, 26), "", 18, UiTheme.TeamLeft);
             PanelAt(myPanel, new Rect2(14, 38, 272, 2), UiTheme.Panel(UiTheme.GoldDim, UiTheme.GoldDim, 0, 0));
 
