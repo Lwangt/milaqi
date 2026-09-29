@@ -4,7 +4,7 @@
 兵种自动前进、索敌、战斗。战后按双方存活单位的**杀戮值差值**对敌方城邦造成伤害，
 先把对方城邦生命打光的一方获胜。
 
-[![Release](https://img.shields.io/badge/release-v0.6.0-blue)](https://github.com/Lwangt/milaqi/releases/latest)
+[![Release](https://img.shields.io/badge/release-v0.6.1-blue)](https://github.com/Lwangt/milaqi/releases/latest)
 
 | | |
 |---|---|
@@ -123,6 +123,12 @@ dotnet run -- diag greed undead_swarm   # 单局逐回合诊断
 | 自检 | selftest 全过 + regress 6 项全过 |
 
 ## 更新记录
+
+### v0.6.1 兵种装备差异化
+
+为 51 个兵种加入**逐兵种装备表**，同类原型之间也有明显区分：
+大盔 / 角盔 / 王冠 / 兜帽，斧 / 锤 / 弩 / 匕首 / 镰刀 / 三叉戟 / 长矛 / 法杖，
+以及英雄与骑士的披风。
 
 ### v0.6.0 流派平衡大修（极差 86.8% → 7.1%）
 

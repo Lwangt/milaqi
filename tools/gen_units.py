@@ -54,6 +54,26 @@ class C:
         self.img.alpha_composite(lay)
 
 # ============ 外观规格 ============
+# 逐兵种装备覆盖：让同类原型之间也有明显差异
+WEAPON_BY_ID = {
+    "spearman": "spear", "pikeman": "spear", "guardian": "spear",
+    "zealot": "axe", "orc": "axe", "dwarf": "axe", "ogre": "mace",
+    "crossbowman": "crossbow", "ballista": "crossbow",
+    "shadow_assassin": "dagger", "wind_swordsman": "dagger",
+    "reaper": "scythe", "lich": "scythe", "necromancer": "staff",
+    "siren": "trident", "titan": "mace", "chaos_golem": "mace",
+    "guan_yu": "spear", "zhao_yun": "spear", "templar": "mace",
+    "sniper": "crossbow", "ranger": "bow", "elf_ranger": "bow",
+    "cannoneer": "crossbow", "knight": "spear", "dragon_knight": "spear",
+}
+HELM_BY_ID = {
+    "titan": "greathelm", "guardian": "greathelm", "shieldman": "greathelm",
+    "dwarf": "greathelm", "templar": "greathelm", "knight": "greathelm",
+    "orc": "horns", "ogre": "horns", "war_beast": "horns",
+    "guan_yu": "crown", "zhao_yun": "crown", "demon_lord": "horns",
+    "shadow_assassin": "hood", "wind_swordsman": "hood",
+}
+
 def spec_of(u):
     t = set(u.get("tags") or [])
     uid = u.get("id", "x")
@@ -118,6 +138,10 @@ def spec_of(u):
         s.update(kind="machine", weapon="bow", build=1.16)
     if "hero" in t and uid in ("guan_yu", "zhao_yun"):
         s.update(cloth=(58, 112, 84, 255), armor=(198, 182, 132, 255), accent=(240, 196, 96, 255))
+    if uid in WEAPON_BY_ID: s["weapon"] = WEAPON_BY_ID[uid]
+    if uid in HELM_BY_ID: s["helm"] = HELM_BY_ID[uid]
+    if uid in ("guan_yu", "zhao_yun", "templar", "dragon_knight", "demon_lord", "reaper"):
+        s["cape"] = s["cape"] or shade(s["cloth"], 0.82)
     hue = sum(ord(ch) for ch in uid)
     tw = ((hue % 9) - 4) * 0.045
     s["cloth"] = shade(s["cloth"], 1.0+tw)
@@ -165,6 +189,35 @@ def draw_weapon(c, s, hx, hy, ang, sc):
         ex, ey = hx+ux*L*1.25, hy+uy*L*1.25
         c.cap(hx-ux*9, hy-uy*9, ex, ey, 2.1, (76, 64, 80, 255))
         c.arc(ex, ey, 14*sc, ang+142, ang+338, shade(trim, 1.2), 3.0)
+    elif w == "axe":
+        ex, ey = hx+ux*L*0.95, hy+uy*L*0.95
+        c.cap(hx-ux*7, hy-uy*7, ex, ey, 2.2, (124, 90, 56, 255))
+        c.poly([(ex-uy*7, ey+ux*7), (ex+uy*7, ey-ux*7),
+                (ex+ux*12+uy*10, ey+uy*12-ux*10), (ex+ux*12-uy*10, ey+uy*12+ux*10)], shade(col, 1.12))
+        c.poly([(ex+ux*12+uy*10, ey+uy*12-ux*10), (ex+ux*12-uy*10, ey+uy*12+ux*10),
+                (ex+ux*15, ey+uy*15)], shade(trim, 1.2))
+    elif w == "mace":
+        ex, ey = hx+ux*L*0.9, hy+uy*L*0.9
+        c.cap(hx-ux*6, hy-uy*6, ex, ey, 2.2, (118, 86, 54, 255))
+        c.ell(ex, ey, 6.5*sc, 6.5*sc, shade(col, 1.14))
+        for k in range(6):
+            a2 = math.radians(ang) + k*math.tau/6
+            c.cap(ex, ey, ex+math.cos(a2)*8*sc, ey+math.sin(a2)*8*sc, 1.4, shade(trim, 1.1))
+    elif w == "crossbow":
+        cx, cy = hx+ux*11, hy+uy*11
+        c.cap(hx, hy, cx, cy, 2.0, (128, 92, 58, 255))
+        c.cap(cx-uy*10*sc, cy+ux*10*sc, cx+uy*10*sc, cy-ux*10*sc, 2.0, shade((150, 156, 168), 1.05))
+        c.cap(cx-ux*4, cy-uy*4, cx+ux*8, cy+uy*8, 1.3, (236, 232, 226, 255))
+    elif w == "dagger":
+        ex, ey = hx+ux*15*sc, hy+uy*15*sc
+        c.cap(hx-ux*3, hy-uy*3, hx+ux*4, hy+uy*4, 2.0, (96, 66, 40, 255))
+        c.poly([(ex+ux*6, ey+uy*6), (ex-uy*3.2, ey+ux*3.2), (ex+uy*3.2, ey-ux*3.2)], shade(trim, 1.18))
+    elif w == "trident":
+        ex, ey = hx+ux*L*1.4, hy+uy*L*1.4
+        c.cap(hx-ux*9, hy-uy*9, ex, ey, 1.9, (120, 88, 56, 255))
+        for off in (-6.5, 0, 6.5):
+            px, py = ex-uy*off*sc, ey+ux*off*sc
+            c.cap(px, py, px+ux*9*sc, py+uy*9*sc, 1.5, shade(trim, 1.14))
     elif w == "claw":
         for k in (-19, 0, 19):
             c.cap(hx, hy, hx+math.cos(math.radians(ang+k))*14*sc,
@@ -289,6 +342,18 @@ def draw_char(c, s, p):
         c.ell(cx, eyy, hr*0.58, hr*0.22, (24, 26, 34, 255), None)
         c.ell(cx-eo, eyy, hr*0.14, hr*0.14, ec, None)
         c.ell(cx+eo, eyy, hr*0.14, hr*0.14, ec, None)
+    elif hh == "greathelm":
+        c.poly([(cx-hr*1.06, hy+hr*0.3), (cx-hr*1.0, hy-hr*0.86), (cx, hy-hr*1.14),
+                (cx+hr*1.0, hy-hr*0.86), (cx+hr*1.06, hy+hr*0.3)], shade(s["armor"], 1.14))
+        c.ell(cx, eyy-1, hr*0.5, hr*0.16, (24, 26, 34, 255), None)
+        for k in (-1, 0, 1):
+            c.line([(cx+k*hr*0.3, hy-hr*0.5), (cx+k*hr*0.3, hy+hr*0.1)], shade(s["accent"], 1.0), 1.0)
+    elif hh == "crown":
+        c.ell(cx, hy-hr*0.44, hr*1.02, hr*0.5, shade(s["accent"], 1.16))
+        for k in (-2, -1, 0, 1, 2):
+            px = cx + k*hr*0.42
+            c.poly([(px-hr*0.16, hy-hr*0.72), (px+hr*0.16, hy-hr*0.72), (px, hy-hr*1.24)], shade(s["accent"], 1.24))
+        c.ell(cx, hy-hr*0.72, hr*1.0, hr*0.16, shade(s["accent"], 1.30))
     elif hh == "horns":
         c.ell(cx, hy-hr*0.42, hr*1.04, hr*0.72, shade(s["armor"], 1.1))
         c.poly([(cx-hr*0.6, hy-hr*0.8), (cx-hr*0.22, hy-hr*0.9), (cx-hr*0.85, hy-hr*1.7)], (244, 236, 218, 255))
