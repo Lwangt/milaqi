@@ -130,14 +130,14 @@
             "target": "undead",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.97
+            "value": 0.55
           },
           {
             "type": "stat",
             "target": "undead",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.68
+            "value": 0.34
           }
         ],
         "frontlineTarget": 0.45
@@ -195,28 +195,21 @@
             "target": "shield",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.55
+            "value": 0.12
           },
           {
             "type": "stat",
             "target": "shield",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.67
+            "value": 0.12
           },
           {
             "type": "stat",
             "target": "giant",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.32
-          },
-          {
-            "type": "stat",
-            "target": "giant",
-            "stat": "atk",
-            "mode": "pct",
-            "value": 0.34
+            "value": 0.06
           }
         ],
         "frontlineTarget": 0.45
@@ -277,14 +270,14 @@
             "target": "ranged",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.41
+            "value": 0.7
           },
           {
             "type": "stat",
             "target": "ranged",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.37
+            "value": 0.55
           },
           {
             "type": "stat",
@@ -355,14 +348,14 @@
             "target": "magic",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.28
+            "value": 1.6
           },
           {
             "type": "stat",
             "target": "magic",
             "stat": "matk",
             "mode": "pct",
-            "value": 0.33
+            "value": 1.9
           }
         ],
         "frontlineTarget": 0.32
@@ -421,28 +414,28 @@
             "target": "assassin",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.21
+            "value": 0.3
           },
           {
             "type": "stat",
             "target": "assassin",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.14
+            "value": 0.18
           },
           {
             "type": "stat",
             "target": "cavalry",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.16
+            "value": 0.22
           },
           {
             "type": "stat",
             "target": "cavalry",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.09
+            "value": 0.12
           }
         ],
         "frontlineTarget": 0.34
@@ -501,14 +494,14 @@
             "target": "hero",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.6
+            "value": 0.1
           },
           {
             "type": "stat",
             "target": "hero",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.56
+            "value": 0.08
           }
         ],
         "frontlineTarget": 0.4
@@ -568,21 +561,14 @@
             "target": "all",
             "stat": "hp",
             "mode": "pct",
-            "value": 0.36
+            "value": 0.16
           },
           {
             "type": "stat",
             "target": "all",
             "stat": "atk",
             "mode": "pct",
-            "value": 0.46
-          },
-          {
-            "type": "stat",
-            "target": "all",
-            "stat": "matk",
-            "mode": "pct",
-            "value": 0.46
+            "value": 0.11
           }
         ],
         "frontlineTarget": 0.42

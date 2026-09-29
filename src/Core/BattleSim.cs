@@ -59,6 +59,8 @@ namespace Milaqi.Core
         public float minDamageRatio = 0.2f;
         public float tickRate = 30f;
         public float maxSeconds = 30f;
+        public float suddenDeathStart = 18f;
+        public float suddenDeathRate = 0.14f;
         public float time;
 
         readonly List<SimUnit> _units = new List<SimUnit>(512);
@@ -101,6 +103,8 @@ namespace Milaqi.Core
             minDamageRatio = c.minDamageRatio;
             tickRate = c.tickRate;
             maxSeconds = db.Balance.battleMaxSeconds;
+            suddenDeathStart = db.Balance.suddenDeathStart;
+            suddenDeathRate = db.Balance.suddenDeathRate;
         }
 
         public float BaseX(Team t) { return t == Team.Left ? 0f : fieldWidth; }
@@ -414,6 +418,9 @@ namespace Milaqi.Core
         public void ApplyDamage(SimUnit t, float dmg, SimUnit attacker)
         {
             if (t == null || !t.alive || dmg <= 0f) return;
+            // 后期伤害递增：坦克对撞时靠这条保证战斗一定收敛，不会僵到时间上限
+            if (time > suddenDeathStart)
+                dmg *= 1f + (time - suddenDeathStart) * suddenDeathRate;
             if (t.shield > 0f)
             {
                 float absorbed = Math.Min(t.shield, dmg);

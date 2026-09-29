@@ -76,6 +76,11 @@ namespace Milaqi.Tests
                 string b = args.Length > 2 ? args[2] : "undead_swarm";
                 DiagMatch(db, a, b);
             }
+            if (mode == "comp")
+            {
+                int r = args.Length > 1 ? int.Parse(args[1]) : 4;
+                ArchComp(db, r);
+            }
             if (mode == "ladder")
             {
                 int n = args.Length > 1 ? int.Parse(args[1]) : 60;
@@ -217,6 +222,61 @@ namespace Milaqi.Tests
                 m.Tick(dt);
             }
             return m;
+        }
+
+        /// <summary>
+        /// 各流派在第 N 回合「战斗开始」时的实际出兵构成 + 每人口战力。
+        /// 用来定位流派强度差异到底来自兵种池、人口利用率还是组合。
+        /// </summary>
+        static void ArchComp(GameDatabase db, int sampleRound)
+        {
+            var diff = db.Difficulty("hard");
+            var rnd = new Random(4242);
+            Console.WriteLine();
+            Console.WriteLine("== 各流派出兵构成（第 " + sampleRound + " 回合战斗开始）==");
+            Console.WriteLine("流派          人口  平均本  每人口战力  构成");
+            foreach (var arch in db.Archetypes)
+            {
+                var m = new Match(db, rnd.Next(1, int.MaxValue));
+                m.Start();
+                var ai = new AiController(m, m.players[0], arch, diff);
+                var p = m.players[0];
+                var counts = new Dictionary<string, int>();
+                int pop = 0, tierSum = 0, n = 0;
+                double power = 0;
+                bool captured = false;
+                int guard = 0;
+                while (m.phase != MatchPhase.GameOver && guard++ < 400000)
+                {
+                    float dt = 1f / 30f;
+                    ai.Update(dt);
+                    m.Tick(dt);
+                    if (!captured && m.round == sampleRound && m.phase == MatchPhase.Battle)
+                    {
+                        for (int i = 0; i < p.roster.Count; i++)
+                        {
+                            var d = db.Unit(p.roster[i].id);
+                            if (d == null) continue;
+                            counts.TryGetValue(d.id, out int c);
+                            counts[d.id] = c + 1;
+                            pop += d.pop; tierSum += d.tier; n++;
+                            // 粗算每人口战力：有效生命 × DPS
+                            float hp = d.hp * (1f + d.pdef / (d.pdef + 75f));
+                            float dps = d.atk * d.atkSpeed;
+                            power += hp * dps * d.pop;   // 后续除以 pop 得每人口
+                        }
+                        captured = true;
+                    }
+                    if (m.round > sampleRound) break;
+                }
+                var parts = new List<string>();
+                foreach (var kv in counts) parts.Add(kv.Key + "x" + kv.Value);
+                double ppp = pop > 0 ? power / pop : 0;
+                Console.WriteLine(Pad(arch.name, 12) + Pad(pop.ToString(), 6)
+                    + Pad(n > 0 ? (tierSum / (double)n).ToString("0.0") : "-", 7)
+                    + Pad(ppp.ToString("0"), 12)
+                    + string.Join(",", parts));
+            }
         }
 
         static string ArmyLine(GameDatabase db, Match m, int pi)

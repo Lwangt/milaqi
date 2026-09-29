@@ -179,6 +179,10 @@ namespace Milaqi.Core
         public float baseHp = 300f;
         public float prepSeconds = 35f;
         public float battleMaxSeconds = 30f;
+        /// <summary>战斗进入「后期」的秒数：之后伤害逐秒递增，强制打破坦克僵局。</summary>
+        public float suddenDeathStart = 18f;
+        /// <summary>后期每秒伤害增幅（0.14 表示每秒 +14% 基础伤害）。</summary>
+        public float suddenDeathRate = 0.14f;
         public RoundConfig round = new RoundConfig();
         public CombatConfig combat = new CombatConfig();
         public Dictionary<string, int> startingUnits = new Dictionary<string, int>();

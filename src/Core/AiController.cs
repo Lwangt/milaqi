@@ -110,11 +110,13 @@ namespace Milaqi.Core
 
         public float UnitScore(UnitDef d, int[] foe)
         {
-            float s = d.tier * (12f + archetype.style.tierBias);
+            // 等级权重从 12 降到 5：原来 T5 比 T2 光等级就多 36 分，
+            // 直接把流派的兵种偏好淹没了，导致所有流派都去堆最高本的前排兵。
+            float s = d.tier * (5f + archetype.style.tierBias);
             if (d.tags != null)
                 for (int i = 0; i < d.tags.Length; i++) s += 15f * archetype.TagW(d.tags[i]);
             float uw = archetype.UnitW(d.id);
-            s += 18f * uw;
+            s += 34f * uw;
             // 流派如果定义了兵源白名单，名单外的兵重罚——否则 AI 会跑去买不属于本流派的超模单位，
             // 流派身份会被「哪个标签的高费兵更强」淹没（实测会让胜率极差冲到 60%+）
             if (archetype.unitWeight != null && archetype.unitWeight.Count > 0 && uw <= 0f) s -= 55f;
@@ -154,12 +156,12 @@ namespace Milaqi.Core
 
             if (!dBack)
             {
-                if (curFront < targetFront) s += (targetFront - curFront) * 190f;
+                if (curFront < targetFront) s += (targetFront - curFront) * 120f;
                 else s -= (curFront - targetFront) * 45f;
             }
             else
             {
-                if (curFront < targetFront * 0.65f) s -= 55f;
+                if (curFront < targetFront * 0.65f) s -= 34f;
                 else if (curFront >= targetFront) s += 14f;
             }
             // 多样性：第 4 个同兵种开始递减
