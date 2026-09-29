@@ -15,11 +15,36 @@ namespace Milaqi.Game
         public Main main;
         public string selectedSkill;
         public bool showDebug;
+        /// <summary>为 true 时战场图形交给 BattleWorld3D，这里只保留 2D 覆盖层。</summary>
+        public bool Use3D;
+        /// <summary>战场在屏幕上的矩形（3D 相机据此取景）。</summary>
+        public Rect2 FieldRect { get { return _field; } }
 
         Rect2 _field = new Rect2(100, 185, 1400, 420);
         float _scale = 1f;
         float _vtime;
         int _vfxJitter;
+
+        /// <summary>单位动作状态（待机/行走/攻击），按单位 id 缓存。</summary>
+        sealed class UnitAnimState
+        {
+            public float px, py, prevT;
+            public bool init;
+            public float wt, it, at;
+            public UnitSprite.Anim anim = UnitSprite.Anim.Idle;
+        }
+        readonly Dictionary<int, UnitAnimState> _uanim = new();
+        Vector2 _curShake;
+
+        UnitAnimState AnimOf(SimUnit u)
+        {
+            if (!_uanim.TryGetValue(u.id, out var a))
+            {
+                a = new UnitAnimState();
+                _uanim[u.id] = a;
+            }
+            return a;
+        }
 
         // 屏幕震动：受击、阵亡、城邦掉血时抖一下，战斗才有打击感
         float _shake;
@@ -191,6 +216,18 @@ namespace Milaqi.Game
                     case SimEventKind.Hit:
                     case SimEventKind.Shot:
                         {
+                            if (Use3D)
+                            {
+                                // 3D 世界负责弹道与命中特效，这里只负责伤害数字
+                                if (e.value >= 1f && _floats.Count < 80)
+                                    _floats.Add(new FloatText
+                                    {
+                                        pos = ToScreen(e.x2, e.y2) + new Vector2((float)(_vfxJitter++ % 3 - 1) * 7f, -14f),
+                                        text = ((int)e.value).ToString(), life = 0.75f, max = 0.75f,
+                                        color = new Color(1f, 0.92f, 0.58f), size = 13f
+                                    });
+                                break;
+                            }
                             var ad = match.db.Unit(e.label);
                             int kind = VfxKind(ad);
                             var col = VfxOf(kind, e.team);
@@ -307,9 +344,13 @@ namespace Milaqi.Game
             var sz = Size;
 
             // 屏幕震动：整体偏移绘制（不影响布局与命中判定）
-            if (_shake > 0.2f)
-                DrawSetTransform(new Vector2((float)GD.RandRange(-1.0, 1.0), (float)GD.RandRange(-1.0, 1.0)) * _shake, 0f, Vector2.One);
+            _curShake = _shake > 0.2f
+                ? new Vector2((float)GD.RandRange(-1.0, 1.0), (float)GD.RandRange(-1.0, 1.0)) * _shake
+                : Vector2.Zero;
+            DrawSetTransform(_curShake, 0f, Vector2.One);
 
+            if (!Use3D)
+            {
             DrawRect(new Rect2(Vector2.Zero, sz), BgTop);
             DrawRect(new Rect2(0, sz.Y * 0.55f, sz.X, sz.Y * 0.45f), BgBottom);
 
@@ -463,6 +504,7 @@ namespace Milaqi.Game
                 else
                     DrawCircle(p.pos, p.radius * (0.4f + k * 0.9f), c);
             }
+            }   // end !Use3D
             // 伤害数字
             var font = GetThemeDefaultFont();
             if (font != null)
@@ -600,50 +642,93 @@ namespace Milaqi.Game
 
         void DrawGround()
         {
-            // 外框：暗色魔法石
+            // 金属外框 + 金边
             var outer = new Rect2(_field.Position - new Vector2(8, 8), _field.Size + new Vector2(16, 16));
             DrawRect(outer, new Color(0.16f, 0.13f, 0.12f));
             DrawRect(new Rect2(outer.Position + new Vector2(3, 3), outer.Size - new Vector2(6, 6)), new Color(0.42f, 0.34f, 0.22f));
-            DrawRect(_field, new Color(0.11f, 0.10f, 0.13f));
 
-            // 石板纹理
-            float tile = _field.Size.Y / 5f;
-            int cols = Mathf.CeilToInt(_field.Size.X / tile);
-            for (int r = 0; r < 5; r++)
-            {
-                for (int c = 0; c < cols; c++)
-                {
-                    float x = _field.Position.X + c * tile;
-                    float y = _field.Position.Y + r * tile;
-                    var shade = ((r * 31 + c * 17) & 3) == 0 ? 0.185f : 0.150f;
-                    DrawRect(new Rect2(x + 1, y + 1, tile - 2, tile - 2), new Color(shade, shade * 0.94f, shade * 1.18f));
-                }
-            }
-            // 中央大道
-            float midY = _field.Position.Y + _field.Size.Y * 0.5f;
-            DrawRect(new Rect2(_field.Position.X, midY - _field.Size.Y * 0.16f, _field.Size.X, _field.Size.Y * 0.32f), new Color(0.16f, 0.15f, 0.20f, 0.75f));
-            for (int i = 0; i < 5; i++)
-            {
-                float y = _field.Position.Y + _field.Size.Y * (i + 1) / 6f;
-                DrawLine(new Vector2(_field.Position.X, y), new Vector2(_field.Position.X + _field.Size.X, y), new Color(1, 1, 1, 0.03f), 1f);
-            }
-            DrawLine(new Vector2(_field.Position.X, _field.Position.Y), new Vector2(_field.Position.X + _field.Size.X, _field.Position.Y), new Color(0.55f, 0.44f, 0.26f, 0.55f), 2f);
-            DrawLine(new Vector2(_field.Position.X, _field.Position.Y + _field.Size.Y), new Vector2(_field.Position.X + _field.Size.X, _field.Position.Y + _field.Size.Y), new Color(0.55f, 0.44f, 0.26f, 0.55f), 2f);
+            // 草地：整张程序化贴图，无接缝，一次绘制
+            var arena = FieldArt.Arena();
+            if (arena != null) DrawTextureRect(arena, _field, false);
+            else DrawRect(_field, new Color(0.35f, 0.57f, 0.24f));
 
-            // 中央符文法阵
-            float cx = _field.Position.X + _field.Size.X * 0.5f;
-            var arc = UiTheme.Arcane;
-            float pulse = 0.5f + 0.5f * Mathf.Sin(_vtime * 1.2f);
-            DrawCircle(new Vector2(cx, midY), _field.Size.Y * 0.40f, new Color(arc.R, arc.G, arc.B, 0.05f + 0.03f * pulse));
-            DrawArc(new Vector2(cx, midY), _field.Size.Y * 0.40f, 0, Mathf.Tau, 64, new Color(arc.R, arc.G, arc.B, 0.30f + 0.15f * pulse), 2f);
-            DrawArc(new Vector2(cx, midY), _field.Size.Y * 0.30f, _vtime * 0.4f, _vtime * 0.4f + 2.2f, 40, new Color(arc.R, arc.G, arc.B, 0.22f), 2f);
-            DrawArc(new Vector2(cx, midY), _field.Size.Y * 0.30f, _vtime * 0.4f + 3.14f, _vtime * 0.4f + 5.34f, 40, new Color(arc.R, arc.G, arc.B, 0.22f), 2f);
-            for (int i = 0; i < 8; i++)
+            // 中线：极淡的踩踏痕迹，帮忙判断距离
+            float midX = _field.Position.X + _field.Size.X * 0.5f;
+            DrawLine(new Vector2(midX, _field.Position.Y + 2), new Vector2(midX, _field.Position.Y + _field.Size.Y - 2),
+                     new Color(1f, 1f, 1f, 0.055f), 2f);
+
+            // 上下金色饰线
+            var gold = new Color(0.55f, 0.44f, 0.26f, 0.5f);
+            DrawLine(new Vector2(_field.Position.X, _field.Position.Y), new Vector2(_field.Position.X + _field.Size.X, _field.Position.Y), gold, 2f);
+            DrawLine(new Vector2(_field.Position.X, _field.Position.Y + _field.Size.Y), new Vector2(_field.Position.X + _field.Size.X, _field.Position.Y + _field.Size.Y), gold, 2f);
+
+            // 上下内阴影，给战场一点纵深
+            DrawRect(new Rect2(_field.Position, new Vector2(_field.Size.X, 10f)), new Color(0f, 0f, 0f, 0.10f));
+            DrawRect(new Rect2(_field.Position + new Vector2(0f, _field.Size.Y - 10f), new Vector2(_field.Size.X, 10f)), new Color(0f, 0f, 0f, 0.10f));
+        }
+
+        void DrawUnit(SimUnit u)
+        {
+            bool left = u.team == Team.Left;
+            var tex = UnitSprite.Get(u.def.id);
+
+            // ---- 动作状态机：攻击 > 行走 > 待机 ----
+            float period = 1f / Mathf.Max(0.05f, u.st.atkSpeed);
+            float since = period - u.attackCd;
+            bool attacking = since >= 0f && since < 0.46f;
+
+            var a = AnimOf(u);
+            float dt = Mathf.Max(0.0005f, _vtime - a.prevT);
+            float ddx = u.x - a.px, ddy = u.y - a.py;
+            float spd = a.init ? Mathf.Sqrt(ddx * ddx + ddy * ddy) / dt : 0f;
+            a.px = u.x; a.py = u.y; a.prevT = _vtime; a.init = true;
+
+            if (attacking) { a.anim = UnitSprite.Anim.Attack; a.at = since; }
+            else if (spd > 4f)
             {
-                float a = _vtime * 0.25f + i * Mathf.Pi / 4f;
-                var p = new Vector2(cx + Mathf.Cos(a) * _field.Size.Y * 0.40f, midY + Mathf.Sin(a) * _field.Size.Y * 0.40f);
-                DrawCircle(p, 2.5f, new Color(UiTheme.Gold.R, UiTheme.Gold.G, UiTheme.Gold.B, 0.55f));
+                a.anim = UnitSprite.Anim.Walk;
+                a.wt += dt * Mathf.Clamp(spd / 40f, 0.55f, 1.7f);
             }
+            else { a.anim = UnitSprite.Anim.Idle; a.it += dt; }
+
+            float t = a.anim == UnitSprite.Anim.Attack ? a.at
+                    : a.anim == UnitSprite.Anim.Walk ? a.wt : a.it;
+            int frame = UnitSprite.FrameOf(a.anim, t);
+
+            float r = Mathf.Max(5f, u.radius * _scale * 0.95f);
+            var p = ToScreen(u.x, u.y);
+
+            if (tex != null)
+            {
+                float h = Mathf.Max(34f, u.radius * _scale * 6.4f);
+                float w = h;
+                float foot = h * UnitSprite.FootRatio;
+                Color tint;
+                if (u.hitUntil > match.sim.time) tint = new Color(1.9f, 1.2f, 1.2f, 1f);
+                else if (left) tint = new Color(0.95f, 0.99f, 1f, 1f);
+                else tint = new Color(1f, 0.95f, 0.93f, 1f);
+                DrawSetTransform(_curShake + p, 0f, new Vector2(left ? 1f : -1f, 1f));
+                DrawTextureRectRegion(tex, new Rect2(-w * 0.5f, -foot, w, h), UnitSprite.SrcRect(frame), tint);
+                DrawSetTransform(_curShake, 0f, Vector2.One);
+            }
+            else
+            {
+                DrawCircle(p, r, left ? LeftColor : RightColor);
+                DrawArc(p, r, 0f, Mathf.Tau, 22, new Color(0, 0, 0, 0.55f), 1.5f);
+            }
+
+            if (u.st.range > 60f) DrawArc(p, r + 2.5f, 0f, Mathf.Tau, 20, new Color(1, 1, 1, 0.18f), 1.2f);
+            if (u.def.tier >= 4) DrawArc(p, r + 5f, 0f, Mathf.Tau, 24, new Color(1f, 0.85f, 0.35f, 0.6f), 1.8f);
+            if (u.shield > 0f) DrawArc(p, r + 7f, 0f, Mathf.Tau, 24, new Color(0.6f, 0.9f, 1f, 0.7f), 2f);
+            if (u.slowPct > 0f && u.slowUntil > match.sim.time) DrawArc(p, r + 9f, 0f, Mathf.Tau, 24, new Color(0.5f, 0.85f, 1f, 0.5f), 1.5f);
+
+            float bw = Mathf.Max(16f, r * 2.3f);
+            float bh = 3.5f;
+            var bpos = new Vector2(p.X - bw * 0.5f, p.Y - r - 11f);
+            DrawRect(new Rect2(bpos, new Vector2(bw, bh)), new Color(0, 0, 0, 0.65f));
+            float ratio = u.maxHp > 0 ? Mathf.Clamp(u.hp / u.maxHp, 0f, 1f) : 0f;
+            var hpColor = ratio > 0.5f ? new Color(0.4f, 0.9f, 0.4f) : (ratio > 0.25f ? new Color(0.95f, 0.8f, 0.3f) : new Color(0.95f, 0.35f, 0.35f));
+            DrawRect(new Rect2(bpos, new Vector2(bw * ratio, bh)), hpColor);
         }
 
         void DrawBase(bool left, float hpRatio)
@@ -711,59 +796,6 @@ namespace Milaqi.Game
             return Colors.White;
         }
 
-        void DrawUnit(SimUnit u)
-        {
-            bool left = u.team == Team.Left;
-            var baseCol = left ? LeftColor : RightColor;
-            var tint = baseCol.Lerp(ClassTint(u.def), 0.45f);
-            if (u.hitUntil > match.sim.time) tint = tint.Lerp(Colors.White, 0.7f);
-
-            float r = Math.Max(5f, u.radius * _scale * 0.95f);
-            float bob = Mathf.Sin(_vtime * 7f + u.id * 1.7f) * (_vtime > 0 ? 1.6f : 0f);
-            float period = 1f / Mathf.Max(0.05f, u.st.atkSpeed);
-            float since = period - u.attackCd;
-            float lunge = since >= 0f && since < 0.16f ? (1f - since / 0.16f) * 5f : 0f;
-            float dir = left ? 1f : -1f;
-
-            var p = ToScreen(u.x, u.y) + new Vector2(lunge * dir, bob);
-
-            var tex = UnitPortrait.Get(u.def.id);
-            if (tex != null)
-            {
-                float size = r * 4.0f;
-                // 3D 立绘本身已是类别配色，这里只叠加一层阵营色调区分敌我
-                var teamTint = Colors.White.Lerp(left ? new Color(0.62f, 0.82f, 1f) : new Color(1f, 0.66f, 0.68f), 0.55f);
-                DrawSetTransform(p, 0f, new Vector2(left ? 1f : -1f, 1f));
-                DrawTextureRect(tex, new Rect2(-size * 0.5f, -size * 0.5f, size, size), false, teamTint);
-                DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
-            }
-            else
-            {
-                DrawCircle(p, r, tint);
-                DrawArc(p, r, 0, Mathf.Tau, 22, new Color(0, 0, 0, 0.55f), 1.5f);
-            }
-
-            if (u.st.range > 60f) DrawArc(p, r + 2.5f, 0, Mathf.Tau, 20, new Color(1, 1, 1, 0.2f), 1.2f);
-            if (u.def.tier >= 4) DrawArc(p, r + 5f, 0, Mathf.Tau, 24, new Color(1f, 0.85f, 0.35f, 0.6f), 1.8f);
-            if (u.shield > 0f) DrawArc(p, r + 7f, 0, Mathf.Tau, 24, new Color(0.6f, 0.9f, 1f, 0.7f), 2f);
-            if (u.slowPct > 0f && u.slowUntil > match.sim.time) DrawArc(p, r + 9f, 0, Mathf.Tau, 24, new Color(0.5f, 0.85f, 1f, 0.5f), 1.5f);
-
-            float bw = Mathf.Max(16f, r * 2.3f);
-            float bh = 3.5f;
-            var bpos = new Vector2(p.X - bw * 0.5f, p.Y - r - 11f);
-            DrawRect(new Rect2(bpos, new Vector2(bw, bh)), new Color(0, 0, 0, 0.65f));
-            float ratio = u.maxHp > 0 ? Mathf.Clamp(u.hp / u.maxHp, 0f, 1f) : 0f;
-            var hpColor = ratio > 0.5f ? new Color(0.4f, 0.9f, 0.4f) : (ratio > 0.25f ? new Color(0.95f, 0.8f, 0.3f) : new Color(0.95f, 0.35f, 0.35f));
-            DrawRect(new Rect2(bpos, new Vector2(bw * ratio, bh)), hpColor);
-        }
-
-        /// <summary>
-        /// 战场点击直接在 _Input 里判定，不依赖 Godot 的 GUI 路由。
-        /// 原因：HUD 是更高层的 CanvasLayer，_GuiInput 会被它拦掉（实测 _Input 能收到、
-        /// _GuiInput 收不到），导致技能点不出去、队列落位和右键出售也一起失效。
-        /// 判定规则很简单：落在战场矩形内的鼠标点击就是战场操作——侧栏面板在矩形外，
-        /// 商店与技能按钮在下方，不会误触。
-        /// </summary>
         public override void _Input(InputEvent @event)
         {
             if (match == null || main == null) return;

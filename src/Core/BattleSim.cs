@@ -15,6 +15,8 @@ namespace Milaqi.Core
         public float value;
         public float radius;
         public string label;
+        public int src;   // 攻击者/施法者的单位 id（表现层用来触发动作）
+        public int dst;   // 受击者的单位 id
     }
 
     public sealed class SimUnit
@@ -348,8 +350,8 @@ namespace Milaqi.Core
             {
                 kind = ranged ? SimEventKind.Shot : SimEventKind.Hit,
                 x = a.x, y = a.y, x2 = t.x, y2 = t.y, team = a.team, value = dmg,
-                // 用 label 带上攻击者兵种 id，表现层据此播放该兵种的专属攻击特效
-                label = a.def.id
+                // label 带兵种 id（选特效样式），src/dst 带单位 id（触发动作与命中反馈）
+                label = a.def.id, src = a.id, dst = t.id
             });
 
             ApplyDamage(t, dmg, a);

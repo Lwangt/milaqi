@@ -70,21 +70,19 @@ namespace Milaqi.Game
             foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--selftest" || a == "selftest") selfTest = true;
             if (selfTest) { RunSelfTest(); return; }
 
-            var baker = new PortraitBaker();
-            AddChild(baker);
-            _ = BakeThenStart(baker);
-        }
-
-        async System.Threading.Tasks.Task BakeThenStart(PortraitBaker baker)
-        {
-            await baker.Bake(db);
+            // 卡牌与头像直接用程序化生成的 2D 精灵，省掉 3D 离线烘焙（启动更快）
             BuildUiAndStart();
         }
 
+        public BattleWorld3D world;
+
         void BuildUiAndStart()
         {
+            // 2D 战场：程序化生成的精细兵种精灵 + 手绘质感的草地，
+            // 比 3D 原语更接近参考画面，同时省掉三维开销。
             view = new BattleView();
             view.main = this;
+            view.Use3D = false;
             view.SetAnchorsPreset(Control.LayoutPreset.FullRect);
             AddChild(view);
 
@@ -246,12 +244,13 @@ namespace Milaqi.Game
             ai = mode == GameMode.Local ? new AiController(match, match.players[1]) : null;
             view.match = match;
             hud.match = match;
+            if (world != null) world.match = match;
             selectedSkill = null;
             view.selectedSkill = null;
             gemShopOpen = false;
             _lastRound = -1;
             matchStarted = true;
-            view.Layout();
+            LayoutAll();
             ai0 = null;
             EnsureDemoAi();
             if (broadcast && mode == GameMode.Host) net.BroadcastSnapshot(Snapshot.Write(match, db));
@@ -284,6 +283,7 @@ namespace Milaqi.Game
             ai = null;
             view.match = match;
             hud.match = match;
+            if (world != null) world.match = match;
             matchStarted = true;
             net.StartClient(ip, port);
             menu.ShowMenu(false);
@@ -307,9 +307,14 @@ namespace Milaqi.Game
             GD.Print("已作为客户端连接");
         }
 
-        void OnResize()
+        void OnResize() { LayoutAll(); }
+
+        /// <summary>同步 2D 覆盖层与 3D 战场的取景。</summary>
+        public void LayoutAll()
         {
-            if (view != null) view.Layout();
+            if (view == null) return;
+            view.Layout();
+            if (world != null) world.Layout(view.FieldRect, new Vector2(1600, 900));
         }
 
         // ---------------------------------------------------------------- 主循环
@@ -433,6 +438,7 @@ namespace Milaqi.Game
             UpdateShots(delta);
             UpdateClickTest(delta);
             if (match == null) return;
+            if (world != null) world.Sync((float)delta);
             if (match.round != _lastRound) { _lastRound = match.round; match.players[0].skillCharges.Clear(); match.players[1].skillCharges.Clear(); }
             if (mode != GameMode.Client)
             {

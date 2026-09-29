@@ -15,9 +15,11 @@ namespace Milaqi.Game
 
         public static void Set(string id, Texture2D tex) { if (id != null) Cache[id] = tex; }
 
-        /// <summary>优先用 3D 烘焙贴图，没有则退回矢量图。</summary>
+        /// <summary>卡牌/头像用图：优先新的 2D 精灵，其次 3D 烘焙，最后退回矢量图。</summary>
         public static Texture2D Get(string id)
         {
+            var sprite = UnitSprite.Icon(id);
+            if (sprite != null) return sprite;
             Texture2D t;
             if (id != null && Cache.TryGetValue(id, out t) && t != null) return t;
             return UnitArt.Get(id);

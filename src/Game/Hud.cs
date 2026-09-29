@@ -158,7 +158,7 @@ namespace Milaqi.Game
             AddChild(bgLayer);
 
             var bg = new ColorRect();
-            bg.Color = UiTheme.Ink;
+            bg.Color = new Color(0, 0, 0, 0f);   // 不再铺全屏底色，中间让给 3D 战场
             bg.Position = Vector2.Zero;
             bg.Size = new Vector2(1600, 900);
             bg.MouseFilter = Control.MouseFilterEnum.Ignore;
