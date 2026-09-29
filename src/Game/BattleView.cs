@@ -490,16 +490,26 @@ namespace Milaqi.Game
                 }
                 else if (p.kind >= 0 && p.kind != 4)
                 {
-                    // 命中火花：放射状短线
-                    DrawCircle(p.pos, p.radius * (0.35f + k * 0.85f), c);
-                    int rays = 4 + (p.kind == 3 ? 3 : 0);
+                    float r0 = p.radius * (0.35f + k * 0.85f);
+                    // 外层光晕，让命中在密集团战里也看得见
+                    DrawCircle(p.pos, r0 * 1.55f, new Color(c.R, c.G, c.B, c.A * 0.22f));
+                    DrawCircle(p.pos, r0, c);
+                    // 白热核心：命中瞬间最亮，迅速衰减
+                    float hot = Mathf.Max(0f, 1f - k * 2.6f);
+                    if (hot > 0.02f)
+                        DrawCircle(p.pos, p.radius * (0.28f + k * 0.34f), new Color(1f, 1f, 0.92f, hot * 0.92f));
+                    // 放射火花
+                    int rays = 5 + (p.kind == 3 ? 4 : 0);
                     for (int r = 0; r < rays; r++)
                     {
                         float ang = r * Mathf.Tau / rays + k * 1.1f;
                         var d = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang));
-                        DrawLine(p.pos + d * p.radius * 0.35f, p.pos + d * p.radius * (0.7f + k * 0.9f),
-                            new Color(c.R, c.G, c.B, c.A * 0.8f), 1.8f);
+                        DrawLine(p.pos + d * p.radius * 0.32f, p.pos + d * p.radius * (0.72f + k * 1.0f),
+                            new Color(c.R, c.G, c.B, c.A * 0.85f), 1.9f);
                     }
+                    // 扩散冲击环
+                    DrawArc(p.pos, p.radius * (0.5f + k * 1.35f), 0f, Mathf.Tau, 22,
+                            new Color(1f, 1f, 1f, c.A * 0.45f), 1.6f);
                 }
                 else
                     DrawCircle(p.pos, p.radius * (0.4f + k * 0.9f), c);
@@ -700,7 +710,7 @@ namespace Milaqi.Game
 
             if (tex != null)
             {
-                float h = Mathf.Max(34f, u.radius * _scale * 6.4f);
+                float h = Mathf.Max(38f, u.radius * _scale * 7.8f);
                 float w = h;
                 float foot = h * UnitSprite.FootRatio;
                 Color tint;

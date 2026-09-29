@@ -357,7 +357,10 @@ namespace Milaqi.Game
                 DirAccess.MakeDirRecursiveAbsolute(dir);
                 string path = dir + "/shot_" + shotIndex + "_" + shotTimes[shotIndex].ToString("0") + "s.png";
                 var err = img.SavePng(path);
-                GD.Print("SHOT " + shotIndex + " -> " + path + " (" + err + ")");
+                GD.Print("SHOT " + shotIndex + " -> " + path + " (" + err + ")  FPS=" + Engine.GetFramesPerSecond()
+                    + "  units=" + (match != null && match.sim != null ? match.sim.Units.Count : 0)
+                    + "  draw=" + Performance.GetMonitor(Performance.Monitor.RenderTotalDrawCallsInFrame)
+                    + "  time=" + Mathf.Round(Performance.GetMonitor(Performance.Monitor.TimeProcess) * 1000.0) + "ms");
                 shotIndex++;
             }
             if (shotIndex >= shotTimes.Count) GetTree().Quit(0);
